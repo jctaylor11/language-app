@@ -22,7 +22,7 @@ def create_tables(engine):
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
                 username text NOT NULL UNIQUE,
-                created_at timestamptz NOT NULL
+                created_at timestamptz NOT NULL DEFAULT NOW()
             );
         """))
 
@@ -53,7 +53,7 @@ def create_tables(engine):
             CREATE TABLE IF NOT EXISTS user_words (
                 user_id int NOT NULL REFERENCES users(id),
                 word_id int NOT NULL REFERENCES words(id),
-                added_at timestamptz NOT NULL,
+                added_at timestamptz NOT NULL DEFAULT NOW(),
                 PRIMARY KEY (user_id, word_id)
             );
         """))
