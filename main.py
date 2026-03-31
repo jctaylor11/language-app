@@ -1,5 +1,8 @@
 from sqlalchemy import text
 from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
 
 from db.connection import get_engine
 
@@ -9,8 +12,24 @@ app = FastAPI()
 engine = get_engine()
 
 
-@app.post("/session")
+class WordResult(BaseModel):
+    word_id: int
+    response_time_ms: Optional[int] = None
+    answered_at: Optional[datetime] = None
+    pre_correction_input: Optional[str] = None
+    status: str  # TODO: Configure enum in enum file for single source of truth and replace with Enum
+    session_position: int
+
+
+# For insert_session_data input
+class SessionResults(BaseModel):
+    session_id: int
+    word_results: list[WordResult]
+
+
+@app.post("/sessions")
 async def create_session():
+    """Create new session and return session ID to client"""
     # Hardcode the user_id for now until auth added later
     user_id = 1
 
@@ -29,6 +48,7 @@ async def create_session():
 
 @app.get("/words")
 async def get_word_batch():
+    """Fetch batch of words to show to user"""
     # Hardcode for now, update after auth
     user_id = 1
 
@@ -47,3 +67,23 @@ async def get_word_batch():
         word_batch = [row._asdict() for row in rows]
 
     return {"word_batch": word_batch}
+
+
+@app.post("/session-results")
+async def create_session_results(session_results: SessionResults):
+    """Save user's response data for each word in the session batch"""
+    # Hardcoded for now
+    user_id = 1
+
+    params = [{"user_id": user_id, "session_id": session_results.session_id, **word_result.model_dump()} for word_result in session_results.word_results]
+
+    with engine.begin() as conn:
+       conn.execute(text("""
+            INSERT INTO session_results (user_id, session_id, word_id, response_time_ms, answered_at, pre_correction_input, status, session_position)
+            VALUES (:user_id, :session_id, :word_id, :response_time_ms, :answered_at, :pre_correction_input, :status, :session_position)
+        """), params)
+    
+    return {"results_saved": len(session_results.word_results)}
+
+
+
