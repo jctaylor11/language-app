@@ -71,19 +71,27 @@ async def get_word_batch():
 
 @app.post("/session-results")
 async def create_session_results(session_results: SessionResults):
-    """Save user's response data for each word in the session batch"""
+    """eSave user's response data for each word in the session batch"""
     # Hardcoded for now
     user_id = 1
 
     params = [{"user_id": user_id, "session_id": session_results.session_id, **word_result.model_dump()} for word_result in session_results.word_results]
 
     with engine.begin() as conn:
-       conn.execute(text("""
+        # All response data for each word in the session batch saved
+        conn.execute(text("""
             INSERT INTO session_results (user_id, session_id, word_id, response_time_ms, answered_at, pre_correction_input, status, session_position)
             VALUES (:user_id, :session_id, :word_id, :response_time_ms, :answered_at, :pre_correction_input, :status, :session_position)
         """), params)
+
+        # Session's completed_at value is updated each flush - final update accurate logs completion
+        conn.execute(text("""
+            UPDATE sessions
+            SET completed_at = NOW()
+            WHERE id = :session_id
+        """), {"session_id": session_results.session_id})
     
-    return {"results_saved": len(session_results.word_results)}
+    return {"results_saved": len(session_results.word_results)} 
 
 
 
