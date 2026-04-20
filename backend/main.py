@@ -67,7 +67,7 @@ async def get_word_batch():
     # Fetch a batch of 5 words from database
     with engine.begin() as conn:
         result = conn.execute(text("""
-            SELECT id as word_id, target_word, native_word
+            SELECT id as word_id, target, source
             FROM words
             JOIN user_words ON user_words.word_id = words.id
             WHERE user_id = :user_id
