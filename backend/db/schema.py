@@ -12,8 +12,8 @@ def create_tables(engine):
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS words (
                 id SERIAL PRIMARY KEY,
-                target_word text NOT NULL,
-                native_word text NOT NULL,
+                target text NOT NULL,
+                source text NOT NULL,
                 part_of_speech text NOT NULL
             );
         """))

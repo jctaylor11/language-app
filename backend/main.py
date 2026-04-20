@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-from db.connection import get_engine
+from backend.db.connection import get_engine
 
 app = FastAPI()
 
