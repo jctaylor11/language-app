@@ -12,7 +12,7 @@ export default function App() {
   const [words, setWords] = useState<Word[]>([])
   const [inputText, setInputText] = useState<string>('')
 
-  async function fetchWords() {
+  async function fetchWords(): Promise<Word[]> {
     const wordsUrl = "http://127.0.0.1:8000/words"
     const response = await fetch(wordsUrl, {method: "GET"})
     const wordsData = await response.json()
@@ -41,15 +41,23 @@ export default function App() {
   const sourceWord = words[0]?.source
 
 
-  function handleInputChange(input: string) {
+  async function handleInputChange(input: string) {
     setInputText(input)
 
     // Check whether input matches the answer
     if (input === sourceWord) {
       setInputText('')
       
-      // Remove item from list
-      setWords(words.slice(1))
+      // Remove item from array
+      const newWords = words.slice(1)
+
+      // Append a new batch to the end of the array if it falls below threshold
+      if (newWords.length <= 3) {
+        const newBatch = await fetchWords()
+        setWords([...newWords, ...newBatch])
+      } else {
+        setWords(words.slice(1))
+      }
     }
   }
 
