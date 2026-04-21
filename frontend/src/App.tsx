@@ -10,6 +10,7 @@ type Word = {
 export default function App() {
   const [session, setSession] = useState<number | null>(null)
   const [words, setWords] = useState<Word[]>([])
+  const [inputText, setInputText] = useState<string>('')
 
   async function fetchWords() {
     const wordsUrl = "http://127.0.0.1:8000/words"
@@ -36,14 +37,29 @@ export default function App() {
   const targetWord = words[0]?.target
   const sourceWord = words[0]?.source
 
+
+  function handleInputChange(input: string) {
+    setInputText(input)
+
+    // Check whether input matches the answer
+    if (input === sourceWord) {
+      setInputText('')
+      
+      // Remove item from list
+      setWords(words.slice(1))
+    }
+  }
+
   return (
     <>
-      <div>
-        {targetWord}
-      </div>
-      <div>
-        {sourceWord}
-      </div>
+      <div>{targetWord}</div>
+      <div>{sourceWord}</div>
+      <form>
+        <input 
+          type='text' 
+          value={inputText}
+          onChange={(e) => handleInputChange(e.target.value)}/>
+      </form>
     </>
   )
 }
