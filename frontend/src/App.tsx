@@ -16,7 +16,7 @@ export default function App() {
     const wordsUrl = "http://127.0.0.1:8000/words"
     const response = await fetch(wordsUrl, {method: "GET"})
     const wordsData = await response.json()
-    setWords(wordsData.word_batch)
+    return wordsData.word_batch
   }
 
   useEffect(() => {
@@ -28,10 +28,13 @@ export default function App() {
       setSession(sessionData.session_id)
     }
 
-    console.log(session)
+    async function init() {    // Init function used so that fetchWords can be awaited
+      fetchSession()
+      const word_batch = await fetchWords()
+      setWords(word_batch)
+    }
 
-    fetchSession()
-    fetchWords()
+    init()
   }, [])
 
   const targetWord = words[0]?.target
