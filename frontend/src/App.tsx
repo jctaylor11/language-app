@@ -57,9 +57,7 @@ export default function App() {
 
 
   async function handleInputChange(input: string) {
-
-    async function sendResults() {
-
+    function buildSessionResults() {
       // Packs the results for the word
       const wordResults: WordResults = {
         word_id: 1,
@@ -76,6 +74,11 @@ export default function App() {
         word_results: [wordResults]
       }
 
+      return sessionResults
+    }
+
+
+    async function sendResults(sessionResults: SessionResults) {
       // Sends the sessionResults via http POST
       const sessionResultsUrl = "http://127.0.0.1:8000/session-results"
       const response = await fetch(sessionResultsUrl, {
@@ -83,7 +86,7 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(sessionResults)
       })
-      const responseBody = response.json()
+      const responseBody = await response.json()
       console.log("POST response: ", response.status, responseBody)
     }
 
@@ -91,7 +94,8 @@ export default function App() {
 
     // Check whether input matches the answer
     if (input === sourceWord) {
-      sendResults()
+      const sessionResults = buildSessionResults()
+      await sendResults(sessionResults)
       setInputText('')
       
       // Remove item from array
