@@ -2,9 +2,17 @@ import { useEffect } from "react"
 import { useState } from "react"
 
 type Word = {
-  word_id: string,
+  id: number,
   target: string,
   source: string
+}
+
+type WordsResponse = {
+  word_batch: Word[]
+}
+
+type SessionResponse = {
+  session_id: number
 }
 
 type WordResults = {
@@ -30,7 +38,7 @@ export default function App() {
   async function fetchWords(): Promise<Word[]> {
     const wordsUrl = "http://127.0.0.1:8000/words"
     const response = await fetch(wordsUrl, {method: "GET"})
-    const wordsData = await response.json()
+    const wordsData: WordsResponse = await response.json()
     return wordsData.word_batch
   }
 
@@ -38,39 +46,52 @@ export default function App() {
     const sessionUrl = "http://127.0.0.1:8000/sessions"
     async function fetchSession() {
       const response = await fetch(sessionUrl, {method: "POST"})
-      const sessionData  = await response.json()
+      const sessionData: SessionResponse = await response.json()
       console.log("Data", sessionData)
       setSession(sessionData.session_id)
     }
 
     async function init() {    // Init function used so that fetchWords can be awaited
       await fetchSession()
-      const word_batch = await fetchWords()
-      setWords(word_batch)
+      const wordBatch = await fetchWords()
+      setWords(wordBatch)
     }
 
     init()
   }, [])
 
-  const targetWord = words[0]?.target
-  const sourceWord = words[0]?.source
+  const currentWord: Word | undefined = words[0]
+  const targetWord = currentWord?.target
+  const sourceWord = currentWord?.source
 
 
   async function handleInputChange(input: string) {
-    function buildSessionResults() {
+    // Defensively ensure values are valid
+    if (!currentWord || session === null) return;
+  
+    function buildSessionResults(currentWord: Word, session: number, input: string): SessionResults {
+      // Compute results
+      const word_id = currentWord.id
+      const response_time_ms = null       // Util function that takes the ref time, and current time and calculates difference. Ref time is reset whenever new word is loaded (or after word is complete - maybe loaded though for initial boundary case)
+      const answered_at = new Date().toISOString()
+      const pre_correction_input = input  // Change this to a util function that determines what their incorrect input was (e.g deduct correct word)
+      const status = "correct_first_try"  // Hard-coded - This should be a utils function that makes inference based on pre_correction_input
+      const session_position = 1          // Hard-coded - Counter for words done in session needs implemenation
+      const session_id = session
+
       // Packs the results for the word
       const wordResults: WordResults = {
-        word_id: 1,
-        response_time_ms: null,
-        answered_at: null,
-        pre_correction_input: null,
-        status: "correct_first_try",
-        session_position: 5
+        word_id,
+        response_time_ms,
+        answered_at,
+        pre_correction_input,
+        status,
+        session_position
       }
 
       // Packs the result into to sessionResults type (only one item in list for now)
       const sessionResults: SessionResults = {
-        session_id: 1,
+        session_id,
         word_results: [wordResults]
       }
 
@@ -94,7 +115,7 @@ export default function App() {
 
     // Check whether input matches the answer
     if (input === sourceWord) {
-      const sessionResults = buildSessionResults()
+      const sessionResults = buildSessionResults(currentWord, session, input)
       await sendResults(sessionResults)
       setInputText('')
       
