@@ -233,5 +233,8 @@ dist-ssr
 *.sln
 *.sw?
 
+# Claude
+.claude
+
 # Own notes
 NOTES.md

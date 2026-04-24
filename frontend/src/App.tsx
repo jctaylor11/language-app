@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import { useState } from "react"
+import { useRef } from "react"
 
 type Word = {
   id: number,
@@ -34,6 +35,11 @@ export default function App() {
   const [session, setSession] = useState<number | null>(null)
   const [words, setWords] = useState<Word[]>([])
   const [inputText, setInputText] = useState<string>('')
+  const wordShownTime = useRef<number>(Date.now())
+
+  useEffect(() => {
+    wordShownTime.current = Date.now()
+  }, [words[0]?.id])
 
   async function fetchWords(): Promise<Word[]> {
     const wordsUrl = "http://127.0.0.1:8000/words"
@@ -72,7 +78,7 @@ export default function App() {
     function buildSessionResults(currentWord: Word, session: number, input: string): SessionResults {
       // Compute results
       const word_id = currentWord.id
-      const response_time_ms = null       // Util function that takes the ref time, and current time and calculates difference. Ref time is reset whenever new word is loaded (or after word is complete - maybe loaded though for initial boundary case)
+      const response_time_ms = Date.now() - wordShownTime.current      // Util function that takes the ref time, and current time and calculates difference. Ref time is reset whenever new word is loaded (or after word is complete - maybe loaded though for initial boundary case)
       const answered_at = new Date().toISOString()
       const pre_correction_input = input  // Change this to a util function that determines what their incorrect input was (e.g deduct correct word)
       const status = "correct_first_try"  // Hard-coded - This should be a utils function that makes inference based on pre_correction_input
