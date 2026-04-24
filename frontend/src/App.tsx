@@ -35,6 +35,7 @@ export default function App() {
   const [session, setSession] = useState<number | null>(null)
   const [words, setWords] = useState<Word[]>([])
   const [inputText, setInputText] = useState<string>('')
+  const keystrokes = useRef<string>('')
   const wordShownTime = useRef<number>(Date.now())
 
   useEffect(() => {
@@ -53,7 +54,7 @@ export default function App() {
     async function fetchSession() {
       const response = await fetch(sessionUrl, {method: "POST"})
       const sessionData: SessionResponse = await response.json()
-      console.log("Data", sessionData)
+      console.log("Session", sessionData)
       setSession(sessionData.session_id)
     }
 
@@ -66,6 +67,14 @@ export default function App() {
     init()
   }, [])
 
+
+  function calcIncorrectInput(correctWord: string, allKeystrokes: string): string | null {
+    if (allKeystrokes === correctWord) {
+      return null
+    }
+    return allKeystrokes
+  }
+
   const currentWord: Word | undefined = words[0]
   const targetWord = currentWord?.target
   const sourceWord = currentWord?.source
@@ -75,12 +84,12 @@ export default function App() {
     // Defensively ensure values are valid
     if (!currentWord || session === null) return;
   
-    function buildSessionResults(currentWord: Word, session: number, input: string): SessionResults {
+    function buildSessionResults(currentWord: Word, session: number): SessionResults {
       // Compute results
       const word_id = currentWord.id
-      const response_time_ms = Date.now() - wordShownTime.current      // Util function that takes the ref time, and current time and calculates difference. Ref time is reset whenever new word is loaded (or after word is complete - maybe loaded though for initial boundary case)
+      const response_time_ms = Date.now() - wordShownTime.current      
       const answered_at = new Date().toISOString()
-      const pre_correction_input = input  // Change this to a util function that determines what their incorrect input was (e.g deduct correct word)
+      const pre_correction_input =  calcIncorrectInput(currentWord.source, keystrokes.current)
       const status = "correct_first_try"  // Hard-coded - This should be a utils function that makes inference based on pre_correction_input
       const session_position = 1          // Hard-coded - Counter for words done in session needs implemenation
       const session_id = session
@@ -121,10 +130,13 @@ export default function App() {
 
     // Check whether input matches the answer
     if (input === sourceWord) {
-      const sessionResults = buildSessionResults(currentWord, session, input)
+      const sessionResults = buildSessionResults(currentWord, session)
       await sendResults(sessionResults)
+
+      // Reset the states for new word
       setInputText('')
-      
+      keystrokes.current = ''
+
       // Remove item from array
       const newWords = words.slice(1)
 
@@ -136,6 +148,16 @@ export default function App() {
         setWords(newWords)
       }
     }
+
+  }
+
+  function handleKeyDown(key: string) {
+    // Filter out meaningless keys, replace Backspace with a clean and distinct symbol
+    if (key.length !== 1 && key !== 'Backspace') return
+    const recorded = key === 'Backspace' ? '⌫' : key
+
+    // Update the ref
+    keystrokes.current = keystrokes.current + recorded
   }
 
   return (
@@ -146,7 +168,8 @@ export default function App() {
         <input 
           type='text' 
           value={inputText}
-          onChange={(e) => handleInputChange(e.target.value)}/>
+          onChange={(e) => handleInputChange(e.target.value)}
+          onKeyDown={(e) => handleKeyDown(e.key)}/>
       </form>
     </>
   )
