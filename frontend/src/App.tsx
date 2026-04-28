@@ -37,6 +37,7 @@ export default function App() {
   const [inputText, setInputText] = useState<string>('')
   const keystrokes = useRef<string>('')
   const wordShownTime = useRef<number>(Date.now())
+  const sessionPosition = useRef<number>(1)
 
   useEffect(() => {
     wordShownTime.current = Date.now()
@@ -83,6 +84,7 @@ export default function App() {
         // Reset the states for new word
       setInputText('')
       keystrokes.current = ''
+      sessionPosition.current += 1
 
       // Remove item from array
       const newWords = words.slice(1)
@@ -111,7 +113,7 @@ export default function App() {
       status = pre_correction_input === null ? 'correct_first_try' : 'corrected'    
     }
 
-    const session_position = 1          // Hard-coded - Counter for words done in session needs implemenation
+    const session_position = sessionPosition.current         
     const session_id = session
 
     // Packs the results for the words
