@@ -37,7 +37,9 @@ export default function App() {
   const [inputText, setInputText] = useState<string>('')
   const keystrokes = useRef<string>('')
   const wordShownTime = useRef<number>(Date.now())
-  const sessionPosition = useRef<number>(1)
+
+  const storedPosition = sessionStorage.getItem('sessionPosition')
+  const sessionPosition = useRef<number>(storedPosition ? Number(storedPosition) : 1)
 
   useEffect(() => {
     wordShownTime.current = Date.now()
@@ -56,11 +58,20 @@ export default function App() {
       const response = await fetch(sessionUrl, {method: "POST"})
       const sessionData: SessionResponse = await response.json()
       console.log("Session", sessionData)
-      setSession(sessionData.session_id)
+      return sessionData.session_id
     }
 
     async function init() {    // Init function used so that fetchWords can be awaited
-      await fetchSession()
+      const storedSessionId = sessionStorage.getItem('sessionId')
+      let sessionId = storedSessionId ? Number(storedSessionId) : null
+
+      if (!sessionId) {
+        sessionId = await fetchSession()
+        sessionStorage.setItem('sessionId', String(sessionId))
+      }
+
+      setSession(sessionId)
+
       const wordBatch = await fetchWords()
       setWords(wordBatch)
     }
@@ -85,6 +96,7 @@ export default function App() {
       setInputText('')
       keystrokes.current = ''
       sessionPosition.current += 1
+      sessionStorage.setItem('sessionPosition', String(sessionPosition.current))   // sessionStorage only initialised sessionPosition on increment
 
       // Remove item from array
       const newWords = words.slice(1)
@@ -194,13 +206,11 @@ export default function App() {
     <>
       <div>{targetWord}</div>
       <div>{sourceWord}</div>
-      <form>
-        <input 
-          type='text' 
-          value={inputText}
-          onChange={(e) => handleInputChange(e.target.value)}
-          onKeyDown={(e) => handleKeyDown(e)}/>  {/* Full event object needed to disable default Tab behaviour*/}
-      </form>   
+      <input 
+        type='text' 
+        value={inputText}
+        onChange={(e) => handleInputChange(e.target.value)}
+        onKeyDown={(e) => handleKeyDown(e)}/>  {/* Full event object needed to disable default Tab behaviour*/}
     </>
   )
 }
