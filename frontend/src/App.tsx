@@ -12,9 +12,6 @@ export default function App() {
   const keystrokes = useRef<string>('')
   const wordShownTime = useRef<number>(Date.now())
   
-  const storedPosition = sessionStorage.getItem('sessionPosition')
-  const sessionPosition = useRef<number>(storedPosition ? Number(storedPosition) : 1)
-
   const currentWord: Word | undefined = words[0]
   const targetWord = currentWord?.target
   const sourceWord = currentWord?.source
@@ -41,12 +38,21 @@ export default function App() {
     init()
   }, [])
 
+  function getSessionPosition(): number {
+    const stored = sessionStorage.getItem('sessionPosition')
+    return stored ? Number(stored) : 1
+  }
+
+  function advanceSessionPosition() {
+    const newSessionPosition = getSessionPosition() + 1
+    sessionStorage.setItem('sessionPosition', String(newSessionPosition))
+  }
+
   async function advanceWord() {
     // Reset the states for new word
     setInputText('')
     keystrokes.current = ''
-    sessionPosition.current += 1
-    sessionStorage.setItem('sessionPosition', String(sessionPosition.current))   // sessionStorage only initialises sessionPosition on increment
+    advanceSessionPosition()
 
     // Remove item from array
     const newWords = words.slice(1)
@@ -65,6 +71,7 @@ export default function App() {
     const response_time_ms = Date.now() - wordShownTime.current      
     const answered_at = new Date().toISOString()
     const pre_correction_input = calcIncorrectInput(currentWord.source, keystrokes.current)
+    const session_position = getSessionPosition()
 
     let status: string
     if (skipped) {
@@ -80,7 +87,7 @@ export default function App() {
       answered_at,
       pre_correction_input,
       status,
-      session_position: sessionPosition.current
+      session_position
     }
 
     // Pack words into SessionResults (only one item in list for now)
