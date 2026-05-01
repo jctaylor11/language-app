@@ -136,14 +136,20 @@ export default function App() {
   }
 
   return (
-    <>
-      <div>{targetWord}</div>
-      <div>{sourceWord}</div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-200 gap-8 pb-48">
+      <div className="text-center">
+        <h1 className="text-4xl font-medium tracking-wide">{targetWord}</h1>
+        <p>{sourceWord}</p>
+      </div>
       <input 
         type='text' 
         value={inputText}
         onChange={(e) => handleInputChange(e.target.value)}
-        onKeyDown={(e) => handleKeyDown(e)}/>  {/* Full event object needed to disable default Tab behaviour*/}
-    </>
+        onKeyDown={(e) => handleKeyDown(e)}    /* Full event object needed to disable default Tab behaviour*/
+        className="bg-transparent border-t border-b text-center border-gray-500 outline-none w-64 text-xl"
+      />  
+    </div>
   )
 }
+
+
