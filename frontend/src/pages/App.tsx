@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useRef } from "react"
+import React, { useEffect, useState, useRef } from 'react'
+import { Link } from 'react-router'
 
-import type { Word, WordResults, SessionResults } from './types'
-import { fetchWords, fetchSession, sendResults } from "./api"
-import { calcIncorrectInput } from "./utils"
+import type { Word, WordResults, SessionResults } from '../types'
+import { fetchWords, fetchSession, sendResults } from "../api"
+import { calcIncorrectInput } from "../utils"
 
 export default function App() {
   const [session, setSession] = useState<number | null>(null)
@@ -136,18 +137,24 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-200 gap-8 pb-48">
-      <div className="text-center">
-        <h1 className="text-4xl font-medium tracking-wide">{targetWord}</h1>
-        <p>{sourceWord}</p>
+    <div className="min-h-screen bg-slate-200 flex flex-col">
+      <nav className='flex justify-end p-5'>
+        <Link to="/dashboard">Dashboard</Link>
+      </nav>
+      <div className="flex-1 flex flex-col items-center justify-center gap-8 pb-48">
+        <div className="text-center">
+          <h1 className="text-4xl font-medium tracking-wide">{targetWord}</h1>
+          <p>{sourceWord}</p>
+        </div>
+        {/* Full event object needed onKeyDown to disable default Tab behaviour*/}
+        <input 
+          type='text' 
+          value={inputText}
+          onChange={(e) => handleInputChange(e.target.value)}
+          onKeyDown={(e) => handleKeyDown(e)}    
+          className="bg-transparent border-t border-b text-center border-gray-500 outline-none w-64 text-xl"
+        />  
       </div>
-      <input 
-        type='text' 
-        value={inputText}
-        onChange={(e) => handleInputChange(e.target.value)}
-        onKeyDown={(e) => handleKeyDown(e)}    /* Full event object needed to disable default Tab behaviour*/
-        className="bg-transparent border-t border-b text-center border-gray-500 outline-none w-64 text-xl"
-      />  
     </div>
   )
 }
