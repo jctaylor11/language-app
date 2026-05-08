@@ -16,7 +16,7 @@ def get_engine():
 
     try:
         # From sqlalchemy docs: database url = dialect+driver://username:password@host:port/database
-        engine = create_engine(f"postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}")
+        engine = create_engine(f"postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}", echo=True)
         with engine.connect():  # Tests the connection
             pass
     except Exception as e:
