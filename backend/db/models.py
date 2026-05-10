@@ -50,7 +50,7 @@ class SessionResult(Base):
     word_id: Mapped[int] = mapped_column(ForeignKey("words.id"))
     response_time_ms: Mapped[int | None]
     answered_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
-    pre_correction_input: Mapped[str | None]
+    raw_keystrokes: Mapped[str | None]
     status: Mapped[ResultStatus] = mapped_column(Enum(ResultStatus, name="result_status"))
     session_position: Mapped[int]
 

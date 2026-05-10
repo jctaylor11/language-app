@@ -10,7 +10,6 @@ def seed_words(engine):
                 ('네', 'yes', 'adverb'),
                 ('아니요', 'no', 'adverb'),
                 ('물', 'water', 'noun'),
-                ('밥', 'rice / meal', 'noun'),
                 ('사람', 'person', 'noun'),
                 ('좋다', 'good', 'adjective'),
                 ('크다', 'big', 'adjective'),

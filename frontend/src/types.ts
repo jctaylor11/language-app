@@ -16,7 +16,7 @@ export type WordResults = {
   word_id: number,
   response_time_ms: number | null,
   answered_at: string | null,
-  pre_correction_input: string | null,
+  raw_keystrokes: string | null,
   status: string,
   session_position: number
 }

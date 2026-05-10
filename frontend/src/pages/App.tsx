@@ -71,14 +71,14 @@ export default function App() {
     const word_id = currentWord.id
     const response_time_ms = Date.now() - wordShownTime.current      
     const answered_at = new Date().toISOString()
-    const pre_correction_input = calcIncorrectInput(currentWord.source, keystrokes.current)
+    const raw_keystrokes = calcIncorrectInput(currentWord.source, keystrokes.current)
     const session_position = getSessionPosition()
 
     let status: string
     if (skipped) {
       status = 'skipped'
     } else {
-      status = pre_correction_input === null ? 'correct_first_try' : 'corrected'    
+      status = raw_keystrokes === null ? 'correct_first_try' : 'corrected'    
     }
 
     // Pack results for the words
@@ -86,7 +86,7 @@ export default function App() {
       word_id,
       response_time_ms,
       answered_at,
-      pre_correction_input,
+      raw_keystrokes,
       status,
       session_position
     }

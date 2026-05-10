@@ -28,7 +28,7 @@ class WordResult(BaseModel):
     word_id: int
     response_time_ms: Optional[int] = None
     answered_at: Optional[datetime] = None
-    pre_correction_input: Optional[str] = None
+    raw_keystrokes: Optional[str] = None
     status: str  # TODO: Configure enum in enum file for single source of truth and replace with Enum
     session_position: int
 
@@ -92,8 +92,8 @@ async def create_session_results(session_results: SessionResults):
     with engine.begin() as conn:
         # All response data for each word in the session batch saved
         conn.execute(text("""
-            INSERT INTO session_results (user_id, session_id, word_id, response_time_ms, answered_at, pre_correction_input, status, session_position)
-            VALUES (:user_id, :session_id, :word_id, :response_time_ms, :answered_at, :pre_correction_input, :status, :session_position)
+            INSERT INTO session_results (user_id, session_id, word_id, response_time_ms, answered_at, raw_keystrokes, status, session_position)
+            VALUES (:user_id, :session_id, :word_id, :response_time_ms, :answered_at, :raw_keystrokes, :status, :session_position)
         """), params)
 
         # Session's completed_at value is updated each flush - final update accurate logs completion
