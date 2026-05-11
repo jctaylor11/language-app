@@ -1,5 +1,8 @@
 from sqlalchemy import text
 
+from backend.db.connection import get_engine
+
+
 def seed_words(engine):
     with engine.begin() as conn:
         conn.execute(text("""
@@ -24,3 +27,8 @@ def seed_words(engine):
                 ('오늘', 'today', 'noun'),
                 ('내일', 'tomorrow', 'noun');
         """))
+
+
+if __name__ == "__main__":
+    engine = get_engine()
+    seed_words(engine)
