@@ -138,7 +138,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-200 flex flex-col">
-      <nav className='flex justify-end p-5'>
+      <nav className='flex justify-end p-5 gap-4'>
+        <Link to="/sentences">Sentences</Link>
         <Link to="/dashboard">Dashboard</Link>
       </nav>
       <div className="flex-1 flex flex-col items-center justify-center gap-8 pb-48">
