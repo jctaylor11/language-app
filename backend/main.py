@@ -83,7 +83,7 @@ async def get_word_batch():
 
 @app.post("/session-results")
 async def create_session_results(session_results: SessionResults):
-    """eSave user's response data for each word in the session batch"""
+    """Save user's response data for each word in the session batch"""
     # Hardcoded for now
     user_id = 1
 
@@ -106,4 +106,20 @@ async def create_session_results(session_results: SessionResults):
     return {"results_saved": len(session_results.word_results)} 
 
 
+@app.get("/generate-sentences")
+def get_sentences(num_words: int):
 
+    with engine.begin() as conn:
+        result = conn.execute(text("""
+            SELECT target
+            FROM words
+            JOIN user_words ON user_words.word_id = words.id
+            WHERE user_id = 1
+            ORDER BY RANDOM()
+            LIMIT :num_words
+        """), {"num_words": num_words})
+    
+    rows = result.fetchall()
+    sentence_words = [row.target for row in rows]
+
+    return {"sentence_words": sentence_words}
