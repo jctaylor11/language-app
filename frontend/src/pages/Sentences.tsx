@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+
+import { generateSentences } from '../api'
 
 
 function SentenceInput({ sentence, inputText, handleKeyDown }: { sentence: string, inputText: string, handleKeyDown: (input: string) => void}) {
@@ -19,6 +21,22 @@ export default function Sentences() {
     const [inputText, setInputText] = useState('')
 
     const sentence = "This is a placeholder for a Korean sentence"
+
+    useEffect(() => {
+        async function init() {
+            const sentences = await generateSentences(10)
+            sessionStorage.setItem('sentences', JSON.stringify(sentences))
+
+            // For testing
+            const savedSentences = sessionStorage.getItem('sentences')
+            console.log(JSON.parse(savedSentences!))
+        }
+
+        init()
+
+    }, [])
+
+
 
     function handleKeyDown(input: string) {
         setInputText(input)

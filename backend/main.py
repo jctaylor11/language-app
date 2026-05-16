@@ -6,6 +6,7 @@ from typing import Optional
 from datetime import datetime
 
 from backend.db.connection import get_engine
+from backend.llm import generate_sentences
 
 app = FastAPI()
 
@@ -106,20 +107,25 @@ async def create_session_results(session_results: SessionResults):
     return {"results_saved": len(session_results.word_results)} 
 
 
-@app.get("/generate-sentences")
-def get_sentences(num_words: int):
+@app.get("/sentences")
+def generate_sentences_endpoint(num_words: int):
+    # Hardcoded for now
+    user_id = 1
 
     with engine.begin() as conn:
         result = conn.execute(text("""
             SELECT target
             FROM words
             JOIN user_words ON user_words.word_id = words.id
-            WHERE user_id = 1
+            WHERE user_id = :user_id
             ORDER BY RANDOM()
             LIMIT :num_words
-        """), {"num_words": num_words})
+        """), {"user_id": user_id, "num_words": num_words})
     
     rows = result.fetchall()
     sentence_words = [row.target for row in rows]
 
-    return {"sentence_words": sentence_words}
+    # API request
+    sentences = generate_sentences(sentence_words)
+
+    return {"sentences": sentences}
