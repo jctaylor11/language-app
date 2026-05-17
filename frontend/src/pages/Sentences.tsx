@@ -24,8 +24,11 @@ export default function Sentences() {
 
     useEffect(() => {
         async function init() {
-            const sentences = await generateSentences(10)
-            sessionStorage.setItem('sentences', JSON.stringify(sentences))
+
+            if (!sessionStorage.getItem('sentences')) {
+                const sentences = await generateSentences(10)
+                sessionStorage.setItem('sentences', JSON.stringify(sentences))
+            }
 
             // For testing
             const savedSentences = sessionStorage.getItem('sentences')
@@ -35,8 +38,6 @@ export default function Sentences() {
         init()
 
     }, [])
-
-
 
     function handleKeyDown(input: string) {
         setInputText(input)
