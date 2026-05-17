@@ -25,3 +25,8 @@ export type SessionResults = {
   session_id: number,
   word_results: WordResults[]
 }
+
+export type SentencePair = {
+  target: string,
+  source: string,
+}

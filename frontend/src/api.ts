@@ -1,4 +1,4 @@
-import type { Word, WordsResponse, SessionResponse, SessionResults } from './types'
+import type { Word, WordsResponse, SessionResponse, SessionResults, SentencePair } from './types'
 
 const BASE_URL = "http://127.0.0.1:8000"
 
@@ -32,7 +32,7 @@ export async function sendResults(sessionResults: SessionResults): Promise<void>
   }
 }
 
-export async function generateSentences(numWords: number): Promise<string> {
+export async function generateSentences(numWords: number): Promise<SentencePair[]> {
   try {
     const sentencesUrl = `${BASE_URL}/sentences?num_words=${numWords}`
     const response = await fetch(sentencesUrl, {method: "GET"})
