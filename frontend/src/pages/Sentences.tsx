@@ -4,10 +4,14 @@ import { generateSentences } from '../api'
 import type { SentencePair } from '../types'
 
 
-function SentenceInput({ sentence, inputText, handleKeyDown }: { sentence: string, inputText: string, handleKeyDown: (input: string) => void}) {
+function SentenceCard({ sentencePair, inputText, handleKeyDown }: {sentencePair: SentencePair, inputText: string, handleKeyDown: (input: string) => void}) {
+    const targetSentence = sentencePair.target 
+    const sourceSentence = sentencePair.source
+
     return (
         <div className='flex flex-col items-center justify-center pt-60 '>
-            <h1>{sentence}</h1>
+            <h1 className='text-2xl font-medium tracking-wide'>{targetSentence}</h1>
+            <p>{sourceSentence}</p>
             <input
                 type='text'
                 className='bg-transparent border-t border-b text-center border-gray-500 outline-none w-64 text-xl'
@@ -40,15 +44,39 @@ export default function Sentences() {
 
     }, [])
 
-    console.log(sentencePairs)  // Just for testing it's been wired through
+    function advanceSentencePair() {
+        if (!sentencePairs) {
+            console.error("sentencePairs list is empty")  // Defensive, this shouldn't happen
+            return
+        }
+        
+        setInputText('')
+        // Consider whether track session position for sentences as well as words
 
+        const newSentencePairs = sentencePairs.slice(1)   
+        setSentencePairs(newSentencePairs)
+
+        // TODO: Add the fetch logic for a new batch whenever the number of items gets down to x
+    }
 
     function handleKeyDown(input: string) {
+        if (!sentencePairs) return  // Defensive
+        
         setInputText(input)
+
+        const cleanedSourceSentence = sentencePairs[0].source.toLowerCase().replace(/[^\w\s]/g,"")
+        const cleanedInput = input.toLowerCase().replace(/[^\w\s]/g,"")
+
+        if (cleanedInput == cleanedSourceSentence) {
+            advanceSentencePair()
+        }
     }
 
     if (started) {
-        return <SentenceInput sentence={sentence} inputText={inputText} handleKeyDown={handleKeyDown} />
+        if (!sentencePairs) {
+            return <div>Loading...</div>
+        }
+        return <SentenceCard sentencePair={sentencePairs[0]} inputText={inputText} handleKeyDown={handleKeyDown} />
     }
 
     return(

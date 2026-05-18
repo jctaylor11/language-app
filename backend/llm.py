@@ -3,20 +3,21 @@ from pydantic import BaseModel
 
 client = anthropic.Anthropic()
 
+class SentencesPair(BaseModel):
+    target: str
+    source: str
+
+class SentencesPackage(BaseModel):
+    sentences: list[SentencesPair]
+
+
 def generate_sentences(sentence_words: list[str]) -> str:
     vocab_string = ", ".join(sentence_words)
 
-    class SentencesPair(BaseModel):
-        target: str
-        source: str
-
-    class SentencesPackage(BaseModel):
-        sentences: list[SentencesPair]
-    
     prompt = f"""
     Generate 3 coherent Korean sentences using primarily these vocabulary words: {vocab_string}.
     Particles, basic conjugations, and connectors are allowed as needed for grammar. 
-    The sentences should sound natural and grammatically correct. 
+    The sentences should sound natural and grammatically correct. Do not start with a greeting.
     Intended for users learning Korean and seeing their learnt vocabulary in context.
 
     For each sentence:
@@ -36,8 +37,11 @@ def generate_sentences(sentence_words: list[str]) -> str:
         output_format=SentencesPackage,
     )
 
-    print(response) # Testing
-
     sentences = response.parsed_output.sentences
+
+    # For testing
+    print(f"\nSentences generated using vocab:\n{vocab_string}\n")
+    for sentence in response.parsed_output.sentences:
+        print(f"Target: {sentence.target}\nSource: {sentence.source}\n")
 
     return sentences
