@@ -57,13 +57,13 @@ export default function App() {
 
     // Remove item from array
     const newWords = words.slice(1)
+    setWords(newWords)
 
     // Append a new batch to the end of the array if it falls below threshold
     if (newWords.length <= 3) {
+      console.log("Fetching new batch of words")  // Debugging
       const newBatch = await fetchWords()
-      setWords([...newWords, ...newBatch])
-    } else {
-      setWords(newWords)
+      setWords((remainingWords) => [...remainingWords, ...newBatch])
     }
   }
 
