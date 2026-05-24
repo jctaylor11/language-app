@@ -7,6 +7,7 @@ from datetime import datetime
 
 from backend.db.connection import get_engine
 from backend.llm import generate_sentences
+from backend.enums import ResultStatus
 
 app = FastAPI()
 
@@ -30,7 +31,7 @@ class WordResult(BaseModel):
     response_time_ms: Optional[int] = None
     answered_at: Optional[datetime] = None
     raw_keystrokes: Optional[str] = None
-    status: str  # TODO: Configure enum in enum file for single source of truth and replace with Enum
+    status: ResultStatus
     session_position: int
 
 
@@ -88,7 +89,7 @@ async def create_session_results(session_results: SessionResults):
     # Hardcoded for now
     user_id = 1
 
-    params = [{"user_id": user_id, "session_id": session_results.session_id, **word_result.model_dump()} for word_result in session_results.word_results]
+    params = [{"user_id": user_id, "session_id": session_results.session_id, **word_result.model_dump(mode="json")} for word_result in session_results.word_results]
 
     with engine.begin() as conn:
         # All response data for each word in the session batch saved

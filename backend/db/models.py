@@ -1,14 +1,9 @@
-import enum
 from datetime import datetime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy import Enum, ForeignKey
 
-
-class ResultStatus(enum.Enum):
-    correct_first_try = "correct_first_try"
-    corrected = "corrected"
-    skipped = "skipped"
+from backend.enums import ResultStatus
 
 
 class Base(DeclarativeBase):
