@@ -40,6 +40,6 @@ export async function generateSentences(numWords: number): Promise<SentencePair[
     return sentencesData.sentences
   } catch (error) {
     console.error("Failed to get sentences:", error)
-    return ""
+    return []
   }
 }

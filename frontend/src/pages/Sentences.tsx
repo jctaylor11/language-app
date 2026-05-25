@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 import { generateSentences } from '../api'
 import type { SentencePair } from '../types'
+import { useQuery } from '@tanstack/react-query'
+
+const NUM_WORDS = 5
 
 
 function SentenceCard({ sentencePair, inputText, handleKeyDown }: {sentencePair: SentencePair, inputText: string, handleKeyDown: (input: string) => void}) {
@@ -24,37 +27,22 @@ function SentenceCard({ sentencePair, inputText, handleKeyDown }: {sentencePair:
 export default function Sentences() {
     const [started, setStarted] =  useState(false)
     const [inputText, setInputText] = useState('')
+    const [sentencePairsOffset, setSentencePairsOffset] = useState(0)
 
-    const [sentencePairs, setSentencePairs] = useState<SentencePair[] | null>(() => {
-        const storedSentencePairs = sessionStorage.getItem('sentencePairs')
-        return storedSentencePairs ? JSON.parse(storedSentencePairs) : null
+    const { data: sentencePairs} = useQuery({
+        queryKey: ['sentencePairs'], 
+        queryFn: () => generateSentences(NUM_WORDS)
     })
 
-    useEffect(() => {
-        async function init() {
-            if (!sentencePairs) {
-                const generatedSentencePairs = await generateSentences(10)
-                sessionStorage.setItem('sentencePairs', JSON.stringify(generatedSentencePairs))
-
-                setSentencePairs(generatedSentencePairs)
-            }
-        }
-
-        init()
-
-    }, [])
 
     function advanceSentencePair() {
         if (!sentencePairs) {
             console.error("sentencePairs list is empty")  // Defensive, this shouldn't happen
             return
         }
-        
-        setInputText('')
-        // Consider whether track session position for sentences as well as words
 
-        const newSentencePairs = sentencePairs.slice(1)   
-        setSentencePairs(newSentencePairs)
+        setInputText('')
+        setSentencePairsOffset(prev => prev + 1)
 
         // TODO: Add the fetch logic for a new batch whenever the number of items gets down to x
     }
@@ -64,10 +52,10 @@ export default function Sentences() {
         
         setInputText(input)
 
-        const cleanedSourceSentence = sentencePairs[0].source.toLowerCase().replace(/[^\w\s]/g,"")
+        const cleanedSourceSentence = sentencePairs[sentencePairsOffset].source.toLowerCase().replace(/[^\w\s]/g,"")
         const cleanedInput = input.toLowerCase().replace(/[^\w\s]/g,"")
 
-        if (cleanedInput == cleanedSourceSentence) {
+        if (cleanedInput === cleanedSourceSentence) {
             advanceSentencePair()
         }
     }
@@ -76,7 +64,7 @@ export default function Sentences() {
         if (!sentencePairs) {
             return <div>Loading...</div>
         }
-        return <SentenceCard sentencePair={sentencePairs[0]} inputText={inputText} handleKeyDown={handleKeyDown} />
+        return <SentenceCard sentencePair={sentencePairs[sentencePairsOffset]} inputText={inputText} handleKeyDown={handleKeyDown} />
     }
 
     return(
