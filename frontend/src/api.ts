@@ -17,6 +17,17 @@ export async function fetchSession(): Promise<number> {
   return sessionData.session_id
 }
 
+export async function getOrCreateSession(): Promise<number> {
+  const storedSession = sessionStorage.getItem('sessionId')
+  if (!storedSession) {
+    const fetchedSession = await fetchSession()
+    sessionStorage.setItem('sessionId', String(fetchedSession))
+    return fetchedSession
+  } else {
+    return Number(storedSession)
+  }
+}
+
 export async function sendResults(sessionResults: SessionResults): Promise<void> {
   try {
     const sessionResultsUrl = `${BASE_URL}/session-results`

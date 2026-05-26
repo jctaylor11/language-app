@@ -6,7 +6,6 @@ import { useQuery } from '@tanstack/react-query'
 
 const NUM_WORDS = 5
 
-
 function SentenceCard({ sentencePair, inputText, handleKeyDown }: {sentencePair: SentencePair, inputText: string, handleKeyDown: (input: string) => void}) {
     const targetSentence = sentencePair.target 
     const sourceSentence = sentencePair.source
@@ -33,7 +32,6 @@ export default function Sentences() {
         queryKey: ['sentencePairs'], 
         queryFn: () => generateSentences(NUM_WORDS)
     })
-
 
     function advanceSentencePair() {
         if (!sentencePairs) {

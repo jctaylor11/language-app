@@ -2,11 +2,12 @@ import React, { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router'
 
 import type { Word, WordResults, SessionResults } from '../types'
-import { fetchWords, fetchSession, sendResults } from "../api"
+import { fetchWords, getOrCreateSession, sendResults } from "../api"
 import { calcIncorrectInput } from "../utils"
 
+import { useQuery } from '@tanstack/react-query'
+
 export default function App() {
-  const [session, setSession] = useState<number | null>(null)
   const [words, setWords] = useState<Word[]>([])
   const [inputText, setInputText] = useState<string>('')
 
@@ -17,21 +18,17 @@ export default function App() {
   const targetWord = currentWord?.target
   const sourceWord = currentWord?.source
 
+  const {data: session} = useQuery({
+    queryKey: ['session'],
+    queryFn: getOrCreateSession,
+  })
+
   useEffect(() => {
     wordShownTime.current = Date.now()
   }, [words[0]?.id])
 
   useEffect(() => {
-    async function init() {    // Init function used so that fetchWords can be awaited
-      const storedSessionId = sessionStorage.getItem('sessionId')
-      let sessionId = storedSessionId ? Number(storedSessionId) : null
-
-      if (!sessionId) {
-        sessionId = await fetchSession()
-        sessionStorage.setItem('sessionId', String(sessionId))
-      }
-
-      setSession(sessionId)
+    async function init() {
       const wordBatch = await fetchWords()
       setWords(wordBatch)
     }
@@ -102,7 +99,7 @@ export default function App() {
 
   async function handleInputChange(input: string) {
     // Defensively ensure values are valid
-    if (!currentWord || session === null) return;
+    if (!currentWord || !session) return;
 
     setInputText(input)
 
@@ -115,7 +112,7 @@ export default function App() {
   }
 
   async function handleKeyDown(e: React.KeyboardEvent) {
-    if (!currentWord || session === null) return;
+    if (!currentWord || !session) return;
 
     const key = e.key
     if (key === 'Escape' || key === 'Tab') {
