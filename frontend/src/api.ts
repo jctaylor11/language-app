@@ -18,7 +18,7 @@ export async function fetchSession(): Promise<number> {
 }
 
 export async function getOrCreateSession(): Promise<number> {
-  const storedSession = sessionStorage.getItem('sessionId')
+  const storedSession = sessionStorage.getItem('sessionId')   // So sessionId persists across refresh - session defined as tab session currently
   if (!storedSession) {
     const fetchedSession = await fetchSession()
     sessionStorage.setItem('sessionId', String(fetchedSession))

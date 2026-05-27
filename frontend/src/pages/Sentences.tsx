@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 import { generateSentences } from '../api'
 import type { SentencePair } from '../types'
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery } from '@tanstack/react-query'
 
 const NUM_WORDS = 5
 
@@ -26,31 +26,32 @@ function SentenceCard({ sentencePair, inputText, handleKeyDown }: {sentencePair:
 export default function Sentences() {
     const [started, setStarted] =  useState(false)
     const [inputText, setInputText] = useState('')
-    const [sentencePairsOffset, setSentencePairsOffset] = useState(0)
+    const [sentencePairIndex, setSentencePairIndex] = useState(0)
 
-    const { data: sentencePairs} = useQuery({
+    const {data: sentencePairsData, fetchNextPage, isLoading, isFetchingNextPage} = useInfiniteQuery({
         queryKey: ['sentencePairs'], 
-        queryFn: () => generateSentences(NUM_WORDS)
-    })
+        queryFn: () => generateSentences(NUM_WORDS),
+        initialPageParam: 0,
+        getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1
+    }) 
+
+    const sentencePairs = sentencePairsData?.pages.flat() ?? []     // Pages only needed so refetch doesn't replace data
 
     function advanceSentencePair() {
-        if (!sentencePairs) {
-            console.error("sentencePairs list is empty")  // Defensive, this shouldn't happen
-            return
-        }
+        const nextIndex = sentencePairIndex + 1
 
         setInputText('')
-        setSentencePairsOffset(prev => prev + 1)
+        setSentencePairIndex(nextIndex)
 
-        // TODO: Add the fetch logic for a new batch whenever the number of items gets down to x
+        if (sentencePairs.length - nextIndex <= 3) {
+            fetchNextPage()
+        }
     }
 
     function handleKeyDown(input: string) {
-        if (!sentencePairs) return  // Defensive
-        
         setInputText(input)
 
-        const cleanedSourceSentence = sentencePairs[sentencePairsOffset].source.toLowerCase().replace(/[^\w\s]/g,"")
+        const cleanedSourceSentence = sentencePairs[sentencePairIndex].source.toLowerCase().replace(/[^\w\s]/g,"")
         const cleanedInput = input.toLowerCase().replace(/[^\w\s]/g,"")
 
         if (cleanedInput === cleanedSourceSentence) {
@@ -59,10 +60,10 @@ export default function Sentences() {
     }
 
     if (started) {
-        if (!sentencePairs) {
+        if (isLoading || (isFetchingNextPage && !sentencePairs[sentencePairIndex])) {       // && required else it will show 'loading' whenever refetch is happening in background
             return <div>Loading...</div>
         }
-        return <SentenceCard sentencePair={sentencePairs[sentencePairsOffset]} inputText={inputText} handleKeyDown={handleKeyDown} />
+        return <SentenceCard sentencePair={sentencePairs[sentencePairIndex]} inputText={inputText} handleKeyDown={handleKeyDown} />
     }
 
     return(
