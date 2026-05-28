@@ -5,36 +5,36 @@ import type { Word, WordResults, SessionResults } from '../types'
 import { fetchWords, getOrCreateSession, sendResults } from "../api"
 import { calcIncorrectInput } from "../utils"
 
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 
 export default function App() {
-  const [words, setWords] = useState<Word[]>([])
   const [inputText, setInputText] = useState<string>('')
+  const [wordIndex, setWordIndex] = useState(0)
 
   const keystrokes = useRef<string>('')
   const wordShownTime = useRef<number>(Date.now())
-  
-  const currentWord: Word | undefined = words[0]
-  const targetWord = currentWord?.target
-  const sourceWord = currentWord?.source
 
   const {data: session} = useQuery({
     queryKey: ['session'],
     queryFn: getOrCreateSession,
   })
 
+  const {data: wordsData, fetchNextPage} = useInfiniteQuery({
+    queryKey: ['words'],
+    queryFn: fetchWords,
+    initialPageParam: 0,
+    getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1
+  })
+
+  const words = wordsData?.pages.flat() ?? []
+
+  const currentWord: Word | undefined = words[wordIndex]
+  const targetWord = currentWord?.target
+  const sourceWord = currentWord?.source
+
   useEffect(() => {
     wordShownTime.current = Date.now()
-  }, [words[0]?.id])
-
-  useEffect(() => {
-    async function init() {
-      const wordBatch = await fetchWords()
-      setWords(wordBatch)
-    }
-
-    init()
-  }, [])
+  }, [words[wordIndex]?.id])
 
   function getSessionPosition(): number {
     const stored = sessionStorage.getItem('sessionPosition')
@@ -52,15 +52,13 @@ export default function App() {
     keystrokes.current = ''
     advanceSessionPosition()
 
-    // Remove item from array
-    const newWords = words.slice(1)
-    setWords(newWords)
+    // Advance the counter
+    const nextWordIndex = wordIndex + 1
+    setWordIndex(nextWordIndex)
 
-    // Append a new batch to the end of the array if it falls below threshold
-    if (newWords.length <= 3) {
-      console.log("Fetching new batch of words")  // Debugging
-      const newBatch = await fetchWords()
-      setWords((remainingWords) => [...remainingWords, ...newBatch])
+    // Append new batch if falls below threshold
+    if (words.length - nextWordIndex <= 3) {
+      fetchNextPage()
     }
   }
 

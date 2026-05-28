@@ -28,6 +28,7 @@ export default function Sentences() {
     const [inputText, setInputText] = useState('')
     const [sentencePairIndex, setSentencePairIndex] = useState(0)
 
+    // useInfiniteQuery used instead of useQuery since batches need to append not replace to accommodate prefetching in the background for sentences to be continuously shown
     const {data: sentencePairsData, fetchNextPage, isLoading, isFetchingNextPage} = useInfiniteQuery({
         queryKey: ['sentencePairs'], 
         queryFn: () => generateSentences(NUM_WORDS),
