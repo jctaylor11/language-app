@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useState, useRef } from 'react'
 import { Link } from 'react-router'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 
 import type { Word, WordResults, SessionResults } from '../types'
-import { fetchWords, getOrCreateSession, sendResults } from "../api"
-import { calcIncorrectInput } from "../utils"
+import { fetchWords, getOrCreateSession, sendResults } from '../api'
+import { calcIncorrectInput } from '../utils'
 
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 
 export default function App() {
   const [inputText, setInputText] = useState<string>('')
@@ -32,10 +32,6 @@ export default function App() {
   const targetWord = currentWord?.target
   const sourceWord = currentWord?.source
 
-  useEffect(() => {
-    wordShownTime.current = Date.now()
-  }, [words[wordIndex]?.id])
-
   function getSessionPosition(): number {
     const stored = sessionStorage.getItem('sessionPosition')
     return stored ? Number(stored) : 1
@@ -47,10 +43,12 @@ export default function App() {
   }
 
   async function advanceWord() {
-    // Reset the states for new word
     setInputText('')
     keystrokes.current = ''
     advanceSessionPosition()
+
+    // New time needed to calculate how long they took to answer
+    wordShownTime.current = Date.now()
 
     // Advance the counter
     const nextWordIndex = wordIndex + 1
@@ -96,16 +94,15 @@ export default function App() {
   }
 
   async function handleInputChange(input: string) {
-    // Defensively ensure values are valid
-    if (!currentWord || !session) return;
+    if (!currentWord || !session) return;   // Defensive
 
     setInputText(input)
 
     // Check whether input matches the answer
     if (input === sourceWord) {
       const sessionResults = buildSessionResults(currentWord, session)
+      await advanceWord()   // Timer is reset in advanceWord - therefore placed before sendResults (so its not waiting) and after sessionResults is built (else time sent immediately after started)
       await sendResults(sessionResults)
-      await advanceWord()
     }
   }
 
@@ -116,7 +113,7 @@ export default function App() {
     if (key === 'Escape' || key === 'Tab') {
       e.preventDefault()
 
-      // Skip word - Builds response before advanceWord for response time integrity considering useEffect dependency on words[0] 
+      // Build results before advancing to capture response time accurately since time updates on advanceWord
       const skipped = true
       const sessionResults = buildSessionResults(currentWord, session, skipped)
       await advanceWord()    // advanceWord before network request to priorise UI speed
@@ -133,7 +130,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-200 flex flex-col">
-      <nav className='flex justify-end p-5 gap-4'>
+      <nav className="flex justify-end p-5 gap-4">
         <Link to="/sentences">Sentences</Link>
         <Link to="/dashboard">Dashboard</Link>
       </nav>
@@ -154,5 +151,3 @@ export default function App() {
     </div>
   )
 }
-
-
