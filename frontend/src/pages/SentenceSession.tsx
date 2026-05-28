@@ -1,35 +1,34 @@
 import { useState } from 'react'
+import { useInfiniteQuery } from '@tanstack/react-query'
 
 import { generateSentences } from '../api'
 import type { SentencePair } from '../types'
-import { useInfiniteQuery } from '@tanstack/react-query'
 
 const NUM_WORDS = 5
 
-function SentenceCard({ sentencePair, inputText, handleKeyDown }: {sentencePair: SentencePair, inputText: string, handleKeyDown: (input: string) => void}) {
+function SentenceCard({ sentencePair, inputText, onInputChange }: {sentencePair: SentencePair, inputText: string, onInputChange: (input: string) => void}) {
     const targetSentence = sentencePair.target 
     const sourceSentence = sentencePair.source
 
     return (
-        <div className='flex flex-col items-center justify-center pt-60 '>
-            <h1 className='text-2xl font-medium tracking-wide'>{targetSentence}</h1>
+        <div className="flex flex-col items-center justify-center pt-60">
+            <h1 className="text-2xl font-medium tracking-wide">{targetSentence}</h1>
             <p>{sourceSentence}</p>
             <input
-                type='text'
-                className='bg-transparent border-t border-b text-center border-gray-500 outline-none w-64 text-xl'
+                type="text"
+                className="bg-transparent border-t border-b text-center border-gray-500 outline-none w-64 text-xl"
                 value={inputText}
-                onChange={(e) => handleKeyDown(e.target.value)}
+                onChange={(e) => onInputChange(e.target.value)}
             />
         </div>
     )}
 
-export default function Sentences() {
+export default function SentenceSession() {
     const [started, setStarted] =  useState(false)
     const [inputText, setInputText] = useState('')
     const [sentencePairIndex, setSentencePairIndex] = useState(0)
 
-    // useInfiniteQuery used instead of useQuery since batches need to append not replace to accommodate prefetching in the background for sentences to be continuously shown
-    const {data: sentencePairsData, fetchNextPage, isLoading, isFetchingNextPage} = useInfiniteQuery({
+    const {data: sentencePairsData, fetchNextPage, isLoading, isFetchingNextPage} = useInfiniteQuery({  // useInfiniteQuery appends batches instead of replace on refetch
         queryKey: ['sentencePairs'], 
         queryFn: () => generateSentences(NUM_WORDS),
         initialPageParam: 0,
@@ -49,7 +48,7 @@ export default function Sentences() {
         }
     }
 
-    function handleKeyDown(input: string) {
+    function handleInputChange(input: string) {
         setInputText(input)
 
         const cleanedSourceSentence = sentencePairs[sentencePairIndex].source.toLowerCase().replace(/[^\w\s]/g,"")
@@ -64,12 +63,12 @@ export default function Sentences() {
         if (isLoading || (isFetchingNextPage && !sentencePairs[sentencePairIndex])) {       // && required else it will show 'loading' whenever refetch is happening in background
             return <div>Loading...</div>
         }
-        return <SentenceCard sentencePair={sentencePairs[sentencePairIndex]} inputText={inputText} handleKeyDown={handleKeyDown} />
+        return <SentenceCard sentencePair={sentencePairs[sentencePairIndex]} inputText={inputText} onInputChange={handleInputChange} />
     }
 
     return(
         <div className="flex items-center justify-center pt-60">
-            <button onClick={() => setStarted(true)} className='border px-6 py-1 rounded cursor-pointer hover:bg-gray-100 active:bg-gray-200'>Generate Sentences</button>
+            <button onClick={() => setStarted(true)} className="border px-6 py-1 rounded cursor-pointer hover:bg-gray-100 active:bg-gray-200">Generate Sentences</button>
         </div>
     )
 }

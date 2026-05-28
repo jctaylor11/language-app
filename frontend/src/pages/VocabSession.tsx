@@ -6,8 +6,28 @@ import type { Word, WordResults, SessionResults } from '../types'
 import { fetchWords, getOrCreateSession, sendResults } from '../api'
 import { calcIncorrectInput } from '../utils'
 
+function WordCard({ wordPair, inputText, onKeyDown, onInputChange }: {wordPair: Word, inputText: string, onKeyDown: (e: React.KeyboardEvent) => void, onInputChange: (value: string) => void}) {
+  const targetWord = wordPair.target
+  const sourceWord = wordPair.source
 
-export default function App() {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center gap-8 pb-48">
+    <div className="text-center">
+      <h1 className="text-4xl font-medium tracking-wide">{targetWord}</h1>
+      <p>{sourceWord}</p>
+    </div>
+    {/* Full event object needed onKeyDown to disable default Tab behaviour*/}
+    <input 
+      type="text"
+      value={inputText}
+      onChange={(e) => onInputChange(e.target.value)}
+      onKeyDown={onKeyDown}    // For non-value keys (esc, tab) and keystroke history recording
+      className="bg-transparent border-t border-b text-center border-gray-500 outline-none w-64 text-xl"
+    />  
+  </div>
+)}
+
+export default function VocabSession() {
   const [inputText, setInputText] = useState<string>('')
   const [wordIndex, setWordIndex] = useState(0)
 
@@ -23,14 +43,13 @@ export default function App() {
     queryKey: ['words'],
     queryFn: fetchWords,
     initialPageParam: 0,
-    getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1
+    getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
+    staleTime: Infinity   // Prevent background refetch mid-session (e.g window refocus)
   })
 
   const words = wordsData?.pages.flat() ?? []
 
   const currentWord: Word | undefined = words[wordIndex]
-  const targetWord = currentWord?.target
-  const sourceWord = currentWord?.source
 
   function getSessionPosition(): number {
     const stored = sessionStorage.getItem('sessionPosition')
@@ -99,7 +118,7 @@ export default function App() {
     setInputText(input)
 
     // Check whether input matches the answer
-    if (input === sourceWord) {
+    if (input === currentWord.source) {
       const sessionResults = buildSessionResults(currentWord, session)
       await advanceWord()   // Timer is reset in advanceWord - therefore placed before sendResults (so its not waiting) and after sessionResults is built (else time sent immediately after started)
       await sendResults(sessionResults)
@@ -128,26 +147,19 @@ export default function App() {
     keystrokes.current = keystrokes.current + recorded
   }
 
+  if (!currentWord) {
+    return <div>Loading...</div>
+  }
+
   return (
     <div className="min-h-screen bg-slate-200 flex flex-col">
       <nav className="flex justify-end p-5 gap-4">
         <Link to="/sentences">Sentences</Link>
         <Link to="/dashboard">Dashboard</Link>
       </nav>
-      <div className="flex-1 flex flex-col items-center justify-center gap-8 pb-48">
-        <div className="text-center">
-          <h1 className="text-4xl font-medium tracking-wide">{targetWord}</h1>
-          <p>{sourceWord}</p>
-        </div>
-        {/* Full event object needed onKeyDown to disable default Tab behaviour*/}
-        <input 
-          type='text' 
-          value={inputText}
-          onChange={(e) => handleInputChange(e.target.value)}
-          onKeyDown={(e) => handleKeyDown(e)}    
-          className="bg-transparent border-t border-b text-center border-gray-500 outline-none w-64 text-xl"
-        />  
-      </div>
+      <WordCard wordPair={currentWord} inputText={inputText} onKeyDown={handleKeyDown} onInputChange={handleInputChange}/>
     </div>
   )
 }
+
+
