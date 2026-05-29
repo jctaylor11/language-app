@@ -1,8 +1,8 @@
-import type { Word, WordsResponse, SessionResponse, SessionResults, SentencePair } from './types'
+import type { WordPair, WordsResponse, SessionResponse, SessionResults, SentencePair } from './types'
 
 const BASE_URL = "http://127.0.0.1:8000"
 
-export async function fetchWords(): Promise<Word[]> {
+export async function fetchWords(): Promise<WordPair[]> {
   const wordsUrl = `${BASE_URL}/words`
   const response = await fetch(wordsUrl, {method: "GET"})
   const wordsData: WordsResponse = await response.json()

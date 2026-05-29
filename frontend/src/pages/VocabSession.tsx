@@ -2,11 +2,11 @@ import React, { useState, useRef } from 'react'
 import { Link } from 'react-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 
-import type { Word, WordResults, SessionResults } from '../types'
+import type { WordPair, WordResults, SessionResults } from '../types'
 import { fetchWords, getOrCreateSession, sendResults } from '../api'
 import { calcIncorrectInput } from '../utils'
 
-function WordCard({ wordPair, inputText, onKeyDown, onInputChange }: {wordPair: Word, inputText: string, onKeyDown: (e: React.KeyboardEvent) => void, onInputChange: (value: string) => void}) {
+function WordCard({ wordPair, inputText, onKeyDown, onInputChange }: {wordPair: WordPair, inputText: string, onKeyDown: (e: React.KeyboardEvent) => void, onInputChange: (value: string) => void}) {
   const targetWord = wordPair.target
   const sourceWord = wordPair.source
 
@@ -49,7 +49,7 @@ export default function VocabSession() {
 
   const words = wordsData?.pages.flat() ?? []
 
-  const currentWord: Word | undefined = words[wordIndex]
+  const currentWord: WordPair | undefined = words[wordIndex]
 
   function getSessionPosition(): number {
     const stored = sessionStorage.getItem('sessionPosition')
@@ -79,7 +79,7 @@ export default function VocabSession() {
     }
   }
 
-  function buildSessionResults(currentWord: Word, session: number, skipped: boolean = false): SessionResults {
+  function buildSessionResults(currentWord: WordPair, session: number, skipped: boolean = false): SessionResults {
     const word_id = currentWord.id
     const response_time_ms = Date.now() - wordShownTime.current      
     const answered_at = new Date().toISOString()

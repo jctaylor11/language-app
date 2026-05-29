@@ -1,11 +1,11 @@
-export type Word = {
+export type WordPair = {
   id: number,
   target: string,
   source: string
 }
 
 export type WordsResponse = {
-  word_batch: Word[]
+  word_batch: WordPair[]
 }
 
 export type SessionResponse = {
