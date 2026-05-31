@@ -1,11 +1,11 @@
-from sqlalchemy import text
+from sqlalchemy import text, insert
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
 
 from backend.db.connection import get_engine
+from backend.db.models import Sentence
 from backend.llm import generate_sentences
 from backend.enums import ResultStatus
 
@@ -28,9 +28,9 @@ engine = get_engine()
 
 class WordResult(BaseModel):
     word_id: int
-    response_time_ms: Optional[int] = None
-    answered_at: Optional[datetime] = None
-    raw_keystrokes: Optional[str] = None
+    response_time_ms: int | None = None
+    answered_at: datetime | None = None
+    raw_keystrokes: str | None = None
     status: ResultStatus
     session_position: int
 
@@ -123,10 +123,17 @@ def generate_sentences_endpoint(num_words: int):
             LIMIT :num_words
         """), {"user_id": user_id, "num_words": num_words})
     
-    rows = result.fetchall()
+        rows = result.fetchall()
+
     sentence_words = [row.target for row in rows]
 
     # API request
     sentences = generate_sentences(sentence_words)
 
-    return {"sentences": sentences}
+    with engine.begin() as conn:
+        result = conn.execute(insert(Sentence).returning(Sentence.id, Sentence.target, Sentence.source),    # Core with expression language used to handle multi-rows
+            [{"target": s.target, "source": s.source} for s in sentences])
+
+        rows = result.fetchall()
+
+    return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in rows]}
