@@ -56,3 +56,12 @@ class UserWord(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
     word_id: Mapped[int] = mapped_column(ForeignKey("words.id"), primary_key=True)
     added_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default="now()")
+
+
+class Sentence(Base):
+    __tablename__ = "sentences"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    target: Mapped[str] = mapped_column(unique=True)
+    source: Mapped[str]
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default="now()")
