@@ -8,6 +8,7 @@ from backend.db.connection import get_engine
 from backend.db.models import Sentence
 from backend.llm import generate_sentences
 from backend.enums import ResultStatus
+from backend.lemmatiser import extract_lemmas
 
 app = FastAPI()
 
@@ -130,10 +131,18 @@ def generate_sentences_endpoint(num_words: int):
     # API request
     sentences = generate_sentences(sentence_words)
 
+    # Lemmas are needed as a standard form to reference vocab table (citation form)
+    for sentence in sentences:
+        sentence.lemmas = extract_lemmas(sentence.target)
+
     with engine.begin() as conn:
         result = conn.execute(insert(Sentence).returning(Sentence.id, Sentence.target, Sentence.source),    # Core with expression language used to handle multi-rows
             [{"target": s.target, "source": s.source} for s in sentences])
 
         rows = result.fetchall()
+
+        # Query database for set of lemmas that exist in vocab database (citation form) - get their IDs
+        # Map the setnence words to the valid word IDs (ignoring lemma words which do not have an ID - they are not in vocab vault)
+        # As a batch - insert the word IDs in setnence_words: all word_ids for each sentence_id
 
     return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in rows]}

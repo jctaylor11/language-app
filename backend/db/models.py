@@ -65,3 +65,10 @@ class Sentence(Base):
     target: Mapped[str] = mapped_column(unique=True)
     source: Mapped[str]
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default="now()")
+
+
+class SentenceWord(Base):
+    __tablename__ = "sentence_words"
+
+    sentence_id: Mapped[int] = mapped_column(ForeignKey("sentences.id", ondelete="CASCADE"), primary_key=True)
+    word_id: Mapped[int] = mapped_column(ForeignKey("words.id", ondelete="CASCADE"), primary_key=True)

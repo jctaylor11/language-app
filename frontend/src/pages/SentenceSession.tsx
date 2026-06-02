@@ -48,6 +48,7 @@ export default function SentenceSession() {
     queryFn: () => generateSentences(NUM_WORDS),
     initialPageParam: 0,
     getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
+    staleTime: Infinity, // Prevent background refetching mid-session
   });
 
   const sentencePairs = sentencePairsData?.pages.flat() ?? []; // Pages only needed so refetch doesn't replace data

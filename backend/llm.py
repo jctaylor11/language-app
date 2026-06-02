@@ -1,12 +1,13 @@
 import anthropic
 import time
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 client = anthropic.Anthropic()
 
 class SentencePair(BaseModel):
     target: str
     source: str
+    lemmas: list[str] = []  # Needs default since initally empty
 
 class SentencePackage(BaseModel):
     sentences: list[SentencePair]
