@@ -135,13 +135,29 @@ def generate_sentences_endpoint(num_words: int):
     for sentence in sentences:
         sentence.lemmas = extract_lemmas(sentence.target)
 
+    # Collate all lemmas for single database query to get word IDs
+    all_lemmas_in_sentence = set()
+    for sentence in sentences:
+        for lemma in sentence.lemmas:
+            all_lemmas_in_sentence.add(lemma)
+    all_lemmas_in_sentence = list(all_lemmas_in_sentence)
+
     with engine.begin() as conn:
         result = conn.execute(insert(Sentence).returning(Sentence.id, Sentence.target, Sentence.source),    # Core with expression language used to handle multi-rows
             [{"target": s.target, "source": s.source} for s in sentences])
 
         rows = result.fetchall()
 
-        # Query database for set of lemmas that exist in vocab database (citation form) - get their IDs
+        # Word IDs are queried so the the words corresponding to each sentence can be inserted into sentence_words table
+        result = conn.execute(text("""
+            SELECT id, target FROM words
+            WHERE target = ANY(:lemmas)
+            """), {"lemmas": all_lemmas_in_sentence})
+
+        lemma_to_word_id = {row.target: row.id for row in result}
+
+        print(lemma_to_word_id)
+
         # Map the setnence words to the valid word IDs (ignoring lemma words which do not have an ID - they are not in vocab vault)
         # As a batch - insert the word IDs in setnence_words: all word_ids for each sentence_id
 
