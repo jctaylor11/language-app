@@ -154,11 +154,20 @@ def generate_sentences_endpoint(num_words: int):
             WHERE target = ANY(:lemmas)
             """), {"lemmas": all_lemmas_in_sentence})
 
+        # Mapping lemmas to the word ID so we can map which words are in each sentence, reference in citation form
         lemma_to_word_id = {row.target: row.id for row in result}
 
-        print(lemma_to_word_id)
+        # Assembling list of row objects to insert in sentence_words table
+        sentence_word_mappings = []
+        for row, sentence in zip(rows, sentences):  # Zipped to give access to both sentence IDs (in row) and sentence lemmas (in sentence) in each iteration
+            for lemma in sentence.lemmas:           
+                if lemma in lemma_to_word_id:       # Sentence lemmas may not all be in vocab table (hence will have no ID)
+                    sentence_word_mappings.append({"sentence_id": row.id, "word_id": lemma_to_word_id[lemma]})
 
-        # Map the setnence words to the valid word IDs (ignoring lemma words which do not have an ID - they are not in vocab vault)
-        # As a batch - insert the word IDs in setnence_words: all word_ids for each sentence_id
+        # Record which word IDs are in each sentence to track which words have been reviewed by the user when they review each sentence
+        conn.execute(text("""
+            INSERT INTO sentence_words (sentence_id, word_id)
+            VALUES (:sentence_id, :word_id)
+        """), sentence_word_mappings)
 
     return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in rows]}
