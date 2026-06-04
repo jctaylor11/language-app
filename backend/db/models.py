@@ -64,6 +64,7 @@ class Sentence(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     target: Mapped[str] = mapped_column(unique=True)
     source: Mapped[str]
+    lemma_count: Mapped[int]
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default="now()")
 
 

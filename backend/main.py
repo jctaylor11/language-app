@@ -144,7 +144,7 @@ def generate_sentences_endpoint(num_words: int):
 
     with engine.begin() as conn:
         result = conn.execute(insert(Sentence).returning(Sentence.id, Sentence.target, Sentence.source),    # Core with expression language used to handle multi-rows
-            [{"target": s.target, "source": s.source} for s in sentences])
+            [{"target": sentence.target, "source": sentence.source, "lemma_count": len(sentence.lemmas)} for sentence in sentences])
 
         rows = result.fetchall()
 
@@ -168,6 +168,7 @@ def generate_sentences_endpoint(num_words: int):
         conn.execute(text("""
             INSERT INTO sentence_words (sentence_id, word_id)
             VALUES (:sentence_id, :word_id)
+            ON CONFLICT DO NOTHING
         """), sentence_word_mappings)
 
     return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in rows]}
