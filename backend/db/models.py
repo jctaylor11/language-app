@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import TIMESTAMP
-from sqlalchemy import Enum, ForeignKey
+from sqlalchemy import Enum, ForeignKey, func
 
 from backend.enums import ResultStatus
 
@@ -24,7 +24,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(unique=True)
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default="now()")
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 
 
 class Session(Base):
@@ -55,7 +55,7 @@ class UserWord(Base):
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
     word_id: Mapped[int] = mapped_column(ForeignKey("words.id"), primary_key=True)
-    added_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default="now()")
+    added_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 
 
 class Sentence(Base):
@@ -65,7 +65,7 @@ class Sentence(Base):
     target: Mapped[str] = mapped_column(unique=True)
     source: Mapped[str]
     lemma_count: Mapped[int]
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default="now()")
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 
 
 class SentenceWord(Base):
@@ -73,3 +73,13 @@ class SentenceWord(Base):
 
     sentence_id: Mapped[int] = mapped_column(ForeignKey("sentences.id", ondelete="CASCADE"), primary_key=True)
     word_id: Mapped[int] = mapped_column(ForeignKey("words.id", ondelete="CASCADE"), primary_key=True)
+
+
+class UserSentence(Base):
+    __tablename__ = "user_sentences"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    sentence_id: Mapped[int] = mapped_column(ForeignKey("sentences.id", ondelete="CASCADE"))
+    seen_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+
