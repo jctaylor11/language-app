@@ -42,6 +42,11 @@ class SessionResults(BaseModel):
     word_results: list[WordResult]
 
 
+class UserSentence(BaseModel):
+    user_id: int
+    sentence_id: int
+
+
 @app.post("/sessions")
 async def create_session():
     """Create new session and return session ID to client"""
@@ -172,3 +177,15 @@ def generate_sentences_endpoint(num_words: int):
         """), sentence_word_mappings)
 
     return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in rows]}
+
+
+@app.post("/user_sentences")
+def add_user_sentences(payload: UserSentence):      # TODO: batch these and send via beacon on page close
+    with engine.begin() as conn:
+        conn.execute(text("""
+            INSERT INTO user_sentences (user_id, sentence_id)
+            VALUES (:user_id, :sentence_id)
+        """), {"user_id": payload.user_id, "sentence_id": payload.sentence_id})
+
+    return {"user_sentences_saved": payload.sentence_id}
+

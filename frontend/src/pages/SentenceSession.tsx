@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
-import { generateSentences } from "../api";
+import { generateSentences, addUserSentence } from "../api";
 import type { SentencePair } from "../types";
 
 const NUM_WORDS = 5;
@@ -73,7 +73,9 @@ export default function SentenceSession() {
     const cleanedInput = input.toLowerCase().replace(/[^\w\s]/g, "");
 
     if (cleanedInput === cleanedSourceSentence) {
-      advanceSentencePair();
+      const completedSentenceId = sentencePairs[sentencePairIndex].id; // Need to save the value before its incremented in advanceSentencePair
+      advanceSentencePair(); // Placed before addUserSentence to prioritise what the user sees
+      addUserSentence(1, completedSentenceId); // ID hardcoded for development - updated when auth is implemented
     }
   }
 
