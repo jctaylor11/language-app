@@ -3,6 +3,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { generateSentences, addUserSentence } from "../api";
 import type { SentencePair } from "../types";
+import { DEV_USER_ID } from "../config";
 
 const NUM_WORDS = 5;
 
@@ -45,7 +46,7 @@ export default function SentenceSession() {
   } = useInfiniteQuery({
     // useInfiniteQuery appends batches instead of replace on refetch
     queryKey: ["sentencePairs"],
-    queryFn: () => generateSentences(NUM_WORDS),
+    queryFn: () => generateSentences(DEV_USER_ID, NUM_WORDS),
     initialPageParam: 0,
     getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
     staleTime: Infinity, // Prevent background refetching mid-session
@@ -75,7 +76,8 @@ export default function SentenceSession() {
     if (cleanedInput === cleanedSourceSentence) {
       const completedSentenceId = sentencePairs[sentencePairIndex].id; // Need to save the value before its incremented in advanceSentencePair
       advanceSentencePair(); // Placed before addUserSentence to prioritise what the user sees
-      addUserSentence(1, completedSentenceId); // ID hardcoded for development - updated when auth is implemented
+      // Consider awaiting (investigate any race condition)
+      addUserSentence(DEV_USER_ID, completedSentenceId); // ID hardcoded for development - updated when auth is implemented
     }
   }
 

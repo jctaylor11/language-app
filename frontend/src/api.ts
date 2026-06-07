@@ -8,25 +8,25 @@ import type {
 
 const BASE_URL = "http://127.0.0.1:8000";
 
-export async function fetchWords(): Promise<WordPair[]> {
-  const wordsUrl = `${BASE_URL}/words`;
+export async function fetchWords(userId: number): Promise<WordPair[]> {
+  const wordsUrl = `${BASE_URL}/words?user_id=${userId}`;
   const response = await fetch(wordsUrl, { method: "GET" });
   const wordsData: WordsResponse = await response.json();
   return wordsData.word_batch;
 }
 
-export async function fetchSession(): Promise<number> {
-  const sessionUrl = `${BASE_URL}/sessions`;
+export async function fetchSession(userId: number): Promise<number> {
+  const sessionUrl = `${BASE_URL}/sessions?user_id=${userId}`;
   const response = await fetch(sessionUrl, { method: "POST" });
   const sessionData: SessionResponse = await response.json();
   console.log("Session", sessionData);
   return sessionData.session_id;
 }
 
-export async function getOrCreateSession(): Promise<number> {
+export async function getOrCreateSession(userId: number): Promise<number> {
   const storedSession = sessionStorage.getItem("sessionId"); // So sessionId persists across refresh - session defined as tab session currently
   if (!storedSession) {
-    const fetchedSession = await fetchSession();
+    const fetchedSession = await fetchSession(userId);
     sessionStorage.setItem("sessionId", String(fetchedSession));
     return fetchedSession;
   } else {
@@ -35,10 +35,11 @@ export async function getOrCreateSession(): Promise<number> {
 }
 
 export async function sendResults(
+  userId: number,
   sessionResults: SessionResults,
 ): Promise<void> {
   try {
-    const sessionResultsUrl = `${BASE_URL}/session-results`;
+    const sessionResultsUrl = `${BASE_URL}/session-results?user_id=${userId}`;
     const response = await fetch(sessionResultsUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -52,10 +53,11 @@ export async function sendResults(
 }
 
 export async function generateSentences(
+  userId: number,
   numWords: number,
 ): Promise<SentencePair[]> {
   try {
-    const sentencesUrl = `${BASE_URL}/sentences?num_words=${numWords}`;
+    const sentencesUrl = `${BASE_URL}/sentences?user_id=${userId}&num_words=${numWords}`;
     const response = await fetch(sentencesUrl, { method: "GET" });
     const sentencesData = await response.json();
     return sentencesData.sentences;

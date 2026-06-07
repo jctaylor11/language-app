@@ -48,11 +48,8 @@ class UserSentence(BaseModel):
 
 
 @app.post("/sessions")
-async def create_session():
+async def create_session(user_id: int):
     """Create new session and return session ID to client"""
-    # Hardcode the user_id for now until auth added later
-    user_id = 1
-
     # Create new entry in sessions
     with engine.begin() as conn:
         result = conn.execute(text("""
@@ -67,11 +64,8 @@ async def create_session():
 
 
 @app.get("/words")
-async def get_word_batch():
+async def get_word_batch(user_id: int):
     """Fetch batch of words to show to user"""
-    # Hardcode for now, update after auth
-    user_id = 1
-
     # Fetch a batch of 5 words from database
     with engine.begin() as conn:
         result = conn.execute(text("""
@@ -90,10 +84,8 @@ async def get_word_batch():
 
 
 @app.post("/session-results")
-async def create_session_results(session_results: SessionResults):
+async def create_session_results(user_id: int, session_results: SessionResults):
     """Save user's response data for each word in the session batch"""
-    # Hardcoded for now
-    user_id = 1
 
     params = [{"user_id": user_id, "session_id": session_results.session_id, **word_result.model_dump(mode="json")} for word_result in session_results.word_results]
 
@@ -115,11 +107,8 @@ async def create_session_results(session_results: SessionResults):
 
 
 @app.get("/sentences")
-def get_sentence_batch(num_words: int):
-    # Hardcoded for now
-    user_id = 1
-
-    # TODO: Extract this to a get_eligible_sentences function that returns the rows. The rows are procesed to applicable shape
+def get_sentence_batch(user_id: int, num_words: int):
+    # TODO: Extract this (along with others) to a get_eligible_sentences function that returns the rows. The rows are procesed to applicable shape
     # Will get many more sentences (limit 50) than LLM because querying DB is free, compared to querying LLM
     with engine.begin() as conn: 
         eligible_sentences = conn.execute(text("""
@@ -131,7 +120,7 @@ def get_sentence_batch(num_words: int):
             WHERE us.sentence_id = s.id
             AND us.user_id = :user_id
         )
-        LIMIT 50    -- Fetch many eligibile in one batch for the session since free from database (rather than LLM)
+        LIMIT 50    -- Fetch many eligible in one batch for the session since free from database (rather than LLM)
         """), {"user_id": user_id}).fetchall()
 
     if len(eligible_sentences) > 3:
