@@ -115,9 +115,27 @@ async def create_session_results(session_results: SessionResults):
 
 
 @app.get("/sentences")
-def generate_sentences_endpoint(num_words: int):
+def get_sentence_batch(num_words: int):
     # Hardcoded for now
     user_id = 1
+
+    # TODO: Extract this to a get_eligible_sentences function that returns the rows. The rows are procesed to applicable shape
+    # Will get many more sentences (limit 50) than LLM because querying DB is free, compared to querying LLM
+    with engine.begin() as conn: 
+        eligible_sentences = conn.execute(text("""
+        SELECT s.id, s.target, s.source
+        FROM sentences s
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM user_sentences us
+            WHERE us.sentence_id = s.id
+            AND us.user_id = :user_id
+        )
+        LIMIT 50    -- Fetch many eligibile in one batch for the session since free from database (rather than LLM)
+        """), {"user_id": user_id}).fetchall()
+
+    if len(eligible_sentences) > 3:
+        return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in eligible_sentences]}
 
     with engine.begin() as conn:
         result = conn.execute(text("""
