@@ -36,8 +36,8 @@ class Session(Base):
     completed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
 
 
-class SessionResult(Base):
-    __tablename__ = "session_results"
+class VocabResult(Base):
+    __tablename__ = "vocab_results"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
@@ -75,6 +75,7 @@ class SentenceWord(Base):
     word_id: Mapped[int] = mapped_column(ForeignKey("words.id", ondelete="CASCADE"), primary_key=True)
 
 
+# Note - If having sentence_results, this is a denormalised - acceptable for query convenience though
 class UserSentence(Base):
     __tablename__ = "user_sentences"
 

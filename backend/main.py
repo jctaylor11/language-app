@@ -36,8 +36,7 @@ class WordResult(BaseModel):
     session_position: int
 
 
-# For insert_session_data input
-class SessionResults(BaseModel):
+class VocabResults(BaseModel):
     session_id: int
     word_results: list[WordResult]
 
@@ -83,16 +82,16 @@ async def get_word_batch(user_id: int):
     return {"word_batch": word_batch}
 
 
-@app.post("/session-results")
-async def create_session_results(user_id: int, session_results: SessionResults):
+@app.post("/vocab-results")
+async def create_vocab_results(user_id: int, vocab_results: VocabResults):
     """Save user's response data for each word in the session batch"""
 
-    params = [{"user_id": user_id, "session_id": session_results.session_id, **word_result.model_dump(mode="json")} for word_result in session_results.word_results]
+    params = [{"user_id": user_id, "session_id": vocab_results.session_id, **word_result.model_dump(mode="json")} for word_result in vocab_results.word_results]
 
     with engine.begin() as conn:
         # All response data for each word in the session batch saved
         conn.execute(text("""
-            INSERT INTO session_results (user_id, session_id, word_id, response_time_ms, answered_at, raw_keystrokes, status, session_position)
+            INSERT INTO vocab_results (user_id, session_id, word_id, response_time_ms, answered_at, raw_keystrokes, status, session_position)
             VALUES (:user_id, :session_id, :word_id, :response_time_ms, :answered_at, :raw_keystrokes, :status, :session_position)
         """), params)
 
@@ -101,9 +100,9 @@ async def create_session_results(user_id: int, session_results: SessionResults):
             UPDATE sessions
             SET completed_at = NOW()
             WHERE id = :session_id
-        """), {"session_id": session_results.session_id})
+        """), {"session_id": vocab_results.session_id})
     
-    return {"results_saved": len(session_results.word_results)} 
+    return {"results_saved": len(vocab_results.word_results)} 
 
 
 @app.get("/sentences")

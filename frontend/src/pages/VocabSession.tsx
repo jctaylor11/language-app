@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
-import type { WordPair, WordResults, SessionResults } from "../types";
+import type { WordPair, WordResults, VocabResults } from "../types";
 import { fetchWords, getOrCreateSession, sendResults } from "../api";
 import { calcIncorrectInput } from "../utils";
 import { DEV_USER_ID } from "../config";
@@ -90,11 +90,11 @@ export default function VocabSession() {
     }
   }
 
-  function buildSessionResults(
+  function buildVocabResults(
     currentWord: WordPair,
     session: number,
     skipped: boolean = false,
-  ): SessionResults {
+  ): VocabResults {
     const word_id = currentWord.id;
     const response_time_ms = Date.now() - wordShownTime.current;
     const answered_at = new Date().toISOString();
@@ -111,7 +111,7 @@ export default function VocabSession() {
       status = raw_keystrokes === null ? "correct_first_try" : "corrected";
     }
 
-    // Pack results for the words
+    // Pack results for the words into one type
     const wordResults: WordResults = {
       word_id,
       response_time_ms,
@@ -121,13 +121,13 @@ export default function VocabSession() {
       session_position,
     };
 
-    // Pack words into SessionResults (only one item in list for now)
-    const sessionResults: SessionResults = {
+    // Pack multiple results for the words into one type to send over api
+    const vocabResults: VocabResults = {
       session_id: session,
       word_results: [wordResults],
     };
 
-    return sessionResults;
+    return vocabResults;
   }
 
   async function handleInputChange(input: string) {
@@ -137,9 +137,9 @@ export default function VocabSession() {
 
     // Check whether input matches the answer
     if (input === currentWord.source) {
-      const sessionResults = buildSessionResults(currentWord, session);
-      await advanceWord(); // Timer is reset in advanceWord - therefore placed before sendResults (so its not waiting) and after sessionResults is built (else time sent immediately after started)
-      await sendResults(DEV_USER_ID, sessionResults);
+      const vocabResults = buildVocabResults(currentWord, session);
+      await advanceWord(); // Timer is reset in advanceWord - therefore placed before sendResults (so its not waiting) and after vocabResults is built (else time sent immediately after started)
+      await sendResults(DEV_USER_ID, vocabResults);
     }
   }
 
@@ -152,9 +152,9 @@ export default function VocabSession() {
 
       // Build results before advancing to capture response time accurately since time updates on advanceWord
       const skipped = true;
-      const sessionResults = buildSessionResults(currentWord, session, skipped);
+      const vocabResults = buildVocabResults(currentWord, session, skipped);
       await advanceWord(); // advanceWord before network request to priorise UI speed
-      await sendResults(DEV_USER_ID, sessionResults);
+      await sendResults(DEV_USER_ID, vocabResults);
     }
 
     // Filter out meaningless keys, replace Backspace with a clean and distinct symbol

@@ -21,7 +21,7 @@ export type WordResults = {
   session_position: number;
 };
 
-export type SessionResults = {
+export type VocabResults = {
   session_id: number;
   word_results: WordResults[];
 };

@@ -2,7 +2,7 @@ import type {
   WordPair,
   WordsResponse,
   SessionResponse,
-  SessionResults,
+  VocabResults,
   SentencePair,
 } from "./types";
 
@@ -36,17 +36,17 @@ export async function getOrCreateSession(userId: number): Promise<number> {
 
 export async function sendResults(
   userId: number,
-  sessionResults: SessionResults,
+  vocabResults: VocabResults,
 ): Promise<void> {
   try {
-    const sessionResultsUrl = `${BASE_URL}/session-results?user_id=${userId}`;
-    const response = await fetch(sessionResultsUrl, {
+    const vocabResultsUrl = `${BASE_URL}/vocab-results?user_id=${userId}`;
+    const response = await fetch(vocabResultsUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(sessionResults),
+      body: JSON.stringify(vocabResults),
     });
-    const sessionResultsData = await response.json();
-    console.log("POST response: ", response.status, sessionResultsData);
+    const vocabResultsData = await response.json();
+    console.log("POST response: ", response.status, vocabResultsData);
   } catch (error) {
     console.error("Failed to send results:", error);
   }
