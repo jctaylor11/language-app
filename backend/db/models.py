@@ -3,7 +3,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy import Enum, ForeignKey, func
 
-from backend.enums import ResultStatus
+from backend.enums import VocabResultStatus, SentenceResultStatus
 
 
 class Base(DeclarativeBase):
@@ -46,7 +46,7 @@ class VocabResult(Base):
     response_time_ms: Mapped[int | None]
     answered_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
     raw_keystrokes: Mapped[str | None]
-    status: Mapped[ResultStatus] = mapped_column(Enum(ResultStatus, name="result_status"))
+    status: Mapped[VocabResultStatus] = mapped_column(Enum(VocabResultStatus, name="result_status"))
     session_position: Mapped[int]
 
 
@@ -75,12 +75,12 @@ class SentenceWord(Base):
     word_id: Mapped[int] = mapped_column(ForeignKey("words.id", ondelete="CASCADE"), primary_key=True)
 
 
-# Note - If having sentence_results, this is a denormalised - acceptable for query convenience though
-class UserSentence(Base):
-    __tablename__ = "user_sentences"
+class SentenceResult(Base):
+    __tablename__ = "sentence_results"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    session_id: Mapped[int | None] = mapped_column(ForeignKey("sessions.id", ondelete="CASCADE"))
     sentence_id: Mapped[int] = mapped_column(ForeignKey("sentences.id", ondelete="CASCADE"))
-    seen_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
-
+    status: Mapped[SentenceResultStatus] = mapped_column(Enum(SentenceResultStatus, name="sentence_result_status"))
+    answered_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
-import { generateSentences, addUserSentence } from "../api";
+import { generateSentences, sendSentenceResult } from "../api";
 import type { SentencePair } from "../types";
 import { DEV_USER_ID } from "../config";
 
@@ -77,7 +77,7 @@ export default function SentenceSession() {
       const completedSentenceId = sentencePairs[sentencePairIndex].id; // Need to save the value before its incremented in advanceSentencePair
       advanceSentencePair(); // Placed before addUserSentence to prioritise what the user sees
       // Consider awaiting (investigate any race condition)
-      addUserSentence(DEV_USER_ID, completedSentenceId); // ID hardcoded for development - updated when auth is implemented
+      sendSentenceResult(DEV_USER_ID, completedSentenceId, "correct"); // ID hardcoded for development - updated when auth is implemented
     }
   }
 

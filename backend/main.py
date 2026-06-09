@@ -7,7 +7,7 @@ from datetime import datetime
 from backend.db.connection import get_engine
 from backend.db.models import Sentence
 from backend.llm import generate_sentences
-from backend.enums import ResultStatus
+from backend.enums import VocabResultStatus, SentenceResultStatus
 from backend.lemmatiser import extract_lemmas
 
 app = FastAPI()
@@ -32,7 +32,7 @@ class WordResult(BaseModel):
     response_time_ms: int | None = None
     answered_at: datetime | None = None
     raw_keystrokes: str | None = None
-    status: ResultStatus
+    status: VocabResultStatus
     session_position: int
 
 
@@ -41,9 +41,10 @@ class VocabResults(BaseModel):
     word_results: list[WordResult]
 
 
-class UserSentence(BaseModel):
-    user_id: int
+class SentenceResult(BaseModel):
     sentence_id: int
+    #TODO: session_id: int - add when session is wired to sentences too, NULL until then
+    status: SentenceResultStatus
 
 
 @app.post("/sessions")
@@ -115,9 +116,9 @@ def get_sentence_batch(user_id: int, num_words: int):
         FROM sentences s
         WHERE NOT EXISTS (
             SELECT 1
-            FROM user_sentences us
-            WHERE us.sentence_id = s.id
-            AND us.user_id = :user_id
+            FROM sentence_results sr
+            WHERE sr.sentence_id = s.id
+            AND sr.user_id = :user_id
         )
         LIMIT 50    -- Fetch many eligible in one batch for the session since free from database (rather than LLM)
         """), {"user_id": user_id}).fetchall()
@@ -185,13 +186,14 @@ def get_sentence_batch(user_id: int, num_words: int):
     return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in rows]}
 
 
-@app.post("/user_sentences")
-def add_user_sentences(payload: UserSentence):      # TODO: batch these and send via beacon on page close
+@app.post("/sentence-results")
+def create_sentence_result(user_id: int, payload: SentenceResult):      # TODO: batch these and send via beacon on page close
+    params = {"user_id": user_id, **payload.model_dump(mode="json")}
+
     with engine.begin() as conn:
         conn.execute(text("""
-            INSERT INTO user_sentences (user_id, sentence_id)
-            VALUES (:user_id, :sentence_id)
-        """), {"user_id": payload.user_id, "sentence_id": payload.sentence_id})
+            INSERT INTO sentence_results (user_id, sentence_id, status)
+            VALUES (:user_id, :sentence_id, :status)
+        """), params)
 
-    return {"user_sentences_saved": payload.sentence_id}
-
+    return {"saved_sentence_id": payload.sentence_id}

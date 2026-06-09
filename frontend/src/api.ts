@@ -34,7 +34,7 @@ export async function getOrCreateSession(userId: number): Promise<number> {
   }
 }
 
-export async function sendResults(
+export async function sendVocabResults(
   userId: number,
   vocabResults: VocabResults,
 ): Promise<void> {
@@ -67,16 +67,20 @@ export async function generateSentences(
   }
 }
 
-export async function addUserSentence(
+export async function sendSentenceResult(
   userId: number,
   sentenceId: number,
+  status: string,
 ): Promise<void> {
   try {
-    const userSentencesUrl = `${BASE_URL}/user_sentences`;
+    const userSentencesUrl = `${BASE_URL}/sentence-results?user_id=${userId}`;
     const response = await fetch(userSentencesUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: userId, sentence_id: sentenceId }),
+      body: JSON.stringify({
+        sentence_id: sentenceId,
+        status: status,
+      }),
     });
     const addUserSentenceConfirmation = await response.json();
     console.log(addUserSentenceConfirmation);
