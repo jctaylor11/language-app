@@ -197,3 +197,20 @@ def create_sentence_result(user_id: int, payload: SentenceResult):      # TODO: 
         """), params)
 
     return {"saved_sentence_id": payload.sentence_id}
+
+
+@app.get("/dashboard")
+def get_dashboard(user_id: int):
+    with engine.begin() as conn:
+        rows = conn.execute(text("""
+            SELECT w.id, w.target, w.source, COUNT(vr.id) AS times_reviewed
+            FROM words w
+            JOIN user_words uw ON w.id = uw.word_id
+            JOIN vocab_results vr ON w.id = vr.word_id
+            WHERE uw.user_id = :user_id
+            GROUP BY w.id, w.target, w.source
+            """), {"user_id": user_id}).fetchall()
+        
+        word_table = [{"id": row.id, "target": row.target, "source": row.source, "reviewed_times": row.times_reviewed} for row in rows]
+
+    return {"words": word_table}

@@ -31,3 +31,10 @@ export type SentencePair = {
   target: string;
   source: string;
 };
+
+export type WordEntry = {
+  id: number;
+  target: string;
+  source: string;
+  times_reviewed: number;
+};

@@ -4,6 +4,7 @@ import type {
   SessionResponse,
   VocabResults,
   SentencePair,
+  WordEntry,
 } from "./types";
 
 const BASE_URL = "http://127.0.0.1:8000";
@@ -86,5 +87,17 @@ export async function sendSentenceResult(
     console.log(addUserSentenceConfirmation);
   } catch (error) {
     console.error("Failed to add to user_sentence:", error);
+  }
+}
+
+export async function getWordEntries(userId: number): Promise<WordEntry[]> {
+  try {
+    const wordEntriesUrl = `${BASE_URL}/dashboard?user_id=${userId}`;
+    const response = await fetch(wordEntriesUrl, { method: "GET" });
+    const wordEntries = await response.json();
+    return wordEntries.words;
+  } catch (error) {
+    console.log("Failed to get word entries:", error);
+    return [];
   }
 }

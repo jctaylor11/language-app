@@ -1,5 +1,25 @@
+import { useQuery } from "@tanstack/react-query";
+
+import { getWordEntries } from "../api";
+import { DEV_USER_ID } from "../config";
+
 export default function Dashboard() {
-    return (
-        <h1>Dashboard</h1>
-    )
+  const { data: wordEntries } = useQuery({
+    queryKey: ["words_table"],
+    queryFn: () => getWordEntries(DEV_USER_ID),
+  });
+
+  if (!wordEntries) {
+    return <p>Loading...</p>;
+  }
+
+  return (
+    <ul>
+      {wordEntries.map((entry) => (
+        <li key={entry.id}>
+          {entry.target} - {entry.source}
+        </li>
+      ))}
+    </ul>
+  );
 }
