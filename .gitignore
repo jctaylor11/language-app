@@ -236,6 +236,7 @@ dist-ssr
 # Claude
 .claude
 CLAUDE.md
+CONTEXT.md
 
 # Own notes
 NOTES.md

@@ -37,4 +37,6 @@ export type WordEntry = {
   target: string;
   source: string;
   times_reviewed: number;
+  av_s_per_syllable: number;
+  accuracy: number;
 };

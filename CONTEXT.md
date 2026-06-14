@@ -1,7 +1,7 @@
 # PROJECT_CONTEXT.md — Korean Language App
 
 > Source of truth for what this project is, how it works, and where it stands.
-> Last updated: 2026-06-10 (on branch `experiments`).
+> Last updated: 2026-06-10.
 
 ## 1. What is being built
 

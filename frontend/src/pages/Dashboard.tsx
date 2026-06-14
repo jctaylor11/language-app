@@ -17,7 +17,8 @@ export default function Dashboard() {
     <ul>
       {wordEntries.map((entry) => (
         <li key={entry.id}>
-          {entry.target} - {entry.source}
+          {entry.target} - {entry.source} - {entry.times_reviewed} -{" "}
+          {entry.av_s_per_syllable} - {entry.accuracy}
         </li>
       ))}
     </ul>
