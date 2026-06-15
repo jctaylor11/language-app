@@ -3,12 +3,14 @@ import { Outlet, Link } from "react-router";
 export default function Layout() {
   return (
     <>
-      <nav className="flex justify-end p-5 gap-4">
+      <nav className="flex justify-end p-5 gap-4 border-b border-gray-300">
         <Link to="/vocab">Vocab</Link>
         <Link to="/sentences">Sentences</Link>
         <Link to="/dashboard">Dashboard</Link>
       </nav>
-      <Outlet />
+      <main className="px-6 py-8">
+        <Outlet />
+      </main>
     </>
   );
 }

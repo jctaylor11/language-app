@@ -170,7 +170,7 @@ export default function VocabSession() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-200 flex flex-col">
+    <div className="min-h-screen flex flex-col">
       <WordCard
         wordPair={currentWord}
         inputText={inputText}
