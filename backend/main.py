@@ -206,14 +206,14 @@ def get_dashboard(user_id: int):
             SELECT 
                 w.id,
                 w.target, 
-                w.source, 
+                UPPER(LEFT(w.source, 1)) || LOWER(SUBSTRING(w.source FROM 2)) AS source, 
                 COUNT(vr.id) AS times_reviewed,
-                AVG(vr.response_time_ms) / 1000 / LENGTH(w.target) as av_s_per_syllable,
+                AVG(vr.response_time_ms) / 1000.0 / LENGTH(w.target) as av_s_per_syllable,
                 COUNT(*) FILTER (WHERE vr.status = 'correct_first_try')::numeric / COUNT(*) AS accuracy
             FROM words w
             JOIN user_words uw ON w.id = uw.word_id
             JOIN vocab_results vr ON w.id = vr.word_id
-            WHERE uw.user_id = 1
+            WHERE uw.user_id = :user_id
             GROUP BY 
                 w.id, 
                 w.target, 
