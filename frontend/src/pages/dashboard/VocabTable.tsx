@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getWordEntries } from "../api";
-import { DEV_USER_ID } from "../config";
-import WordTable from "../components/WordTable";
+import { getWordEntries } from "../../api";
+import { DEV_USER_ID } from "../../config";
+import WordTable from "../../components/WordTable";
 
-export default function Dashboard() {
+export default function VocabTable() {
   const { data: wordEntries } = useQuery({
     queryKey: ["words_table"],
     queryFn: () => getWordEntries(DEV_USER_ID),

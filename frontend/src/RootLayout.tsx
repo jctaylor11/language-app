@@ -1,6 +1,6 @@
 import { Outlet, Link } from "react-router";
 
-export default function Layout() {
+export default function RootLayout() {
   return (
     <>
       <nav className="flex justify-end p-5 gap-4 border-b border-gray-300">
