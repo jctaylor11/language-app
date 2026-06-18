@@ -1,8 +1,8 @@
 import { Outlet, Link } from "react-router";
 
 const links = [
-  { to: "/dashboard", label: "Vocab Vault" },
-  { to: "/dashboard/placeholder", label: "Placeholder" },
+  { to: "/dashboard", label: "Overview" },
+  { to: "/dashboard/vocabulary", label: "Vocab Vault" },
 ];
 
 export default function DashboardLayout() {

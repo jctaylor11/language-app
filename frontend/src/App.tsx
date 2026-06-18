@@ -2,9 +2,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import VocabSession from "./pages/VocabSession";
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import VocabTable from "./pages/dashboard/VocabTable";
-import Placeholder from "./pages/dashboard/Placeholder";
 import SentenceSession from "./pages/SentenceSession";
 import RootLayout from "./RootLayout";
+import DashboardIndex from "./pages/dashboard/DashboardIndex";
 
 export default function App() {
   return (
@@ -15,8 +15,8 @@ export default function App() {
           <Route path="/vocab" element={<VocabSession />} />
           <Route path="/sentences" element={<SentenceSession />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<VocabTable />} />
-            <Route path="placeholder" element={<Placeholder />} />
+            <Route index element={<DashboardIndex />} />
+            <Route path="vocabulary" element={<VocabTable />} />
           </Route>
         </Route>
       </Routes>
