@@ -1,3 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
+import type { DashboardHeroMetrics } from "../../types";
+import { getHeroMetrics } from "../../api";
+import { DEV_USER_ID } from "../../config";
+
 const KPI_CONFIG = {
   total_words: { label: "Total Words", format: (v: number) => v },
   words_reviewed: { label: "Total reviewed", format: (v: number) => v },
@@ -7,19 +12,19 @@ const KPI_CONFIG = {
   },
 };
 
-type DashboardHeroMetrics = {
-  total_words: number;
-  words_reviewed: number;
-  accuracy: number;
-};
-
 export default function DashboardIndex() {
-  // Mock data that will be from useQuery once wired up
-  const mock: DashboardHeroMetrics = {
-    total_words: 50,
-    words_reviewed: 200,
-    accuracy: 0.9,
-  };
+  const heroMetrics = useQuery({
+    queryKey: ["heroMetrics"],
+    queryFn: () => getHeroMetrics(DEV_USER_ID),
+  });
+
+  if (heroMetrics.isPending) {
+    return <p>Loading...</p>;
+  }
+
+  if (heroMetrics.isError) {
+    return <p>Error: {heroMetrics.error.message}</p>;
+  }
 
   return (
     <div className="grid grid-cols-3 gap-2">
@@ -32,7 +37,7 @@ export default function DashboardIndex() {
             {config.label}
           </span>
           <span className="text-xl font-mono mt-2">
-            {config.format(mock[key as keyof DashboardHeroMetrics])}
+            {config.format(heroMetrics.data[key as keyof DashboardHeroMetrics])}
           </span>
         </div>
       ))}

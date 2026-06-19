@@ -40,3 +40,9 @@ export type WordEntry = {
   av_s_per_syllable: number;
   accuracy: number;
 };
+
+export type DashboardHeroMetrics = {
+  total_words: number;
+  words_reviewed: number;
+  accuracy: number;
+};

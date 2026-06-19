@@ -199,8 +199,8 @@ def create_sentence_result(user_id: int, payload: SentenceResult):      # TODO: 
     return {"saved_sentence_id": payload.sentence_id}
 
 
-@app.get("/dashboard")
-def get_dashboard(user_id: int):
+@app.get("/dashboard/words")
+def get_dashboard_words(user_id: int):
     with engine.begin() as conn:
         query = conn.execute(text("""
             SELECT 
@@ -225,3 +225,23 @@ def get_dashboard(user_id: int):
         word_table = [{"id": row.id, "target": row.target, "source": row.source, "times_reviewed": row.times_reviewed, "av_s_per_syllable": row.av_s_per_syllable, "accuracy": row.accuracy} for row in rows]
 
     return {"words": word_table}
+
+
+@app.get("/dashboard/hero-metrics")
+def get_dashboard_hero_metrics(user_id = 1):
+    with engine.begin() as conn:
+        query = conn.execute(text("""
+            WITH total_reviewed AS (
+                SELECT status FROM vocab_results WHERE user_id = :user_id
+                ) 
+            SELECT 
+                (SELECT COUNT(*) FROM user_words WHERE user_id = :user_id) AS total_words,
+                (SELECT COUNT(*) FROM total_reviewed) AS total_reviewed,
+                (SELECT COUNT(*) FILTER (WHERE status = 'correct_first_try')::numeric / NULLIF(COUNT(*), 0) FROM total_reviewed) AS accuracy
+            """), {"user_id": user_id})
+    
+        row = query.fetchone()
+
+        hero_metrics = {"total_words": row.total_words, "words_reviewed": row.total_reviewed, "accuracy": row.accuracy} 
+
+    return {"metrics": hero_metrics}

@@ -5,6 +5,7 @@ import type {
   VocabResults,
   SentencePair,
   WordEntry,
+  DashboardHeroMetrics,
 } from "./types";
 
 const BASE_URL = "http://127.0.0.1:8000";
@@ -92,7 +93,7 @@ export async function sendSentenceResult(
 
 export async function getWordEntries(userId: number): Promise<WordEntry[]> {
   try {
-    const wordEntriesUrl = `${BASE_URL}/dashboard?user_id=${userId}`;
+    const wordEntriesUrl = `${BASE_URL}/dashboard/words?user_id=${userId}`;
     const response = await fetch(wordEntriesUrl, { method: "GET" });
     const wordEntries = await response.json();
     return wordEntries.words;
@@ -100,4 +101,19 @@ export async function getWordEntries(userId: number): Promise<WordEntry[]> {
     console.log("Failed to get word entries:", error);
     return [];
   }
+}
+
+export async function getHeroMetrics(
+  userId: number,
+): Promise<DashboardHeroMetrics> {
+  const heroMetricsUrl = `${BASE_URL}/dashboard/hero-metrics?user_id=${userId}`;
+  const response = await fetch(heroMetricsUrl, { method: "GET" });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get hero metrics: ${response.status}`);
+  }
+
+  const heroMetrics = await response.json();
+
+  return heroMetrics.metrics;
 }

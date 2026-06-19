@@ -9,7 +9,7 @@ export default function WordTable({ wordEntries }: Props) {
     return <p className="text-sm text-neutral-400">No words yet</p>;
   }
   return (
-    <div className="border border-neutral-200 shadow-sm rounded-2xl overflow-hidden">
+    <div className="overflow-hidden">
       <table className="w-full text-sm">
         <thead className="border-b border-neutral-200">
           <tr>
