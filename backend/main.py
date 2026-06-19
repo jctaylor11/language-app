@@ -228,16 +228,21 @@ def get_dashboard_words(user_id: int):
 
 
 @app.get("/dashboard/hero-metrics")
-def get_dashboard_hero_metrics(user_id = 1):
+def get_dashboard_hero_metrics(user_id: int):
     with engine.begin() as conn:
         query = conn.execute(text("""
             WITH total_reviewed AS (
                 SELECT status FROM vocab_results WHERE user_id = :user_id
-                ) 
+            )
             SELECT 
                 (SELECT COUNT(*) FROM user_words WHERE user_id = :user_id) AS total_words,
-                (SELECT COUNT(*) FROM total_reviewed) AS total_reviewed,
-                (SELECT COUNT(*) FILTER (WHERE status = 'correct_first_try')::numeric / NULLIF(COUNT(*), 0) FROM total_reviewed) AS accuracy
+                (SELECT COUNT(*) FROM total_reviewed) + (
+                    SELECT COUNT(*)
+                    FROM sentence_results sr
+                    JOIN sentence_words sw ON sr.sentence_id = sw.sentence_id
+                    WHERE sr.user_id = :user_id
+                ) AS total_reviewed,
+                (SELECT COUNT(*) FILTER (WHERE status = 'correct_first_try')::numeric / NULLIF(COUNT(*), 0) FROM total_reviewed) AS accuracy;
             """), {"user_id": user_id})
     
         row = query.fetchone()
