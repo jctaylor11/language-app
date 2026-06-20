@@ -44,5 +44,4 @@ export type WordEntry = {
 export type DashboardHeroMetrics = {
   total_words: number;
   words_reviewed: number;
-  accuracy: number;
 };

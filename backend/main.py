@@ -232,7 +232,7 @@ def get_dashboard_hero_metrics(user_id: int):
     with engine.begin() as conn:
         query = conn.execute(text("""
             WITH total_reviewed AS (
-                SELECT status FROM vocab_results WHERE user_id = :user_id
+                SELECT 1 FROM vocab_results WHERE user_id = :user_id
             )
             SELECT 
                 (SELECT COUNT(*) FROM user_words WHERE user_id = :user_id) AS total_words,
@@ -241,12 +241,11 @@ def get_dashboard_hero_metrics(user_id: int):
                     FROM sentence_results sr
                     JOIN sentence_words sw ON sr.sentence_id = sw.sentence_id
                     WHERE sr.user_id = :user_id
-                ) AS total_reviewed,
-                (SELECT COUNT(*) FILTER (WHERE status = 'correct_first_try')::numeric / NULLIF(COUNT(*), 0) FROM total_reviewed) AS accuracy;
+                ) AS total_reviewed
             """), {"user_id": user_id})
     
         row = query.fetchone()
 
-        hero_metrics = {"total_words": row.total_words, "words_reviewed": row.total_reviewed, "accuracy": row.accuracy} 
+        hero_metrics = {"total_words": row.total_words, "words_reviewed": row.total_reviewed} 
 
     return {"metrics": hero_metrics}

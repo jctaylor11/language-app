@@ -6,10 +6,6 @@ import { DEV_USER_ID } from "../../config";
 const KPI_CONFIG = {
   total_words: { label: "Total Words", format: (v: number) => v },
   words_reviewed: { label: "Total reviewed", format: (v: number) => v },
-  accuracy: {
-    label: "Accuracy",
-    format: (v: number) => `${(v * 100).toFixed(0)}%`,
-  },
 };
 
 export default function DashboardIndex() {
@@ -27,7 +23,7 @@ export default function DashboardIndex() {
   }
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-2 gap-2">
       {Object.entries(KPI_CONFIG).map(([key, config]) => (
         <div
           key={config.label}
