@@ -249,3 +249,40 @@ def get_dashboard_hero_metrics(user_id: int):
         hero_metrics = {"total_words": row.total_words, "words_reviewed": row.total_reviewed} 
 
     return {"metrics": hero_metrics}
+
+
+@app.get("/dashboard/word_chart_data")
+def get_word_chart_data(user_id: int):
+    with engine.begin() as conn:
+        query = conn.execute(text("""
+            WITH date_series AS (
+                SELECT (
+                    date_trunc('day', generate_series (
+                        NOW() - INTERVAL '50 days',
+                        NOW(),
+                        '1 day'::interval
+                    ))
+                ) AS series_date
+            ),
+            day_counts AS (
+                SELECT 
+                    COUNT(*) AS cum_words,
+                    date_trunc('day', added_at) AS date_added
+                FROM user_words
+                WHERE user_id = :user_id
+                GROUP BY date_trunc('day', added_at)
+            )
+            SELECT 
+                series_date, 
+                SUM(COALESCE(cum_words, 0)) OVER (ORDER BY series_date) AS words_added
+            FROM date_series
+            LEFT JOIN day_counts
+            ON date_series.series_date = day_counts.date_added
+            ORDER BY series_date
+        """), {"user_id": user_id})
+
+    rows = query.fetchall()
+
+    cumulative_words = [{"series_date": row.series_date, "cum_words": row.words_added} for row in rows]
+
+    return {"cumulative_words": cumulative_words}
