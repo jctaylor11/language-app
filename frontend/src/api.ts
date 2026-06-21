@@ -6,6 +6,7 @@ import type {
   SentencePair,
   WordEntry,
   DashboardHeroMetrics,
+  WordChartDataPoint,
 } from "./types";
 
 const BASE_URL = "http://127.0.0.1:8000";
@@ -116,4 +117,19 @@ export async function getHeroMetrics(
   const heroMetrics = await response.json();
 
   return heroMetrics.metrics;
+}
+
+export async function getWordChartData(
+  userId: number,
+): Promise<WordChartDataPoint[]> {
+  const WordChartDataUrl = `${BASE_URL}/dashboard/word-chart-data?user_id=${userId}`;
+  const response = await fetch(WordChartDataUrl, { method: "GET" });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get word chart data: ${response.status}`);
+  }
+
+  const wordChartData = await response.json();
+
+  return wordChartData.cumulative_words;
 }

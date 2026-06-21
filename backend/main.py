@@ -251,14 +251,14 @@ def get_dashboard_hero_metrics(user_id: int):
     return {"metrics": hero_metrics}
 
 
-@app.get("/dashboard/word_chart_data")
+@app.get("/dashboard/word-chart-data")
 def get_word_chart_data(user_id: int):
     with engine.begin() as conn:
         query = conn.execute(text("""
             WITH date_series AS (
                 SELECT (
                     date_trunc('day', generate_series (
-                        NOW() - INTERVAL '50 days',
+                        NOW() - INTERVAL '30 days',
                         NOW(),
                         '1 day'::interval
                     ))

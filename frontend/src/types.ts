@@ -45,3 +45,8 @@ export type DashboardHeroMetrics = {
   total_words: number;
   words_reviewed: number;
 };
+
+export type WordChartDataPoint = {
+  series_date: number;
+  cum_words: number;
+};
