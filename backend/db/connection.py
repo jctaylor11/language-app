@@ -1,5 +1,7 @@
 from sqlalchemy import create_engine
 
+
+
 from backend.config import DATABASE_URL
 
 def get_engine():
@@ -12,3 +14,5 @@ def get_engine():
         raise ConnectionError(f"Failed to connect to database: {e}")
         
     return engine
+
+engine = get_engine()
