@@ -17,26 +17,7 @@ class SentenceResult(BaseModel):
     status: SentenceResultStatus
 
 
-@router.get("/sentences")
-def get_sentence_batch(user_id: int, num_words: int):
-    # TODO: Extract this (along with others) to a get_eligible_sentences function that returns the rows. The rows are procesed to applicable shape
-    # Will get many more sentences (limit 50) than LLM because querying DB is free, compared to querying LLM
-    with engine.begin() as conn: 
-        eligible_sentences = conn.execute(text("""
-        SELECT s.id, s.target, s.source
-        FROM sentences s
-        WHERE NOT EXISTS (
-            SELECT 1
-            FROM sentence_results sr
-            WHERE sr.sentence_id = s.id
-            AND sr.user_id = :user_id
-        )
-        LIMIT 50    -- Fetch many eligible in one batch for the session since free from database (rather than LLM)
-        """), {"user_id": user_id}).fetchall()
-
-    if len(eligible_sentences) > 3:
-        return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in eligible_sentences]}
-
+def sample_user_words(conn, user_id, num_words):
     with engine.begin() as conn:
         result = conn.execute(text("""
             SELECT target
@@ -49,16 +30,43 @@ def get_sentence_batch(user_id: int, num_words: int):
     
         rows = result.fetchall()
 
-    sentence_words = [row.target for row in rows]
+    user_words = [row.target for row in rows]
 
-    # API request
-    sentences = generate_sentences(sentence_words)
+    return user_words
 
-    # Lemmas are needed as a standard form to reference vocab table (citation form)
+
+def get_eligible_sentences(conn, user_id, user_words):      # TODO: User user_words logic to find suitable words, rather than taking any
+    with engine.begin() as conn:   
+        eligible_sentences = conn.execute(text("""
+        SELECT s.id, s.target, s.source
+        FROM sentences s
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM sentence_results sr
+            WHERE sr.sentence_id = s.id
+            AND sr.user_id = :user_id
+        )
+        LIMIT 50    -- Fetch many eligible in one batch for the session since free from database (rather than LLM)
+        """), {"user_id": user_id}).fetchall()
+
+    return eligible_sentences    
+
+
+def lemmatise_sentences(sentences):
     for sentence in sentences:
         sentence.lemmas = extract_lemmas(sentence.target)
 
-    # Collate all lemmas for single database query to get word IDs
+
+def insert_sentences(conn, sentences):
+    result = conn.execute(insert(Sentence).returning(Sentence.id, Sentence.target, Sentence.source),    # Core with expression language used to handle multi-rows
+        [{"target": sentence.target, "source": sentence.source, "lemma_count": len(sentence.lemmas)} for sentence in sentences])
+
+    sentences_with_ids = result.fetchall()
+
+    return sentences_with_ids
+
+
+def insert_sentences_words(conn, sentences):
     all_lemmas_in_sentence = set()
     for sentence in sentences:
         for lemma in sentence.lemmas:
@@ -94,7 +102,27 @@ def get_sentence_batch(user_id: int, num_words: int):
             ON CONFLICT DO NOTHING
         """), sentence_word_mappings)
 
-    return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in rows]}
+
+@router.get("/sentences")
+def get_sentence_batch(user_id: int, num_words: int):
+    # Will get many more sentences (limit 50) than LLM because querying DB is free, compared to querying LLM
+
+    with engine.connect() as conn:
+        user_words = sample_user_words(conn, user_id, num_words)
+        eligible_sentences = get_eligible_sentences(conn, user_id, user_words)   # TODO: Add logic for finding sentences having user_words. Current fetches any not-done
+
+        if len(eligible_sentences) > 3:
+            return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in eligible_sentences]}
+
+        sentences = generate_sentences([w.target for w in user_words])
+        sentences = lemmatise_sentences(sentences)  # Adds to the lemma field in setnences object
+
+        with engine.begin() as conn:
+            sentences = insert_sentences(conn, sentences)   # Returns with IDs
+            insert_sentences_words(conn, sentences)
+        
+    return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in sentences]}
+
 
 @router.post("/sentence-results")
 def create_sentence_result(user_id: int, payload: SentenceResult):      # TODO: batch these and send via beacon on page close
