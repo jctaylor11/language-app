@@ -1,21 +1,15 @@
 from fastapi import APIRouter
 from sqlalchemy import text, insert
 from sqlalchemy.engine import Connection
-from pydantic import BaseModel
 
 from backend.db.connection import engine
-from backend.llm import generate_sentences, SentencePair # Find a better home for SentencePair type
+from backend.llm import generate_sentences
 from backend.lemmatiser import extract_lemmas
 from backend.db.models import Sentence
-from backend.enums import SentenceResultStatus
+from backend.schemas import SentenceResult, SentenceBatchRequest, SentencePair
 
 
 router = APIRouter()
-
-class SentenceResult(BaseModel):
-    sentence_id: int
-    #TODO: session_id: int - add when session is wired to sentences too, NULL until then
-    status: SentenceResultStatus
 
 
 def sample_user_words(conn: Connection, user_id: int, num_words: int) -> list[str]:
@@ -101,10 +95,6 @@ def insert_sentences_words(conn: Connection, sentences: list[SentencePair]) -> N
         VALUES (:sentence_id, :word_id)
         ON CONFLICT DO NOTHING
     """), sentence_word_mappings)
-
-
-class SentenceBatchRequest(BaseModel):
-    num_words: int 
 
 
 @router.post("/sentences")

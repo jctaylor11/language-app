@@ -1,25 +1,10 @@
 from fastapi import APIRouter
 from sqlalchemy import text
-from pydantic import BaseModel
-from datetime import datetime
 
 from backend.db.connection import engine
-from backend.enums import VocabResultStatus
+from backend.schemas import WordResult, VocabResults
 
 router = APIRouter()
-
-class WordResult(BaseModel):
-    word_id: int
-    response_time_ms: int | None = None
-    answered_at: datetime | None = None
-    raw_keystrokes: str | None = None
-    status: VocabResultStatus
-    session_position: int
-
-
-class VocabResults(BaseModel):
-    session_id: int
-    word_results: list[WordResult]
 
 
 @router.post("/sessions")
