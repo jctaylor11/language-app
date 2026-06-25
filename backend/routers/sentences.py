@@ -6,6 +6,7 @@ from backend.db.connection import engine
 from backend.llm import generate_sentences
 from backend.lemmatiser import extract_lemmas
 from backend.db.models import Sentence
+from backend.enums import SentenceResultStatus
 from backend.schemas import SentenceResult, SentenceBatchRequest, SentencePair
 
 
@@ -122,14 +123,16 @@ def get_sentence_batch(user_id: int, payload: SentenceBatchRequest):
     return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in sentences]} 
 
 
+def insert_sentence_result(conn: Connection, user_id: int, sentence_id: int, status: SentenceResultStatus) -> None:
+    conn.execute(text("""
+        INSERT INTO sentence_results (user_id, sentence_id, status)
+        VALUES (:user_id, :sentence_id, :status)
+    """), {"user_id": user_id, "sentence_id": sentence_id, "status": status.value})
+
+
 @router.post("/sentence-results")
 def create_sentence_result(user_id: int, payload: SentenceResult):      # TODO: batch these and send via beacon on page close
-    params = {"user_id": user_id, **payload.model_dump(mode="json")}
-
     with engine.begin() as conn:
-        conn.execute(text("""
-            INSERT INTO sentence_results (user_id, sentence_id, status)
-            VALUES (:user_id, :sentence_id, :status)
-        """), params)
+        insert_sentence_result(conn, user_id, payload.sentence_id, payload.status)
 
-    return {"saved_sentence_id": payload.sentence_id} 
+    return {"saved_sentence_id": payload.sentence_id}
