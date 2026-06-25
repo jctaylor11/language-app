@@ -60,8 +60,14 @@ export async function generateSentences(
   numWords: number,
 ): Promise<SentencePair[]> {
   try {
-    const sentencesUrl = `${BASE_URL}/sentences?user_id=${userId}&num_words=${numWords}`;
-    const response = await fetch(sentencesUrl, { method: "GET" });
+    const sentencesUrl = `${BASE_URL}/sentences?user_id=${userId}`;
+    const response = await fetch(sentencesUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        num_words: numWords,
+      }),
+    });
     const sentencesData = await response.json();
     return sentencesData.sentences;
   } catch (error) {

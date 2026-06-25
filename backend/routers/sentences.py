@@ -66,8 +66,8 @@ def insert_sentences(conn: Connection, sentences: list[SentencePair]) -> list[Se
 
     sentence_ids = result.fetchall()
 
-    for sentence, sentence_ids in zip(sentences, sentence_ids):
-        sentence.id = sentence_ids.id
+    for sentence, row in zip(sentences, sentence_ids):
+        sentence.id = row.id
 
     return sentences
 
@@ -103,12 +103,16 @@ def insert_sentences_words(conn: Connection, sentences: list[SentencePair]) -> N
     """), sentence_word_mappings)
 
 
-@router.get("/sentences")
-def get_sentence_batch(user_id: int, num_words: int):
+class SentenceBatchRequest(BaseModel):
+    num_words: int 
+
+
+@router.post("/sentences")
+def get_sentence_batch(user_id: int, payload: SentenceBatchRequest):
     # Will get many more sentences (limit 50) than LLM because querying DB is free, compared to querying LLM
 
     with engine.connect() as conn:
-        user_words = sample_user_words(conn, user_id, num_words)
+        user_words = sample_user_words(conn, user_id, payload.num_words)
         eligible_sentences = get_eligible_sentences(conn, user_id, user_words)   # TODO: Add logic for finding sentences having user_words. Current fetches any not-done
 
     if len(eligible_sentences) > 3:
@@ -117,13 +121,14 @@ def get_sentence_batch(user_id: int, num_words: int):
 
     # Generates sentences from LLM only if no sentences already in the sentences database match the user's request
     sentences = generate_sentences(user_words)
-    
-    sentences = lemmatise_sentences(sentences)  # Adds to the lemma field in setnences object
+
+    # Lemmatise so sentence words can be matched against the words table by standardised citation form. Needed for sentence_words inserts and lemma_count
+    sentences = lemmatise_sentences(sentences)  # Adds to lemma field of SentencePair type
 
     with engine.begin() as conn:
         sentences = insert_sentences(conn, sentences)   # Returns with IDs
         insert_sentences_words(conn, sentences)
-    
+
     return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in sentences]} 
 
 
