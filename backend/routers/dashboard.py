@@ -1,8 +1,8 @@
-from fastapi import APIRouter
-from sqlalchemy import text
-from sqlalchemy.engine import Connection
+from fastapi import APIRouter, Depends
+from sqlalchemy import text, Connection
+from typing import Annotated
 
-from backend.db.connection import engine
+from backend.db.connection import get_read_connection
 
 router = APIRouter()
 
@@ -85,24 +85,21 @@ def get_cumulative_word_chart_data(conn: Connection, user_id: int) -> list[dict]
 
 
 @router.get("/dashboard/words")
-def get_dashboard_words(user_id: int):
-    with engine.connect() as conn:
-        word_table = get_word_table(conn, user_id)
+def get_dashboard_words(user_id: int, conn: Annotated[Connection, Depends(get_read_connection)]) -> dict:
+    word_table = get_word_table(conn, user_id)
 
     return {"words": word_table}
 
 
 @router.get("/dashboard/hero-metrics")
-def get_dashboard_hero_metrics(user_id: int):
-    with engine.connect() as conn:
-        hero_metrics = get_hero_metrics(conn, user_id)
+def get_dashboard_hero_metrics(user_id: int, conn: Annotated[Connection, Depends(get_read_connection)]) -> dict:
+    hero_metrics = get_hero_metrics(conn, user_id)
 
     return {"metrics": hero_metrics}
 
 
 @router.get("/dashboard/word-chart-data")
-def get_word_chart_data(user_id: int):
-    with engine.connect() as conn:
-        cumulative_words = get_cumulative_word_chart_data(conn, user_id)
+def get_word_chart_data(user_id: int, conn: Annotated[Connection, Depends(get_read_connection)]) -> dict:
+    cumulative_words = get_cumulative_word_chart_data(conn, user_id)
 
     return {"cumulative_words": cumulative_words}

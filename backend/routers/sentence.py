@@ -1,8 +1,8 @@
-from fastapi import APIRouter
-from sqlalchemy import text, insert
-from sqlalchemy.engine import Connection
+from fastapi import APIRouter, Depends
+from sqlalchemy import text, insert, Engine, Connection
+from typing import Annotated
 
-from backend.db.connection import engine
+from backend.db.connection import get_engine, get_write_connection
 from backend.llm import generate_sentences
 from backend.lemmatiser import extract_lemmas
 from backend.db.models import Sentence
@@ -60,7 +60,7 @@ def insert_sentences(conn: Connection, sentences: list[SentencePair]) -> list[Se
 
     sentence_ids = result.fetchall()
 
-    for sentence, row in zip(sentences, sentence_ids):
+    for sentence, row in zip(sentences, sentence_ids):  # Positional order of sentences in matching sentences out is guaranteed by the insert() statement with the list of dicts and returning statement
         sentence.id = row.id
 
     return sentences
@@ -73,7 +73,7 @@ def insert_sentences_words(conn: Connection, sentences: list[SentencePair]) -> N
             all_lemmas_in_sentence.add(lemma)
     all_lemmas_in_sentence = list(all_lemmas_in_sentence)
 
-    # Word IDs are queried so the the words corresponding to each sentence can be inserted into sentence_words table
+    # Word IDs are queried so the words corresponding to each sentence can be inserted into sentence_words table
     result = conn.execute(text("""
         SELECT id, target FROM words
         WHERE target = ANY(:lemmas)
@@ -90,30 +90,32 @@ def insert_sentences_words(conn: Connection, sentences: list[SentencePair]) -> N
                 sentence_word_mappings.append({"sentence_id": sentence.id, "word_id": lemma_to_word_id[lemma]})
 
     # Record which word IDs are in each sentence to track which words have been reviewed by the user when they review each sentence
-    conn.execute(text("""
-        INSERT INTO sentence_words (sentence_id, word_id)
-        VALUES (:sentence_id, :word_id)
-        ON CONFLICT DO NOTHING
-    """), sentence_word_mappings)
+    if sentence_word_mappings:
+        conn.execute(text("""
+            INSERT INTO sentence_words (sentence_id, word_id)
+            VALUES (:sentence_id, :word_id)
+            ON CONFLICT DO NOTHING
+        """), sentence_word_mappings)
 
 
 @router.post("/sentences")
-def get_sentence_batch(user_id: int, payload: SentenceBatchRequest):
-    # Will get many more sentences (limit 50) than LLM because querying DB is free, compared to querying LLM
+def get_sentence_batch(user_id: int, payload: SentenceBatchRequest, engine: Annotated[Engine, Depends(get_engine)]):
+    """Returns a batch of sentences for the user.
 
+    First serves any applicable sentences that already exist in the cached sentences. If none applicable exist, it generates new sentences via LLM API,
+    lemmatises them, and inserts the sentences and associated data into the sentences cache.
+    """
+    # This endpoint manages its own transaction boundaries with the engine object because injecting by dependency would require the connection staying open over the slow LLM API call (generate_sentences)
     with engine.connect() as conn:
         user_words = sample_user_words(conn, user_id, payload.num_words)
         eligible_sentences = get_eligible_sentences(conn, user_id, user_words)   # TODO: Add logic for finding sentences having user_words. Current fetches any not-done
 
     if len(eligible_sentences) > 3:
-        # Sentences retrieved from database can return from pipeline early since they sentence words will have already been lemmatised and inserted
-        return {"sentences": [{"id": sentence.id, "target": sentence.target, "source": sentence.source} for sentence in eligible_sentences]}
+        return {"sentences": [{"id": sentence.id, "target": sentence.target, "source": sentence.source} for sentence in eligible_sentences]}    # Early return since sentences from db are already lemmatised 
 
-    # Generates sentences from LLM only if no sentences already in the sentences database match the user's request
-    sentences = generate_sentences(user_words)
+    sentences = generate_sentences(user_words)  # If not sentences matching user's request already exist in sentences cache
 
-    # Lemmatise so sentence words can be matched against the words table by standardised citation form. Needed for sentence_words inserts and lemma_count
-    sentences = lemmatise_sentences(sentences)  # Adds to lemma field of SentencePair type
+    sentences = lemmatise_sentences(sentences)  # Lemmatisation allows sentence words to be matched against the words table by standardised citation form. Needed for sentence_words inserts and lemma_count
 
     with engine.begin() as conn:
         sentences = insert_sentences(conn, sentences)   # Returns with IDs
@@ -130,8 +132,8 @@ def insert_sentence_result(conn: Connection, user_id: int, sentence_id: int, sta
 
 
 @router.post("/sentence-results")
-def create_sentence_result(user_id: int, payload: SentenceResult):      # TODO: batch these and send via beacon on page close
-    with engine.begin() as conn:
-        insert_sentence_result(conn, user_id, payload.sentence_id, payload.status)
+def create_sentence_result(user_id: int, payload: SentenceResult, conn: Annotated[Connection, Depends(get_write_connection)]):      # TODO: batch these and send via beacon on page close
+    """Records the user's result for a single reviewed sentence."""
+    insert_sentence_result(conn, user_id, payload.sentence_id, payload.status)
 
     return {"saved_sentence_id": payload.sentence_id}
