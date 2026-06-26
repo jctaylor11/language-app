@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import vocab, sentences, dashboard
+from backend.routers import session, sentence, vocab, dashboard
 
 app = FastAPI()
 
@@ -17,8 +17,9 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+app.include_router(session.router)
 app.include_router(vocab.router)
-app.include_router(sentences.router)
+app.include_router(sentence.router)
 app.include_router(dashboard.router)
 
 

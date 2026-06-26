@@ -5,18 +5,7 @@ from sqlalchemy.engine import Connection
 from backend.db.connection import engine
 from backend.schemas import VocabResults
 
-
 router = APIRouter()
-
-
-def insert_session(conn: Connection, user_id: int) -> int:
-    result = conn.execute(text("""
-        INSERT INTO sessions (user_id, started_at)
-        VALUES (:user_id, CURRENT_TIMESTAMP)
-        RETURNING id
-    """), {"user_id": user_id})
-
-    return result.scalar()
 
 
 def sample_word_batch(conn: Connection, user_id: int) -> list[dict]:
@@ -51,15 +40,6 @@ def insert_vocab_results(conn: Connection, user_id: int, vocab_results: VocabRes
     """), {"session_id": vocab_results.session_id})
 
     return len(vocab_results.word_results)
-
-
-@router.post("/sessions")
-def create_session(user_id: int):
-    """Create new session and return session ID to client"""
-    with engine.begin() as conn:
-        session_id = insert_session(conn, user_id)
-
-    return {"session_id": session_id}
 
 
 @router.get("/words")
