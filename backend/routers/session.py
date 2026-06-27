@@ -9,8 +9,8 @@ router = APIRouter()
 
 def insert_session(conn: Connection, user_id: int) -> int:
     result = conn.execute(text("""
-        INSERT INTO sessions (user_id, started_at)
-        VALUES (:user_id, CURRENT_TIMESTAMP)
+        INSERT INTO sessions (user_id)
+        VALUES (:user_id)
         RETURNING id
     """), {"user_id": user_id})
 
