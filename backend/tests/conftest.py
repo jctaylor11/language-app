@@ -10,10 +10,16 @@ test_engine = create_engine(TEST_DATABASE_URL)
 
 
 @pytest.fixture
-def client():
-    conn = test_engine.connect()    # Manual connection control and without with block so we can control what goes in the transaction and rollback at the end
+def conn():     # Handles connection manually - anything that needs conn will have it passed from this manager
+    conn = test_engine.connect()
     conn.begin()
+    yield conn
+    conn.rollback()
+    conn.close()
 
+
+@pytest.fixture
+def client(conn):
     conn.execute(text("INSERT INTO users (id, username) VALUES (1, 'test') ON CONFLICT DO NOTHING"))
 
     def get_test_write_connection(): 
@@ -22,6 +28,3 @@ def client():
     app.dependency_overrides[get_write_connection] = get_test_write_connection
     yield TestClient(app)
     app.dependency_overrides.clear()
-
-    conn.rollback()
-    conn.close()
