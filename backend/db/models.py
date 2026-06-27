@@ -14,7 +14,7 @@ class Word(Base):
     __tablename__ = "words"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    target: Mapped[str]
+    target: Mapped[str] = mapped_column(unique=True)
     source: Mapped[str]
     part_of_speech: Mapped[str]
 
@@ -32,7 +32,7 @@ class Session(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    started_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True))
+    started_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
     completed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
 
 
