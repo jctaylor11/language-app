@@ -15,10 +15,10 @@ def get_word_table(conn: Connection, user_id: int) -> list[dict]:
             UPPER(LEFT(w.source, 1)) || LOWER(SUBSTRING(w.source FROM 2)) AS source,
             COUNT(vr.id) AS times_reviewed,
             AVG(vr.response_time_ms) / 1000.0 / LENGTH(w.target) as av_s_per_syllable,
-            COUNT(*) FILTER (WHERE vr.status = 'correct_first_try')::numeric / COUNT(*) AS accuracy
+            COUNT(*) FILTER (WHERE vr.status = 'correct_first_try')::numeric / NULLIF(COUNT(vr.id), 0) AS accuracy
         FROM words w
         JOIN user_words uw ON w.id = uw.word_id
-        JOIN vocab_results vr ON w.id = vr.word_id
+        LEFT JOIN vocab_results vr ON w.id = vr.word_id
         WHERE uw.user_id = :user_id
         GROUP BY
             w.id,
@@ -28,7 +28,14 @@ def get_word_table(conn: Connection, user_id: int) -> list[dict]:
 
     rows = query.fetchall()
 
-    return [{"id": row.id, "target": row.target, "source": row.source, "times_reviewed": row.times_reviewed, "av_s_per_syllable": row.av_s_per_syllable, "accuracy": row.accuracy} for row in rows]
+    return [{
+        "id": row.id,
+        "target": row.target,
+        "source": row.source,
+        "times_reviewed": row.times_reviewed,
+        "av_s_per_syllable": float(row.av_s_per_syllable) if row.av_s_per_syllable is not None else None,
+        "accuracy": float(row.accuracy) if row.accuracy is not None else None,
+    } for row in rows]
 
 
 def get_hero_metrics(conn: Connection, user_id: int) -> dict:
@@ -81,7 +88,7 @@ def get_cumulative_word_chart_data(conn: Connection, user_id: int) -> list[dict]
 
     rows = query.fetchall()
 
-    return [{"series_date": row.series_date, "cum_words": row.words_added} for row in rows]
+    return [{"series_date": row.series_date, "cum_words": int(row.words_added)} for row in rows]
 
 
 @router.get("/dashboard/words")
