@@ -63,7 +63,7 @@ def get_cumulative_word_chart_data(conn: Connection, user_id: int) -> list[dict]
         WITH date_series AS (
             SELECT (
                 date_trunc('day', generate_series (
-                    NOW() - INTERVAL '30 days',
+                    NOW() - INTERVAL '29 days',
                     NOW(),
                     '1 day'::interval
                 ))
