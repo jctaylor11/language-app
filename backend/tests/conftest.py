@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 
 from backend.main import app
-from backend.db.connection import get_write_connection, get_read_connection, get_engine
+from backend.db.connection import get_write_connection, get_read_connection
 from backend.config import TEST_DATABASE_URL
 
 test_engine = create_engine(TEST_DATABASE_URL)
@@ -30,12 +30,8 @@ def client(conn):
     def get_test_read_connection():
         yield conn
 
-    def get_test_engine():
-        return test_engine
-
     app.dependency_overrides[get_write_connection] = get_test_write_connection
     app.dependency_overrides[get_read_connection] = get_test_read_connection
-    app.dependency_overrides[get_engine] = get_test_engine
     yield TestClient(app)
     app.dependency_overrides.clear()
 
