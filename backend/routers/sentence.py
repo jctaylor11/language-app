@@ -105,7 +105,7 @@ def get_sentence_batch(user_id: int, payload: SentenceBatchRequest, engine: Anno
     First serves any applicable sentences that already exist in the cached sentences. If none applicable exist, it generates new sentences via LLM API,
     lemmatises them, and inserts the sentences and associated data into the sentences cache.
     """
-    # This endpoint manages its own transaction boundaries with the engine object because injecting by dependency would require the connection staying open over the slow LLM API call (generate_sentences)
+    # TODO: replace Depends(get_engine) with two injected connections (read_conn, write_conn) to enable test isolation via dependency overrides. No open transactions are held across the LLM call — connections are idle during it — so the original concern about this approach doesn't apply.
     with engine.connect() as conn:
         user_words = sample_user_words(conn, user_id, payload.num_words)
         eligible_sentences = get_eligible_sentences(conn, user_id, user_words)   # TODO: Add logic for finding sentences having user_words. Current fetches any not-done
