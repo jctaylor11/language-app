@@ -1,8 +1,25 @@
+from unittest.mock import patch
+
 from sqlalchemy import text
 
+from backend.schemas import SentencePair
+from backend.tests.conftest import TEST_USER_ID
 
-# TODO: add test_get_sentence_batch once POST /sentences is refactored to inject
-# read_conn and write_conn instead of engine (see TODO in sentence.py)
+
+def test_get_sentence_batch(client, seed_user_words):
+    mock_sentences = [SentencePair(target="우리는 매일 물을 마십니다.", source="We drink water every day.")]
+
+    with patch("backend.routers.sentence.generate_sentences", return_value=mock_sentences):
+        response = client.post(f"/sentences?user_id={TEST_USER_ID}", json={"num_words": 3})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "sentences" in data
+    assert len(data["sentences"]) == 1
+    sentence = data["sentences"][0]
+    assert isinstance(sentence["id"], int)
+    assert sentence["target"] == mock_sentences[0].target
+    assert sentence["source"] == mock_sentences[0].source
 
 
 def test_create_sentence_result(client, conn, seed_user):
@@ -11,7 +28,8 @@ def test_create_sentence_result(client, conn, seed_user):
     ))
     sentence_id = result.scalar()
 
-    response = client.post(f"/sentence-results?user_id=1", json={"sentence_id": sentence_id, "status": "correct"})
+    response = client.post(f"/sentence-results?user_id={TEST_USER_ID}", json={"sentence_id": sentence_id, "status": "correct"})
 
     assert response.status_code == 200
-    assert response.json()["saved_sentence_id"] == sentence_id
+    data = response.json()
+    assert data["saved_sentence_id"] == sentence_id
