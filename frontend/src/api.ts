@@ -1,3 +1,5 @@
+import type { CredentialResponse } from "@react-oauth/google";
+
 import type {
   WordPair,
   WordsResponse,
@@ -128,8 +130,8 @@ export async function getHeroMetrics(
 export async function getWordChartData(
   userId: number,
 ): Promise<WordChartDataPoint[]> {
-  const WordChartDataUrl = `${BASE_URL}/dashboard/word-chart-data?user_id=${userId}`;
-  const response = await fetch(WordChartDataUrl, { method: "GET" });
+  const wordChartDataUrl = `${BASE_URL}/dashboard/word-chart-data?user_id=${userId}`;
+  const response = await fetch(wordChartDataUrl, { method: "GET" });
 
   if (!response.ok) {
     throw new Error(`Failed to get word chart data: ${response.status}`);
@@ -138,4 +140,16 @@ export async function getWordChartData(
   const wordChartData = await response.json();
 
   return wordChartData.cumulative_words;
+}
+
+export async function getJWTFromGoogleToken(credential: string) {
+  const authGoogleUrl = `${BASE_URL}/auth-google`;
+  const response = await fetch(authGoogleUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ credential }),
+  });
+  const userData = await response.json();
+
+  return userData.token;
 }

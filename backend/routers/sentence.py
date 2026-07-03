@@ -102,7 +102,7 @@ def insert_sentences_words(conn: Connection, sentences: list[SentencePair]) -> N
 def get_sentence_batch(
     user_id: int,
     payload: SentenceBatchRequest,
-    read_conn: Annotated[Connection, Depends(get_read_connection)],
+    read_conn: Annotated[Connection, Depends(get_read_connection)],     # Two connections so that a single conn isn't kept open over slow LLM call
     write_conn: Annotated[Connection, Depends(get_write_connection)],
 ):
     """Returns a batch of sentences for the user.

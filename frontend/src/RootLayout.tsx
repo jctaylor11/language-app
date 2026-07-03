@@ -7,6 +7,7 @@ export default function RootLayout() {
         <Link to="/vocab">Vocab</Link>
         <Link to="/sentences">Sentences</Link>
         <Link to="/dashboard">Dashboard</Link>
+        <Link to="/login">Log in</Link>
       </nav>
       <main className="px-6 py-8">
         <Outlet />

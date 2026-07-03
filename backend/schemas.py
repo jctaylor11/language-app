@@ -34,3 +34,6 @@ class VocabResults(BaseModel):
     session_id: int
     word_results: list[WordResult]
 
+
+class GoogleToken(BaseModel):
+    credential: str

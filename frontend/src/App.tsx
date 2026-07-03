@@ -5,21 +5,28 @@ import VocabTable from "./pages/dashboard/VocabTable";
 import SentenceSession from "./pages/SentenceSession";
 import RootLayout from "./RootLayout";
 import DashboardIndex from "./pages/dashboard/DashboardIndex";
+import Login from "./pages/login";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route element={<RootLayout />}>
-          <Route index element={<Navigate to="/vocab" replace />} />
-          <Route path="/vocab" element={<VocabSession />} />
-          <Route path="/sentences" element={<SentenceSession />} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<DashboardIndex />} />
-            <Route path="vocabulary" element={<VocabTable />} />
+      <GoogleOAuthProvider
+        clientId={import.meta.env.VITE_OIDC_GOOGLE_CLIENT_ID}
+      >
+        <Routes>
+          <Route element={<RootLayout />}>
+            <Route index element={<Navigate to="/vocab" replace />} />
+            <Route path="/vocab" element={<VocabSession />} />
+            <Route path="/sentences" element={<SentenceSession />} />
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<DashboardIndex />} />
+              <Route path="vocabulary" element={<VocabTable />} />
+            </Route>
+            <Route path="/login" element={<Login />} />
           </Route>
-        </Route>
-      </Routes>
+        </Routes>
+      </GoogleOAuthProvider>
     </BrowserRouter>
   );
 }

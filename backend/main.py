@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import session, sentence, vocab, dashboard
+from backend.routers import auth_google, session, sentence, vocab, dashboard
 
 app = FastAPI()
 
@@ -21,6 +21,7 @@ app.include_router(session.router)
 app.include_router(vocab.router)
 app.include_router(sentence.router)
 app.include_router(dashboard.router)
+app.include_router(auth_google.router)
 
 
 
