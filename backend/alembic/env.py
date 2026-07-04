@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from backend.db.models import Base
-from backend.config import DATABASE_URL
+from backend.config import DATABASE_URL, TEST_DATABASE_URL
 
 
 # this is the Alembic Config object, which provides
@@ -15,6 +15,14 @@ config = context.config
 
 # Override sqlalchemy url 
 config.set_main_option('sqlalchemy.url', DATABASE_URL)
+
+# Override sqlalchemy url — use -x db=test to target the test database
+x_args = context.get_x_argument(as_dictionary=True)
+if x_args.get("db") == "test":
+    target_url = TEST_DATABASE_URL
+else:
+    target_url = DATABASE_URL
+config.set_main_option('sqlalchemy.url', target_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

@@ -39,7 +39,7 @@ def client(conn):
 @pytest.fixture
 def seed_user(conn) -> int:
     # Single-user test setup with rollback isolation, so user_id always 1
-    result = conn.execute(text("INSERT INTO users (id, username) VALUES (:test_user_id, 'test') RETURNING id"), {"test_user_id": TEST_USER_ID})
+    result = conn.execute(text("INSERT INTO users (id, google_sub, email) VALUES (:test_user_id, :test_sub, :test_email) RETURNING id"), {"test_user_id": TEST_USER_ID, "test_sub": "123", "test_email": "test@email.com"})
     return result.scalar()
 
 
