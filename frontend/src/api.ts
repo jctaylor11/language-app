@@ -1,5 +1,3 @@
-import type { CredentialResponse } from "@react-oauth/google";
-
 import type {
   WordPair,
   WordsResponse,

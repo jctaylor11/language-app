@@ -1,14 +1,18 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from datetime import timedelta
+from typing import Annotated
+from sqlalchemy import Connection
 
 from backend.auth.google import get_user_infos_from_google_token
+from backend.auth.users import get_or_create_user_id
 from backend.schemas import GoogleToken
+from backend.db.connection import get_write_connection
 
 router = APIRouter()
 
 
 @router.post('/auth-google')
-async def auth_google(google_token: GoogleToken):
+async def auth_google(google_token: GoogleToken, conn: Annotated[Connection, Depends(get_write_connection)]):
     credential = google_token.credential
     if not credential:
         raise HTTPException(
@@ -26,7 +30,10 @@ async def auth_google(google_token: GoogleToken):
     
     user_infos = check['user_infos']
 
-    # Check if user exists, if not create user, if so generate the JWT token
+    user_id = get_or_create_user_id(conn, user_infos)
+
+    # TODO:
+    # jwt = create_access_token(user_id) -> str
 
     # As a placholder, it just returns the email of the user that logged in to confirm logic. Will be replaced with JWT
     return {"token": user_infos["email"]}

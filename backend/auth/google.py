@@ -17,7 +17,7 @@ def get_user_infos_from_google_token(id_token_str):
         }
 
     user_infos = {
-        'id': id_token_info['sub'],
+        'google_sub': id_token_info['sub'],
         'email': id_token_info['email']
     }
 
