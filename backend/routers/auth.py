@@ -5,6 +5,7 @@ from sqlalchemy import Connection
 
 from backend.auth.google import get_user_infos_from_google_token
 from backend.auth.users import get_or_create_user_id
+from backend.auth.jwt import create_access_token
 from backend.schemas import GoogleToken
 from backend.db.connection import get_write_connection
 
@@ -32,8 +33,6 @@ async def auth_google(google_token: GoogleToken, conn: Annotated[Connection, Dep
 
     user_id = get_or_create_user_id(conn, user_infos)
 
-    # TODO:
-    # jwt = create_access_token(user_id) -> str
+    jwt = create_access_token(user_id)
 
-    # As a placholder, it just returns the email of the user that logged in to confirm logic. Will be replaced with JWT
-    return {"token": user_infos["email"]}
+    return {"token": jwt}
