@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import text, Connection
 from typing import Annotated
 
+from backend.auth.access_token import decode_access_token
 from backend.db.connection import get_read_connection, get_write_connection
 from backend.schemas import VocabResults
 
@@ -43,7 +44,7 @@ def insert_vocab_results(conn: Connection, user_id: int, vocab_results: VocabRes
 
 
 @router.get("/words")
-def get_word_batch(user_id: int, conn: Annotated[Connection, Depends(get_read_connection)]) -> dict:
+def get_word_batch(user_id: Annotated[int, Depends(decode_access_token)], conn: Annotated[Connection, Depends(get_read_connection)]) -> dict:
     """Fetch batch of words to show to user"""
     word_batch = sample_word_batch(conn, user_id)
 
@@ -51,7 +52,7 @@ def get_word_batch(user_id: int, conn: Annotated[Connection, Depends(get_read_co
 
 
 @router.post("/vocab-results")
-def create_vocab_results(user_id: int, vocab_results: VocabResults, conn: Annotated[Connection, Depends(get_write_connection)]) -> dict:
+def create_vocab_results(user_id: Annotated[int, Depends(decode_access_token)], vocab_results: VocabResults, conn: Annotated[Connection, Depends(get_write_connection)]) -> dict:
     """Save user's response data for each word in the session batch"""
     results_saved = insert_vocab_results(conn, user_id, vocab_results)
 

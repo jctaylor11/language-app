@@ -11,25 +11,36 @@ import type {
 
 const BASE_URL = "http://127.0.0.1:8000";
 
-export async function fetchWords(userId: number): Promise<WordPair[]> {
-  const wordsUrl = `${BASE_URL}/words?user_id=${userId}`;
-  const response = await fetch(wordsUrl, { method: "GET" });
+function authHeaders(): HeadersInit {
+  const token = localStorage.getItem("jwt");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function fetchWords(): Promise<WordPair[]> {
+  const wordsUrl = `${BASE_URL}/words`;
+  const response = await fetch(wordsUrl, {
+    method: "GET",
+    headers: authHeaders(),
+  });
   const wordsData: WordsResponse = await response.json();
   return wordsData.word_batch;
 }
 
-export async function fetchSession(userId: number): Promise<number> {
-  const sessionUrl = `${BASE_URL}/sessions?user_id=${userId}`;
-  const response = await fetch(sessionUrl, { method: "POST" });
+export async function fetchSession(): Promise<number> {
+  const sessionUrl = `${BASE_URL}/sessions`;
+  const response = await fetch(sessionUrl, {
+    method: "POST",
+    headers: authHeaders(),
+  });
   const sessionData: SessionResponse = await response.json();
   console.log("Session", sessionData);
   return sessionData.session_id;
 }
 
-export async function getOrCreateSession(userId: number): Promise<number> {
+export async function getOrCreateSession(): Promise<number> {
   const storedSession = sessionStorage.getItem("sessionId"); // So sessionId persists across refresh - session defined as tab session currently
   if (!storedSession) {
-    const fetchedSession = await fetchSession(userId);
+    const fetchedSession = await fetchSession();
     sessionStorage.setItem("sessionId", String(fetchedSession));
     return fetchedSession;
   } else {
@@ -38,14 +49,13 @@ export async function getOrCreateSession(userId: number): Promise<number> {
 }
 
 export async function sendVocabResults(
-  userId: number,
   vocabResults: VocabResults,
 ): Promise<void> {
   try {
-    const vocabResultsUrl = `${BASE_URL}/vocab-results?user_id=${userId}`;
+    const vocabResultsUrl = `${BASE_URL}/vocab-results`;
     const response = await fetch(vocabResultsUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify(vocabResults),
     });
     const vocabResultsData = await response.json();
@@ -56,14 +66,13 @@ export async function sendVocabResults(
 }
 
 export async function generateSentences(
-  userId: number,
   numWords: number,
 ): Promise<SentencePair[]> {
   try {
-    const sentencesUrl = `${BASE_URL}/sentences?user_id=${userId}`;
+    const sentencesUrl = `${BASE_URL}/sentences`;
     const response = await fetch(sentencesUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({
         num_words: numWords,
       }),
@@ -77,15 +86,14 @@ export async function generateSentences(
 }
 
 export async function sendSentenceResult(
-  userId: number,
   sentenceId: number,
   status: string,
 ): Promise<void> {
   try {
-    const userSentencesUrl = `${BASE_URL}/sentence-results?user_id=${userId}`;
+    const userSentencesUrl = `${BASE_URL}/sentence-results`;
     const response = await fetch(userSentencesUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({
         sentence_id: sentenceId,
         status: status,
@@ -98,10 +106,13 @@ export async function sendSentenceResult(
   }
 }
 
-export async function getWordEntries(userId: number): Promise<WordEntry[]> {
+export async function getWordEntries(): Promise<WordEntry[]> {
   try {
-    const wordEntriesUrl = `${BASE_URL}/dashboard/words?user_id=${userId}`;
-    const response = await fetch(wordEntriesUrl, { method: "GET" });
+    const wordEntriesUrl = `${BASE_URL}/dashboard/words`;
+    const response = await fetch(wordEntriesUrl, {
+      method: "GET",
+      headers: authHeaders(),
+    });
     const wordEntries = await response.json();
     return wordEntries.words;
   } catch (error) {
@@ -110,11 +121,12 @@ export async function getWordEntries(userId: number): Promise<WordEntry[]> {
   }
 }
 
-export async function getHeroMetrics(
-  userId: number,
-): Promise<DashboardHeroMetrics> {
-  const heroMetricsUrl = `${BASE_URL}/dashboard/hero-metrics?user_id=${userId}`;
-  const response = await fetch(heroMetricsUrl, { method: "GET" });
+export async function getHeroMetrics(): Promise<DashboardHeroMetrics> {
+  const heroMetricsUrl = `${BASE_URL}/dashboard/hero-metrics`;
+  const response = await fetch(heroMetricsUrl, {
+    method: "GET",
+    headers: authHeaders(),
+  });
 
   if (!response.ok) {
     throw new Error(`Failed to get hero metrics: ${response.status}`);
@@ -125,11 +137,12 @@ export async function getHeroMetrics(
   return heroMetrics.metrics;
 }
 
-export async function getWordChartData(
-  userId: number,
-): Promise<WordChartDataPoint[]> {
-  const wordChartDataUrl = `${BASE_URL}/dashboard/word-chart-data?user_id=${userId}`;
-  const response = await fetch(wordChartDataUrl, { method: "GET" });
+export async function getWordChartData(): Promise<WordChartDataPoint[]> {
+  const wordChartDataUrl = `${BASE_URL}/dashboard/word-chart-data`;
+  const response = await fetch(wordChartDataUrl, {
+    method: "GET",
+    headers: authHeaders(),
+  });
 
   if (!response.ok) {
     throw new Error(`Failed to get word chart data: ${response.status}`);

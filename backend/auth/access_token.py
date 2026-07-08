@@ -27,7 +27,7 @@ def decode_access_token(token: Annotated[str, Depends(oauth2_bearer)]):
         
         if user_id is None: 
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user')
-        
+
         return user_id
         
     except JWTError:

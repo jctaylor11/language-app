@@ -1,12 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Line, LineChart, XAxis } from "recharts";
 import { getWordChartData } from "../api";
-import { DEV_USER_ID } from "../config";
 
 export default function WordsChart() {
   const wordChartData = useQuery({
     queryKey: ["wordChartData"],
-    queryFn: () => getWordChartData(DEV_USER_ID),
+    queryFn: () => getWordChartData(),
   });
 
   if (wordChartData.isPending) {

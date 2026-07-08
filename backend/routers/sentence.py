@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import text, insert, Connection
 from typing import Annotated
 
+from backend.auth.access_token import decode_access_token
 from backend.db.connection import get_read_connection, get_write_connection
 from backend.llm import generate_sentences
 from backend.lemmatiser import extract_lemmas
@@ -134,7 +135,7 @@ def insert_sentence_result(conn: Connection, user_id: int, sentence_id: int, sta
 
 
 @router.post("/sentence-results")
-def create_sentence_result(user_id: int, payload: SentenceResult, conn: Annotated[Connection, Depends(get_write_connection)]):      # TODO: batch these and send via beacon on page close
+def create_sentence_result(user_id: Annotated[int, Depends(decode_access_token)], payload: SentenceResult, conn: Annotated[Connection, Depends(get_write_connection)]):      # TODO: batch these and send via beacon on page close
     """Records the user's result for a single reviewed sentence."""
     insert_sentence_result(conn, user_id, payload.sentence_id, payload.status)
 

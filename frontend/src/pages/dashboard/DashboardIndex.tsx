@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { DashboardHeroMetrics } from "../../types";
 import { getHeroMetrics } from "../../api";
-import { DEV_USER_ID } from "../../config";
 import WordsChart from "../../components/WordChart";
 
 const KPI_CONFIG = {
@@ -12,7 +11,7 @@ const KPI_CONFIG = {
 export default function DashboardIndex() {
   const heroMetrics = useQuery({
     queryKey: ["heroMetrics"],
-    queryFn: () => getHeroMetrics(DEV_USER_ID),
+    queryFn: () => getHeroMetrics(),
   });
 
   if (heroMetrics.isPending) {

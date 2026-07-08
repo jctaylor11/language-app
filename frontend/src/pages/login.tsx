@@ -10,7 +10,8 @@ export default function Login() {
     if (!credential) return;
 
     const jwt = await getJWTFromGoogleToken(credential);
-    console.log("JWT Response:", jwt); // Checkpoint that its pulling JWT placeholder
+
+    localStorage.setItem("jwt", jwt);
   };
   return (
     <GoogleLogin

@@ -4,7 +4,6 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import type { WordPair, WordResults, VocabResults } from "../types";
 import { fetchWords, getOrCreateSession, sendVocabResults } from "../api";
 import { calcIncorrectInput } from "../utils";
-import { DEV_USER_ID } from "../config";
 
 function WordCard({
   wordPair,
@@ -47,12 +46,12 @@ export default function VocabSession() {
 
   const { data: session } = useQuery({
     queryKey: ["session"],
-    queryFn: () => getOrCreateSession(DEV_USER_ID),
+    queryFn: () => getOrCreateSession(),
   });
 
   const { data: wordsData, fetchNextPage } = useInfiniteQuery({
     queryKey: ["words"],
-    queryFn: () => fetchWords(DEV_USER_ID),
+    queryFn: () => fetchWords(),
     initialPageParam: 0,
     getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
     staleTime: Infinity, // Prevent background refetch mid-session (e.g window refocus)
@@ -139,7 +138,7 @@ export default function VocabSession() {
     if (input === currentWord.source) {
       const vocabResults = buildVocabResults(currentWord, session);
       await advanceWord(); // Timer is reset in advanceWord - therefore placed before sendVocabResults (so its not waiting) and after vocabResults is built (else time sent immediately after started)
-      await sendVocabResults(DEV_USER_ID, vocabResults);
+      await sendVocabResults(vocabResults);
     }
   }
 
@@ -154,7 +153,7 @@ export default function VocabSession() {
       const skipped = true;
       const vocabResults = buildVocabResults(currentWord, session, skipped);
       await advanceWord(); // advanceWord before network request to priorise UI speed
-      await sendVocabResults(DEV_USER_ID, vocabResults);
+      await sendVocabResults(vocabResults);
     }
 
     // Filter out meaningless keys, replace Backspace with a clean and distinct symbol

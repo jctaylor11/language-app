@@ -1,11 +1,10 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from datetime import timedelta
 from typing import Annotated
 from sqlalchemy import Connection
 
 from backend.auth.google import get_user_infos_from_google_token
 from backend.auth.users import get_or_create_user_id
-from backend.auth.jwt import create_access_token
+from backend.auth.access_token import create_access_token
 from backend.schemas import GoogleToken
 from backend.db.connection import get_write_connection
 
