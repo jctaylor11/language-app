@@ -7,6 +7,7 @@ import RootLayout from "./RootLayout";
 import DashboardIndex from "./pages/dashboard/DashboardIndex";
 import Login from "./pages/login";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { AuthProvider } from "./AuthContext";
 
 export default function App() {
   return (
@@ -14,18 +15,20 @@ export default function App() {
       <GoogleOAuthProvider
         clientId={import.meta.env.VITE_OIDC_GOOGLE_CLIENT_ID}
       >
-        <Routes>
-          <Route element={<RootLayout />}>
-            <Route index element={<Navigate to="/vocab" replace />} />
-            <Route path="/vocab" element={<VocabSession />} />
-            <Route path="/sentences" element={<SentenceSession />} />
-            <Route path="/dashboard" element={<DashboardLayout />}>
-              <Route index element={<DashboardIndex />} />
-              <Route path="vocabulary" element={<VocabTable />} />
+        <AuthProvider>
+          <Routes>
+            <Route element={<RootLayout />}>
+              <Route index element={<Navigate to="/vocab" replace />} />
+              <Route path="/vocab" element={<VocabSession />} />
+              <Route path="/sentences" element={<SentenceSession />} />
+              <Route path="/dashboard" element={<DashboardLayout />}>
+                <Route index element={<DashboardIndex />} />
+                <Route path="vocabulary" element={<VocabTable />} />
+              </Route>
+              <Route path="/login" element={<Login />} />
             </Route>
-            <Route path="/login" element={<Login />} />
-          </Route>
-        </Routes>
+          </Routes>
+        </AuthProvider>
       </GoogleOAuthProvider>
     </BrowserRouter>
   );

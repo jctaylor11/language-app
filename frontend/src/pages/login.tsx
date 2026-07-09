@@ -2,8 +2,11 @@ import { GoogleLogin } from "@react-oauth/google";
 import type { CredentialResponse } from "@react-oauth/google";
 
 import { getJWTFromGoogleToken } from "../api";
+import { useAuth } from "../AuthContext";
 
 export default function Login() {
+  const { login } = useAuth();
+
   const handleSuccess = async (credentialResponse: CredentialResponse) => {
     const credential = credentialResponse.credential;
 
@@ -11,7 +14,7 @@ export default function Login() {
 
     const jwt = await getJWTFromGoogleToken(credential);
 
-    localStorage.setItem("jwt", jwt);
+    login(jwt);
   };
   return (
     <GoogleLogin
