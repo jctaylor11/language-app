@@ -101,7 +101,7 @@ def insert_sentences_words(conn: Connection, sentences: list[SentencePair]) -> N
 
 @router.post("/sentences")
 def get_sentence_batch(
-    user_id: int,
+    user_id: Annotated[int, Depends(decode_access_token)],
     payload: SentenceBatchRequest,
     read_conn: Annotated[Connection, Depends(get_read_connection)],     # Two connections so that a single conn isn't kept open over slow LLM call
     write_conn: Annotated[Connection, Depends(get_write_connection)],
