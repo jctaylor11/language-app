@@ -5,7 +5,8 @@ import VocabTable from "./pages/dashboard/VocabTable";
 import SentenceSession from "./pages/SentenceSession";
 import RootLayout from "./RootLayout";
 import DashboardIndex from "./pages/dashboard/DashboardIndex";
-import Login from "./pages/login";
+import Login from "./pages/Login";
+import Home from "./pages/Home";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "./AuthContext";
 import ProtectedRoute from "./ProtectedRoute";
@@ -20,7 +21,6 @@ export default function App() {
           <Routes>
             <Route element={<RootLayout />}>
               <Route element={<ProtectedRoute />}>
-                <Route index element={<Navigate to="/vocab" replace />} />
                 <Route path="/vocab" element={<VocabSession />} />
                 <Route path="/sentences" element={<SentenceSession />} />
                 <Route path="/dashboard" element={<DashboardLayout />}>
@@ -28,6 +28,7 @@ export default function App() {
                   <Route path="vocabulary" element={<VocabTable />} />
                 </Route>
               </Route>
+              <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
             </Route>
           </Routes>

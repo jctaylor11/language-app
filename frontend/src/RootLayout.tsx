@@ -16,7 +16,10 @@ export default function RootLayout() {
             <button onClick={logout}>Log out</button>
           </>
         ) : (
-          <Link to="/login">Log in</Link>
+          <>
+            <Link to="/">Home</Link>
+            <Link to="/login">Log in</Link>
+          </>
         )}
       </nav>
       <main className="px-6 py-8">
