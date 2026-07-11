@@ -85,3 +85,13 @@ class SentenceResult(Base):
     sentence_id: Mapped[int] = mapped_column(ForeignKey("sentences.id", ondelete="CASCADE"))
     status: Mapped[SentenceResultStatus] = mapped_column(Enum(SentenceResultStatus, name="sentence_result_status"))
     answered_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+
+
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    refresh_token_hash: Mapped[str] = mapped_column(unique=True)
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    refresh_token_expires_at: Mapped[datetime]  = mapped_column(TIMESTAMP(timezone=True))

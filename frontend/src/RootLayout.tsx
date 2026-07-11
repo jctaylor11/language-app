@@ -13,7 +13,9 @@ export default function RootLayout() {
             <Link to="/vocab">Vocab</Link>
             <Link to="/sentences">Sentences</Link>
             <Link to="/dashboard">Dashboard</Link>
-            <button onClick={logout}>Log out</button>
+            <button onClick={logout} className="cursor-pointer">
+              Log out
+            </button>
           </>
         ) : (
           <>
