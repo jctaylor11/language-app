@@ -2,7 +2,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import type { CredentialResponse } from "@react-oauth/google";
 import { useNavigate } from "react-router";
 
-import { getJWTFromGoogleToken } from "../api";
+import { authenticateWithGoogleToken } from "../api";
 import { useAuth } from "../AuthContext";
 
 export default function Login() {
@@ -13,8 +13,8 @@ export default function Login() {
     const credential = credentialResponse.credential;
     if (!credential) return;
 
-    const jwt = await getJWTFromGoogleToken(credential);
-    login(jwt);
+    await authenticateWithGoogleToken(credential);
+    login();
     navigate("/vocab", { replace: true });
   };
   return (

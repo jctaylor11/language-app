@@ -9,18 +9,13 @@ import type {
   WordChartDataPoint,
 } from "./types";
 
-const BASE_URL = "http://127.0.0.1:8000";
-
-function authHeaders(): HeadersInit {
-  const token = localStorage.getItem("jwt");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+const BASE_URL = "http://localhost:8000";
 
 export async function fetchWords(): Promise<WordPair[]> {
   const wordsUrl = `${BASE_URL}/words`;
   const response = await fetch(wordsUrl, {
     method: "GET",
-    headers: authHeaders(),
+    credentials: "include",
   });
   const wordsData: WordsResponse = await response.json();
   return wordsData.word_batch;
@@ -30,7 +25,7 @@ export async function fetchSession(): Promise<number> {
   const sessionUrl = `${BASE_URL}/sessions`;
   const response = await fetch(sessionUrl, {
     method: "POST",
-    headers: authHeaders(),
+    credentials: "include",
   });
   const sessionData: SessionResponse = await response.json();
   console.log("Session", sessionData);
@@ -55,7 +50,8 @@ export async function sendVocabResults(
     const vocabResultsUrl = `${BASE_URL}/vocab-results`;
     const response = await fetch(vocabResultsUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(vocabResults),
     });
     const vocabResultsData = await response.json();
@@ -72,7 +68,8 @@ export async function generateSentences(
     const sentencesUrl = `${BASE_URL}/sentences`;
     const response = await fetch(sentencesUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         num_words: numWords,
       }),
@@ -93,7 +90,8 @@ export async function sendSentenceResult(
     const userSentencesUrl = `${BASE_URL}/sentence-results`;
     const response = await fetch(userSentencesUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sentence_id: sentenceId,
         status: status,
@@ -111,7 +109,7 @@ export async function getWordEntries(): Promise<WordEntry[]> {
     const wordEntriesUrl = `${BASE_URL}/dashboard/words`;
     const response = await fetch(wordEntriesUrl, {
       method: "GET",
-      headers: authHeaders(),
+      credentials: "include",
     });
     const wordEntries = await response.json();
     return wordEntries.words;
@@ -125,7 +123,7 @@ export async function getHeroMetrics(): Promise<DashboardHeroMetrics> {
   const heroMetricsUrl = `${BASE_URL}/dashboard/hero-metrics`;
   const response = await fetch(heroMetricsUrl, {
     method: "GET",
-    headers: authHeaders(),
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -141,7 +139,7 @@ export async function getWordChartData(): Promise<WordChartDataPoint[]> {
   const wordChartDataUrl = `${BASE_URL}/dashboard/word-chart-data`;
   const response = await fetch(wordChartDataUrl, {
     method: "GET",
-    headers: authHeaders(),
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -153,14 +151,39 @@ export async function getWordChartData(): Promise<WordChartDataPoint[]> {
   return wordChartData.cumulative_words;
 }
 
-export async function getJWTFromGoogleToken(credential: string) {
+export async function authenticateWithGoogleToken(
+  credential: string,
+): Promise<void> {
   const authGoogleUrl = `${BASE_URL}/auth-google`;
   const response = await fetch(authGoogleUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({ credential }),
   });
-  const userData = await response.json();
 
-  return userData.token;
+  if (!response.ok) {
+    throw new Error(
+      `Failed to authenticate with Google token: ${response.status}`,
+    );
+  }
+}
+
+export async function checkAuth(): Promise<boolean> {
+  const response = await fetch(`${BASE_URL}/auth/me`, {
+    method: "GET",
+    credentials: "include",
+  });
+  return response.ok;
+}
+
+export async function logoutUser(): Promise<void> {
+  const response = await fetch(`${BASE_URL}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to logout: ${response.status}`);
+  }
 }

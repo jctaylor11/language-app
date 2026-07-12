@@ -3,12 +3,12 @@ import { Outlet, Link } from "react-router";
 import { useAuth } from "./AuthContext";
 
 export default function RootLayout() {
-  const { token, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
 
   return (
     <>
       <nav className="flex justify-end p-5 gap-4 border-b border-gray-300">
-        {token != null ? (
+        {isAuthenticated === true ? (
           <>
             <Link to="/vocab">Vocab</Link>
             <Link to="/sentences">Sentences</Link>
