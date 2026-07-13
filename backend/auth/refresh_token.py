@@ -24,9 +24,11 @@ def get_user_id_from_valid_refresh_token(conn: Connection, refresh_token: str) -
 
 
 def delete_refresh_token(conn: Connection, refresh_token: str) -> None:
+    hashed_refresh_token = hash_token(refresh_token)
+
     conn.execute(text("""
         DELETE FROM refresh_tokens WHERE refresh_token_hash = :refresh_token_hash
-    """), {"refresh_token_hash": hash_token(refresh_token)})
+    """), {"refresh_token_hash": hashed_refresh_token})
 
 
 def hash_token(token: str) -> str:

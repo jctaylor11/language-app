@@ -58,9 +58,16 @@ async def auth_google(google_token: GoogleToken, response: Response, conn: Annot
 async def auth_check(user_id: Annotated[int, Depends(decode_access_token)]):
     return {"authenticated": True}  # Only returns true if jwt successfully decoded, hence auth check returns true
 
+
 @router.post('/auth/logout')
-async def auth_logout(response: Response):
+async def auth_logout(conn: Annotated[Connection, Depends(get_write_connection)], response: Response, request: Request):
+    refresh_token = request.cookies.get("refresh_token")
+
+    if (refresh_token is not None):     # Defensively delete the access and refresh token regardless, hence just check first for db cleanup
+        delete_refresh_token(conn, refresh_token)
+
     response.delete_cookie("access_token")
+    response.delete_cookie("refresh_token", path="/auth/refresh")
     return {"status": "ok"}
 
 
