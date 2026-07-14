@@ -11,11 +11,37 @@ import type {
 
 const BASE_URL = "http://localhost:8000";
 
+// Wrapper API to call endpoints with auth and retry with refresh token if 401 response
+export async function fetchWithAuth(url: string, options: RequestInit = {}) {
+  let response = await fetch(url, { ...options, credentials: "include" });
+
+  // Only intended to catch instance where the access token has expires and the refresh token is still active - hence refresh and retry
+  if (response.status != 401) {
+    return response;
+  } else {
+    const refreshAuthUrl = `${BASE_URL}/auth/refresh`;
+    const refreshResponse = await fetch(refreshAuthUrl, {
+      method: "POST",
+      credentials: "include",
+    });
+
+    // Refresh token is invalid
+    if (refreshResponse.status != 200) {
+      throw new Error(
+        "Refresh token is invalid or expired. Please log in again.",
+      );
+    }
+
+    response = await fetch(url, { ...options, credentials: "include" });
+
+    return response;
+  }
+}
+
 export async function fetchWords(): Promise<WordPair[]> {
   const wordsUrl = `${BASE_URL}/words`;
-  const response = await fetch(wordsUrl, {
+  const response = await fetchWithAuth(wordsUrl, {
     method: "GET",
-    credentials: "include",
   });
   const wordsData: WordsResponse = await response.json();
   return wordsData.word_batch;
@@ -23,9 +49,8 @@ export async function fetchWords(): Promise<WordPair[]> {
 
 export async function fetchSession(): Promise<number> {
   const sessionUrl = `${BASE_URL}/sessions`;
-  const response = await fetch(sessionUrl, {
+  const response = await fetchWithAuth(sessionUrl, {
     method: "POST",
-    credentials: "include",
   });
   const sessionData: SessionResponse = await response.json();
   console.log("Session", sessionData);
@@ -48,9 +73,8 @@ export async function sendVocabResults(
 ): Promise<void> {
   try {
     const vocabResultsUrl = `${BASE_URL}/vocab-results`;
-    const response = await fetch(vocabResultsUrl, {
+    const response = await fetchWithAuth(vocabResultsUrl, {
       method: "POST",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(vocabResults),
     });
@@ -66,9 +90,8 @@ export async function generateSentences(
 ): Promise<SentencePair[]> {
   try {
     const sentencesUrl = `${BASE_URL}/sentences`;
-    const response = await fetch(sentencesUrl, {
+    const response = await fetchWithAuth(sentencesUrl, {
       method: "POST",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         num_words: numWords,
@@ -88,9 +111,8 @@ export async function sendSentenceResult(
 ): Promise<void> {
   try {
     const userSentencesUrl = `${BASE_URL}/sentence-results`;
-    const response = await fetch(userSentencesUrl, {
+    const response = await fetchWithAuth(userSentencesUrl, {
       method: "POST",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sentence_id: sentenceId,
@@ -107,9 +129,8 @@ export async function sendSentenceResult(
 export async function getWordEntries(): Promise<WordEntry[]> {
   try {
     const wordEntriesUrl = `${BASE_URL}/dashboard/words`;
-    const response = await fetch(wordEntriesUrl, {
+    const response = await fetchWithAuth(wordEntriesUrl, {
       method: "GET",
-      credentials: "include",
     });
     const wordEntries = await response.json();
     return wordEntries.words;
@@ -121,9 +142,8 @@ export async function getWordEntries(): Promise<WordEntry[]> {
 
 export async function getHeroMetrics(): Promise<DashboardHeroMetrics> {
   const heroMetricsUrl = `${BASE_URL}/dashboard/hero-metrics`;
-  const response = await fetch(heroMetricsUrl, {
+  const response = await fetchWithAuth(heroMetricsUrl, {
     method: "GET",
-    credentials: "include",
   });
 
   if (!response.ok) {
@@ -137,9 +157,8 @@ export async function getHeroMetrics(): Promise<DashboardHeroMetrics> {
 
 export async function getWordChartData(): Promise<WordChartDataPoint[]> {
   const wordChartDataUrl = `${BASE_URL}/dashboard/word-chart-data`;
-  const response = await fetch(wordChartDataUrl, {
+  const response = await fetchWithAuth(wordChartDataUrl, {
     method: "GET",
-    credentials: "include",
   });
 
   if (!response.ok) {
@@ -170,9 +189,8 @@ export async function authenticateWithGoogleToken(
 }
 
 export async function checkAuth(): Promise<boolean> {
-  const response = await fetch(`${BASE_URL}/auth/me`, {
+  const response = await fetchWithAuth(`${BASE_URL}/auth/me`, {
     method: "GET",
-    credentials: "include",
   });
   return response.ok;
 }
