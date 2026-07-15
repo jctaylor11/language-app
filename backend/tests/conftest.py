@@ -5,6 +5,7 @@ from sqlalchemy import create_engine, text
 from backend.main import app
 from backend.db.connection import get_write_connection, get_read_connection
 from backend.config import TEST_DATABASE_URL
+from backend.auth.refresh_token import create_refresh_token
 
 test_engine = create_engine(TEST_DATABASE_URL)
 
@@ -47,6 +48,11 @@ def seed_user(conn) -> int:
 def seed_session(conn, seed_user):
     result = conn.execute(text("INSERT INTO sessions (id, user_id) VALUES (:session_id, :user_id) RETURNING id"), {"session_id": TEST_SESSION_ID, "user_id": TEST_USER_ID})
     return result.scalar()
+
+
+@pytest.fixture
+def refresh_token(conn, seed_user) -> str:
+    return create_refresh_token(conn, TEST_USER_ID)
 
 
 @pytest.fixture
