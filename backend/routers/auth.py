@@ -29,7 +29,7 @@ def set_auth_cookies(response: Response, conn: Connection, user_id: int) -> None
 
 
 @router.post('/auth-google')
-async def auth_google(google_token: GoogleToken, response: Response, conn: Annotated[Connection, Depends(get_write_connection)]):
+def auth_google(google_token: GoogleToken, response: Response, conn: Annotated[Connection, Depends(get_write_connection)]):
     credential = google_token.credential
     if not credential:
         raise HTTPException(
@@ -55,12 +55,12 @@ async def auth_google(google_token: GoogleToken, response: Response, conn: Annot
 
 
 @router.get('/auth/me')
-async def auth_check(user_id: Annotated[int, Depends(decode_access_token)]):
+def auth_check(user_id: Annotated[int, Depends(decode_access_token)]):
     return {"authenticated": True}  # Only returns true if jwt successfully decoded, hence auth check returns true
 
 
 @router.post('/auth/logout')
-async def auth_logout(conn: Annotated[Connection, Depends(get_write_connection)], response: Response, request: Request):
+def auth_logout(conn: Annotated[Connection, Depends(get_write_connection)], response: Response, request: Request):
     refresh_token = request.cookies.get("refresh_token")
 
     if (refresh_token is not None):     # Defensively delete the access and refresh token regardless, hence just check first for db cleanup
@@ -72,7 +72,7 @@ async def auth_logout(conn: Annotated[Connection, Depends(get_write_connection)]
 
 
 @router.post('/auth/refresh')
-async def auth_refresh(request: Request, response: Response, conn: Annotated[Connection, Depends(get_write_connection)]):
+def auth_refresh(request: Request, response: Response, conn: Annotated[Connection, Depends(get_write_connection)]):
     refresh_token = request.cookies.get("refresh_token")
 
     if refresh_token is None:

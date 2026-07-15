@@ -10,7 +10,8 @@ def get_user_infos_from_google_token(id_token_str):
             google_requests.Request(),
             OIDC_GOOGLE_CLIENT_ID
         )
-    except ValueError:
+    except ValueError as e:
+        print("GOOGLE TOKEN VERIFY FAILED:", e)  # TEMP DEBUG
         return {
             'status': False,
             'user_infos': None
