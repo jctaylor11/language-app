@@ -15,7 +15,7 @@ const BASE_URL = "http://localhost:8000";
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
   let response = await fetch(url, { ...options, credentials: "include" });
 
-  // Only intended to catch instance where the access token has expires and the refresh token is still active - hence refresh and retry
+  // Only intended to catch instance where the access token has expired and the refresh token is still active - hence refresh and retry
   if (response.status != 401) {
     return response;
   } else {

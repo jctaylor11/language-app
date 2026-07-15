@@ -1,7 +1,8 @@
-from backend.tests.conftest import TEST_USER_ID, TEST_SESSION_ID
+from backend.tests.conftest import TEST_SESSION_ID
 
-def test_get_word_batch(client, seed_user_words):
-    response = client.get(f"/words?user_id={TEST_USER_ID}")
+def test_get_word_batch(client, access_token, seed_user_words):
+    client.cookies.set("access_token", access_token)  # access token is sent over httpOnly cookie
+    response = client.get(f"/words")
     data = response.json()
     assert response.status_code == 200
     assert "word_batch" in data
@@ -9,7 +10,8 @@ def test_get_word_batch(client, seed_user_words):
     assert len(data["word_batch"]) == 5 # Limited to 5 by endpoint query's LIMIT
     
 
-def test_create_vocab_results(client, seed_session, seed_user_words):
+def test_create_vocab_results(client, access_token, seed_session, seed_user_words):
+    client.cookies.set("access_token", access_token)
     body = {
         "session_id": TEST_SESSION_ID,
         "word_results": [
@@ -24,7 +26,7 @@ def test_create_vocab_results(client, seed_session, seed_user_words):
         ]
     }
 
-    response = client.post(f"/vocab-results?user_id={TEST_USER_ID}", json=body)
+    response = client.post(f"/vocab-results", json=body)
     data = response.json()
 
     assert response.status_code == 200

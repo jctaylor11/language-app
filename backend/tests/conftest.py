@@ -6,6 +6,7 @@ from backend.main import app
 from backend.db.connection import get_write_connection, get_read_connection
 from backend.config import TEST_DATABASE_URL
 from backend.auth.refresh_token import create_refresh_token
+from backend.auth.access_token import create_access_token
 
 test_engine = create_engine(TEST_DATABASE_URL)
 
@@ -42,6 +43,12 @@ def seed_user(conn) -> int:
     # Single-user test setup with rollback isolation, so user_id always 1
     result = conn.execute(text("INSERT INTO users (id, google_sub, email) VALUES (:test_user_id, :test_sub, :test_email) RETURNING id"), {"test_user_id": TEST_USER_ID, "test_sub": "123", "test_email": "test@email.com"})
     return result.scalar()
+
+
+@pytest.fixture
+def access_token(seed_user) -> str:
+    access_token = create_access_token(TEST_USER_ID)
+    return access_token
 
 
 @pytest.fixture
