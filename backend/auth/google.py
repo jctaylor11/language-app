@@ -8,10 +8,11 @@ def get_user_infos_from_google_token(id_token_str):
         id_token_info = id_token.verify_oauth2_token(
             id_token_str,
             google_requests.Request(),
-            OIDC_GOOGLE_CLIENT_ID
+            OIDC_GOOGLE_CLIENT_ID,
+            clock_skew_in_seconds=10,
         )
     except ValueError as e:
-        print("GOOGLE TOKEN VERIFY FAILED:", e)  # TEMP DEBUG
+        print("GOOGLE TOKEN VERIFY FAILED:", e)  # For debug
         return {
             'status': False,
             'user_infos': None

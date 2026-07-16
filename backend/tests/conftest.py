@@ -63,6 +63,36 @@ def refresh_token(conn, seed_user) -> str:
 
 
 @pytest.fixture
+def concurrent_clients():
+    # Concurrent transactions rather than one shared conn. Two separate TestClient instances each thread has its own client's cookies. 
+    def get_test_write_connection():
+        with test_engine.begin() as conn:   # Independently manages its own  connection lifestyle, unlike the shared and manual connection with client
+            yield conn
+
+    def get_test_read_connection():
+        with test_engine.connect() as conn:
+            yield conn
+
+    app.dependency_overrides[get_write_connection] = get_test_write_connection
+    app.dependency_overrides[get_read_connection] = get_test_read_connection
+    yield TestClient(app), TestClient(app)
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def concurrent_refresh_token():
+    # Committed for real (not rolled back) so both concurrent connections can see it
+    with test_engine.begin() as conn:
+        user_id = conn.execute(text("INSERT INTO users (google_sub, email) VALUES (:sub, :email) RETURNING id"), {"sub": "concurrent-test-sub", "email": "concurrent-test@email.com"}).scalar()
+        token = create_refresh_token(conn, user_id)
+
+    yield token
+
+    with test_engine.begin() as conn:   # Manually delete for teardown since it's committed, not rolled back
+        conn.execute(text("DELETE FROM users WHERE id = :user_id"), {"user_id": user_id})
+
+
+@pytest.fixture
 def seed_user_words(conn, seed_user):
     result = conn.execute(text("""
         INSERT INTO words (target, source, part_of_speech) VALUES

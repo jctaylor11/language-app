@@ -17,12 +17,13 @@ def set_auth_cookies(response: Response, conn: Connection, user_id: int) -> None
     jwt = create_access_token(user_id)
     refresh_token = create_refresh_token(conn, user_id)
 
-    response.set_cookie("access_token", jwt, httponly=True)
+    response.set_cookie("access_token", jwt, httponly=True, samesite="lax")
     # path to auth/refresh to limit scope to only place that uses it. max_age makes it persist browser restarts
     response.set_cookie(
         "refresh_token",
         refresh_token,
         httponly=True,
+        samesite="lax",
         path="/auth/refresh",
         max_age=int(REFRESH_TOKEN_EXPIRES_DAYS) * 24 * 60 * 60,
     )
