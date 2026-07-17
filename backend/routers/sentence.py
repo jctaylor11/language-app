@@ -12,8 +12,10 @@ from backend.schemas import SentenceResult, SentenceBatchRequest, SentencePair
 
 router = APIRouter()
 
+NUM_WORDS_SAMPLED = 10
+NUM_SENTENCES_IN_BATCH = 3
 
-def sample_user_words(conn: Connection, user_id: int, num_words: int) -> list[str]:
+def sample_user_words(conn: Connection, user_id: int, num_words_sampled: int) -> list[str]:
     result = conn.execute(text("""
         SELECT target
         FROM words
@@ -21,7 +23,7 @@ def sample_user_words(conn: Connection, user_id: int, num_words: int) -> list[st
         WHERE user_id = :user_id
         ORDER BY RANDOM()
         LIMIT :num_words
-    """), {"user_id": user_id, "num_words": num_words})
+    """), {"user_id": user_id, "num_words": num_words_sampled})
 
     rows = result.fetchall()
 
@@ -30,7 +32,10 @@ def sample_user_words(conn: Connection, user_id: int, num_words: int) -> list[st
     return user_words
 
 
-def get_eligible_sentences(conn: Connection, user_id: int, user_words: list[str]) -> list[SentencePair]:      # TODO: User user_words logic to find suitable words, rather than taking any
+def get_eligible_sentences(conn: Connection, user_id: int, user_words: list[str]) -> list[SentencePair]:      
+    
+    # TODO: User user_words logic to find suitable words, rather than taking any
+    
     eligible_sentences = conn.execute(text("""
     SELECT s.id, s.target, s.source
     FROM sentences s
@@ -102,7 +107,6 @@ def insert_sentences_words(conn: Connection, sentences: list[SentencePair]) -> N
 @router.post("/sentences")
 def get_sentence_batch(
     user_id: Annotated[int, Depends(decode_access_token)],
-    payload: SentenceBatchRequest,
     read_conn: Annotated[Connection, Depends(get_read_connection)],     # Two connections so that a single conn isn't kept open over slow LLM call
     write_conn: Annotated[Connection, Depends(get_write_connection)],
 ):
@@ -111,13 +115,14 @@ def get_sentence_batch(
     First serves any applicable sentences that already exist in the cached sentences. If none applicable exist, it generates new sentences via LLM API,
     lemmatises them, and inserts the sentences and associated data into the sentences cache.
     """
-    user_words = sample_user_words(read_conn, user_id, payload.num_words)
-    eligible_sentences = get_eligible_sentences(read_conn, user_id, user_words)   # TODO: Add logic for finding sentences having user_words. Current fetches any not-done
+    user_words = sample_user_words(read_conn, user_id, NUM_WORDS_SAMPLED)   # User words needed to get sentences bespoke for the user
 
-    if len(eligible_sentences) > 3:
-        return {"sentences": [{"id": sentence.id, "target": sentence.target, "source": sentence.source} for sentence in eligible_sentences]}    # Early return since sentences from db are already lemmatised
+    eligible_sentences_in_cache = get_eligible_sentences(read_conn, user_id, user_words)   # TODO: Add logic for finding sentences having user_words. Current fetches any not-done
 
-    sentences = generate_sentences(user_words)  # If no eligible sentences already exist in the sentences cache
+    if len(eligible_sentences_in_cache) >= NUM_SENTENCES_IN_BATCH:    # Sufficient sentences already fetched, can return them rather than generate any
+        return {"sentences": [{"id": sentence.id, "target": sentence.target, "source": sentence.source} for sentence in eligible_sentences_in_cache]}    # Early return since sentences from db are already lemmatised
+
+    sentences = generate_sentences(user_words, NUM_SENTENCES_IN_BATCH)  # If no eligible sentences already exist in the sentences cache
 
     sentences = lemmatise_sentences(sentences)  # Lemmatisation allows sentence words to be matched against the words table by standardised citation form. Needed for sentence_words inserts and lemma_count
 

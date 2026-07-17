@@ -10,12 +10,12 @@ class SentencePackage(BaseModel):
     sentences: list[SentencePair]
 
 
-def generate_sentences(sentence_words: list[str]) -> list[SentencePair]:
+def generate_sentences(sentence_words: list[str], num_sentences_generated: int) -> list[SentencePair]:
 
     vocab_string = ", ".join(sentence_words)
 
     prompt = f"""
-    Generate 3 coherent Korean sentences using primarily these vocabulary words: {vocab_string}.
+    Generate {num_sentences_generated} coherent Korean sentences using primarily these vocabulary words: {vocab_string}.
     Particles, basic conjugations, and connectors are allowed as needed for grammar.
     The sentences should sound natural and grammatically correct. Do not start with a greeting.
     Intended for users learning Korean and seeing their learnt vocabulary in context.

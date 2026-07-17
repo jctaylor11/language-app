@@ -10,9 +10,6 @@ class SentenceResult(BaseModel):
     #TODO: session_id: int - add when session is wired to sentences too, NULL until then
     status: SentenceResultStatus
 
-class SentenceBatchRequest(BaseModel):
-    num_words: int
-
 
 class SentencePair(BaseModel):
     id: int | None = None

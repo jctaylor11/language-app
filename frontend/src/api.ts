@@ -85,17 +85,11 @@ export async function sendVocabResults(
   }
 }
 
-export async function generateSentences(
-  numWords: number,
-): Promise<SentencePair[]> {
+export async function generateSentences(): Promise<SentencePair[]> {
   try {
     const sentencesUrl = `${BASE_URL}/sentences`;
     const response = await fetchWithAuth(sentencesUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        num_words: numWords,
-      }),
     });
     const sentencesData = await response.json();
     return sentencesData.sentences;
