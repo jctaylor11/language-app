@@ -8,7 +8,7 @@ from backend.llm import generate_sentences
 from backend.lemmatiser import extract_lemmas
 from backend.db.models import Sentence
 from backend.enums import SentenceResultStatus
-from backend.schemas import SentenceResult, SentenceBatchRequest, SentencePair
+from backend.schemas import SentenceResult, SentencePair
 
 router = APIRouter()
 
