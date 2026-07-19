@@ -32,7 +32,7 @@ class Session(Base):
     __tablename__ = "sessions"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     started_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
     completed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
 
@@ -41,8 +41,8 @@ class VocabResult(Base):
     __tablename__ = "vocab_results"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    session_id: Mapped[int] = mapped_column(ForeignKey("sessions.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    session_id: Mapped[int] = mapped_column(ForeignKey("sessions.id", ondelete="CASCADE"))
     word_id: Mapped[int] = mapped_column(ForeignKey("words.id"))
     response_time_ms: Mapped[int | None]
     answered_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
@@ -54,7 +54,7 @@ class VocabResult(Base):
 class UserWord(Base):
     __tablename__ = "user_words"
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     word_id: Mapped[int] = mapped_column(ForeignKey("words.id"), primary_key=True)
     added_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
-import { generateSentences, sendSentenceResult } from "../api";
+import { fetchSentencePairs, sendSentenceResult } from "../api";
 import type { SentencePair } from "../types";
 
 function SentenceCard({
@@ -43,7 +43,7 @@ export default function SentenceSession() {
   } = useInfiniteQuery({
     // useInfiniteQuery appends batches instead of replace on refetch
     queryKey: ["sentencePairs"],
-    queryFn: () => generateSentences(),
+    queryFn: () => fetchSentencePairs(),
     initialPageParam: 0,
     getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
     staleTime: Infinity, // Prevent background refetching mid-session

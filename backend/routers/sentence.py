@@ -35,7 +35,8 @@ def sample_user_words(conn: Connection, user_id: int, num_words_sampled: int) ->
 def get_eligible_sentences(conn: Connection, user_id: int, user_words: list[str]) -> list[SentencePair]:      
     
     # TODO: User user_words logic to find suitable words, rather than taking any
-    
+    print(f"user words: {user_words}")
+
     eligible_sentences = conn.execute(text("""
     SELECT s.id, s.target, s.source
     FROM sentences s
