@@ -15,7 +15,9 @@ router = APIRouter()
 NUM_WORDS_SAMPLED = 10
 NUM_SENTENCES_IN_BATCH = 3
 
-def sample_user_words(conn: Connection, user_id: int, num_words_sampled: int) -> list[str]:
+def sample_user_words_for_generation(conn: Connection, user_id: int, num_words_sampled: int) -> list[str]:
+    # Words for LLM prompt - should only be a small sample, since excessive words wastes tokens without improving results
+    # TODO: constrain the sample: docs/sentences.md#constraint-aware-eligibility-query
     result = conn.execute(text("""
         SELECT target
         FROM words
@@ -32,26 +34,39 @@ def sample_user_words(conn: Connection, user_id: int, num_words_sampled: int) ->
     return user_words
 
 
-def get_eligible_sentences(conn: Connection, user_id: int, user_words: list[str]) -> list[SentencePair]:      
+def get_eligible_sentences(conn: Connection, user_id: int, proportion_matched: float = 0.7) -> list[SentencePair]:      
+    """Fetch existing sentences from the cache that the user has not already done, which have the desired proportion of known words from their vocab vault.
+
+    Args: 
+        proportion_matched: The desired proportion of the sentence's lemmas that matches the user's known words. ie 0.8 means 20% of the sentence would be new words
     
-    # TODO: User user_words logic to find suitable words, rather than taking any
-    print(f"user words: {user_words}")
+    Returns:
+        A list of eligible sentence pairs from the cache with the desired proportion of known words : unknown words
+    
+    """
 
     eligible_sentences = conn.execute(text("""
-    SELECT s.id, s.target, s.source
-    FROM sentences s
-    WHERE NOT EXISTS (
-        SELECT 1
-        FROM sentence_results sr
-        WHERE sr.sentence_id = s.id
-        AND sr.user_id = :user_id
-    )
-    LIMIT 50    -- Fetch many eligible in one batch for the session since free from database (rather than LLM)
-    """), {"user_id": user_id}).fetchall()
-
+        WITH users_words AS (
+            SELECT * FROM user_words WHERE user_id = :user_id
+            )
+        SELECT s.id, s.target, s.source
+        FROM sentences s
+        JOIN sentence_words sw ON s.id = sw.sentence_id
+        JOIN users_words uw ON sw.word_id = uw.word_id
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM sentence_results sr
+            WHERE sr.user_id = :user_id
+                AND sr.sentence_id = s.id
+            )
+        GROUP BY s.id, s.target, s.source, s.lemma_count
+        HAVING COUNT(s.id) >= :proportion_matched * s.lemma_count
+        LIMIT 50
+        """), {"user_id": user_id, "proportion_matched": proportion_matched})
+    
     sentences = [SentencePair(id=row.id, target=row.target, source=row.source) for row in eligible_sentences]
-
-    return sentences    
+    
+    return sentences
 
 
 def lemmatise_sentences(sentences: list[SentencePair]) -> list[SentencePair]:
@@ -116,12 +131,13 @@ def get_sentence_batch(
     First serves any applicable sentences that already exist in the cached sentences. If none applicable exist, it generates new sentences via LLM API,
     lemmatises them, and inserts the sentences and associated data into the sentences cache.
     """
-    user_words = sample_user_words(read_conn, user_id, NUM_WORDS_SAMPLED)   # User words needed to get sentences bespoke for the user
-
-    eligible_sentences_in_cache = get_eligible_sentences(read_conn, user_id, user_words)   # TODO: Add logic for finding sentences having user_words. Current fetches any not-done
+    eligible_sentences_in_cache = get_eligible_sentences(read_conn, user_id)
 
     if len(eligible_sentences_in_cache) >= NUM_SENTENCES_IN_BATCH:    # Sufficient sentences already fetched, can return them rather than generate any
-        return {"sentences": [{"id": sentence.id, "target": sentence.target, "source": sentence.source} for sentence in eligible_sentences_in_cache]}    # Early return since sentences from db are already lemmatised
+        eligible_sentences = {"sentences": [{"id": sentence.id, "target": sentence.target, "source": sentence.source} for sentence in eligible_sentences_in_cache]}    # Early return since no need to lemmatise etc - sentences from db are already lemmatised
+        return eligible_sentences
+    
+    user_words = sample_user_words_for_generation(read_conn, user_id, NUM_WORDS_SAMPLED)   # User words needed to get sentences bespoke for the user
 
     sentences = generate_sentences(user_words, NUM_SENTENCES_IN_BATCH)  # If no eligible sentences already exist in the sentences cache
 

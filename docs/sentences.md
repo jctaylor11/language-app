@@ -21,7 +21,7 @@
 
 ## Edge cases
 
-- lemma_count could be inflated since one surface word can be split into multiple lemmas (e.g 공부해 -> 공부 + 하다), and therefore a user who knows 공부 only gets half credit.
+- lemma_count could be inflated since one surface word can be split into multiple lemmas (e.g 공부해 -> 공부 + 하다), and therefore a user who knows 공부 only gets half credit. TODO: verify the extract_lemmas output and test proportions are as expected.
 
 ## Design ideas
 
@@ -34,6 +34,7 @@
 - Currently the user words samples are random. However they should be constrained. This should be modular to make it easy to add more constraints in the future (such as sentence tags). Currently:
   - Proportion of user’s words to new words
   - Approx length of sentence
+- Refinement: Instead of simply pulling a proportion of their user_words, there should be a per-word threshold. ie, the proportion of known words above a threshold confidence score that match the total number of lemmas in the sentence. This is unblocked after word confidence scoring is implemented.
 
 ### Sentence evals
 
