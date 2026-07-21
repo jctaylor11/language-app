@@ -4,7 +4,15 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { fetchSentencePairs, sendSentenceResult } from "../api";
 import type { SentencePair } from "../types";
 
-function SentenceControl({ onStart }: { onStart: () => void }) {
+function SentenceControl({
+  proportionValue,
+  onProportionChange,
+  onStart,
+}: {
+  proportionValue: number;
+  onProportionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onStart: () => void;
+}) {
   return (
     <div className="flex justify-center bg-[#dddddd] w-120 mx-auto px-10 py-5">
       <div className="flex flex-col text-[14px] w-90">
@@ -14,7 +22,15 @@ function SentenceControl({ onStart }: { onStart: () => void }) {
           <label className="block mb-2">
             Select desired % of known words in the sentence:
           </label>
-          <input className="w-full" type="range" min="0" max="100" step="20" />
+          <input
+            className="w-full"
+            type="range"
+            min="0"
+            max="100"
+            step="20"
+            value={proportionValue}
+            onChange={(e) => onProportionChange(e)}
+          />
         </div>
         <button
           onClick={() => onStart()}
@@ -54,6 +70,7 @@ function SentenceCard({
 }
 
 export default function SentenceSession() {
+  const [knownProportion, setKnownProportion] = useState(80);
   const [started, setStarted] = useState(false);
   const [inputText, setInputText] = useState("");
   const [sentencePairIndex, setSentencePairIndex] = useState(0);
@@ -66,7 +83,7 @@ export default function SentenceSession() {
   } = useInfiniteQuery({
     // useInfiniteQuery appends batches instead of replace on refetch
     queryKey: ["sentencePairs"],
-    queryFn: () => fetchSentencePairs(),
+    queryFn: () => fetchSentencePairs(knownProportion),
     initialPageParam: 0,
     getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
     staleTime: Infinity, // Prevent background refetching mid-session
@@ -118,5 +135,11 @@ export default function SentenceSession() {
     );
   }
 
-  return <SentenceControl onStart={() => setStarted(true)} />;
+  return (
+    <SentenceControl
+      proportionValue={knownProportion}
+      onProportionChange={(e) => setKnownProportion(Number(e.target.value))}
+      onStart={() => setStarted(true)}
+    />
+  );
 }

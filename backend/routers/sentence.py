@@ -8,7 +8,7 @@ from backend.llm import generate_sentences
 from backend.lemmatiser import extract_lemmas
 from backend.db.models import Sentence
 from backend.enums import SentenceResultStatus
-from backend.schemas import SentenceResult, SentencePair
+from backend.schemas import SentenceResult, SentencePair, SentenceRequest
 
 router = APIRouter()
 
@@ -34,16 +34,18 @@ def sample_user_words_for_generation(conn: Connection, user_id: int, num_words_s
     return user_words
 
 
-def get_eligible_sentences(conn: Connection, user_id: int, proportion_matched: float = 0.7) -> list[SentencePair]:      
+def get_eligible_sentences(conn: Connection, user_id: int, known_words_proportion: float = 0.7) -> list[SentencePair]:
     """Fetch existing sentences from the cache that the user has not already done, which have the desired proportion of known words from their vocab vault.
 
-    Args: 
-        proportion_matched: The desired proportion of the sentence's lemmas that matches the user's known words. ie 0.8 means 20% of the sentence would be new words
-    
+    Args:
+        known_words_proportion: The desired proportion of the sentence's lemmas that matches the user's known words. ie 0.8 means 20% of the sentence would be new words
+
     Returns:
         A list of eligible sentence pairs from the cache with the desired proportion of known words : unknown words
-    
+
     """
+
+    print(f"KNOWN WORDS PROPORTION: {known_words_proportion}")
 
     eligible_sentences = conn.execute(text("""
         WITH users_words AS (
@@ -60,9 +62,9 @@ def get_eligible_sentences(conn: Connection, user_id: int, proportion_matched: f
                 AND sr.sentence_id = s.id
             )
         GROUP BY s.id, s.target, s.source, s.lemma_count
-        HAVING COUNT(s.id) >= :proportion_matched * s.lemma_count
+        HAVING COUNT(s.id) >= :known_words_proportion * s.lemma_count
         LIMIT 50
-        """), {"user_id": user_id, "proportion_matched": proportion_matched})
+        """), {"user_id": user_id, "known_words_proportion": known_words_proportion})
     
     sentences = [SentencePair(id=row.id, target=row.target, source=row.source) for row in eligible_sentences]
     
@@ -125,13 +127,15 @@ def get_sentence_batch(
     user_id: Annotated[int, Depends(decode_access_token)],
     read_conn: Annotated[Connection, Depends(get_read_connection)],     # Two connections so that a single conn isn't kept open over slow LLM call
     write_conn: Annotated[Connection, Depends(get_write_connection)],
+    payload: SentenceRequest
 ):
     """Returns a batch of sentences for the user.
 
     First serves any applicable sentences that already exist in the cached sentences. If none applicable exist, it generates new sentences via LLM API,
     lemmatises them, and inserts the sentences and associated data into the sentences cache.
     """
-    eligible_sentences_in_cache = get_eligible_sentences(read_conn, user_id)
+    known_words_proportion = payload.known_proportion / 100   # The frontend slider is 0 - 100, but this must be converted to decimal
+    eligible_sentences_in_cache = get_eligible_sentences(read_conn, user_id, known_words_proportion)
 
     if len(eligible_sentences_in_cache) >= NUM_SENTENCES_IN_BATCH:    # Sufficient sentences already fetched, can return them rather than generate any
         eligible_sentences = {"sentences": [{"id": sentence.id, "target": sentence.target, "source": sentence.source} for sentence in eligible_sentences_in_cache]}    # Early return since no need to lemmatise etc - sentences from db are already lemmatised

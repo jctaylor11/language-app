@@ -18,6 +18,10 @@ class SentencePair(BaseModel):
     lemmas: list[str] = []  # Needs default since initally empty
 
 
+class SentenceRequest(BaseModel):
+    known_proportion: int
+
+
 class WordResult(BaseModel):
     word_id: int
     response_time_ms: int | None = None
