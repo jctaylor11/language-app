@@ -82,11 +82,12 @@ export default function SentenceSession() {
     isFetchingNextPage,
   } = useInfiniteQuery({
     // useInfiniteQuery appends batches instead of replace on refetch
-    queryKey: ["sentencePairs"],
+    queryKey: ["sentencePairs", knownProportion],
     queryFn: () => fetchSentencePairs(knownProportion),
     initialPageParam: 0,
     getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
     staleTime: Infinity, // Prevent background refetching mid-session
+    enabled: started, // Otherwise it will defalt to true on mount, which will cause it to fetch sentences before the user has submitted preferences (e.g knownProportion)
   });
 
   const sentencePairs = sentencePairsData?.pages.flat() ?? []; // Pages only needed so refetch doesn't replace data
