@@ -39,3 +39,7 @@
 ### Sentence evals
 
 - Eval on the sentences generated to see if they can be returned. Even if they do not meet user's constraints, they should still be cached if they are correct as a Korean sentence
+
+### Sentence generation slider
+
+- Change the slider to be like a wide button which covers the step width (ie 20%) - hence if they choose 100%, it's actually 80-100%. This inherently changes it from a single point to a width, which more accurately represents the precision. See [log](log.md#2026-07-21---sentences-control-slider-has-wide-step)

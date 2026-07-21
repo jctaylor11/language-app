@@ -144,6 +144,7 @@ def get_sentence_batch(
     sentences = lemmatise_sentences(sentences)  # Lemmatisation allows sentence words to be matched against the words table by standardised citation form. Needed for sentence_words inserts and lemma_count
 
     sentences = insert_sentences(write_conn, sentences)  # Returns with IDs
+
     insert_sentences_words(write_conn, sentences)
 
     return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in sentences]}

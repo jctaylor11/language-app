@@ -4,6 +4,29 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { fetchSentencePairs, sendSentenceResult } from "../api";
 import type { SentencePair } from "../types";
 
+function SentenceControl({ onStart }: { onStart: () => void }) {
+  return (
+    <div className="flex justify-center bg-[#dddddd] w-120 mx-auto px-10 py-5">
+      <div className="flex flex-col text-[14px] w-90">
+        <h1 className="text-[28px] font-bold">Sentence Generation</h1>
+        <p className="mb-4">Based on the words you know.</p>
+        <div>
+          <label className="block mb-2">
+            Select desired % of known words in the sentence:
+          </label>
+          <input className="w-full" type="range" min="0" max="100" step="20" />
+        </div>
+        <button
+          onClick={() => onStart()}
+          className="border px-6 py-1 mt-4 rounded cursor-pointer bg-gray-100 hover:bg-[#dddddd] active:bg-gray-200"
+        >
+          Generate Sentences
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function SentenceCard({
   sentencePair,
   inputText,
@@ -95,14 +118,5 @@ export default function SentenceSession() {
     );
   }
 
-  return (
-    <div className="flex items-center justify-center pt-60">
-      <button
-        onClick={() => setStarted(true)}
-        className="border px-6 py-1 rounded cursor-pointer hover:bg-gray-100 active:bg-gray-200"
-      >
-        Generate Sentences
-      </button>
-    </div>
-  );
+  return <SentenceControl onStart={() => setStarted(true)} />;
 }
