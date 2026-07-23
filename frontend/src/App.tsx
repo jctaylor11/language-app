@@ -10,6 +10,7 @@ import Home from "./pages/Home";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "./AuthContext";
 import ProtectedRoute from "./ProtectedRoute";
+import SentenceVault from "./pages/dashboard/SentenceTable";
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
                 <Route path="/dashboard" element={<DashboardLayout />}>
                   <Route index element={<DashboardIndex />} />
                   <Route path="vocabulary" element={<VocabTable />} />
+                  <Route path="sentences" element={<SentenceVault />} />
                 </Route>
               </Route>
               <Route path="/" element={<Home />} />

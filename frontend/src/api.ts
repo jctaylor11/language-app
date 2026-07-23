@@ -7,6 +7,7 @@ import type {
   WordEntry,
   DashboardHeroMetrics,
   WordChartDataPoint,
+  SentenceEntry,
 } from "./types";
 
 const BASE_URL = "http://localhost:8000";
@@ -202,4 +203,19 @@ export async function logoutUser(): Promise<void> {
   if (!response.ok) {
     throw new Error(`Failed to logout: ${response.status}`);
   }
+}
+
+export async function getSentenceEntries(): Promise<SentenceEntry[]> {
+  const sentenceEntriesUrl = `${BASE_URL}/dashboard/sentences`;
+  const response = await fetchWithAuth(sentenceEntriesUrl, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get sentence entries: ${response.status}`);
+  }
+
+  const sentenceEntries = await response.json();
+
+  return sentenceEntries.sentences;
 }

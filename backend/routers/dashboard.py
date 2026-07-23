@@ -8,7 +8,7 @@ from backend.db.connection import get_read_connection
 router = APIRouter()
 
 
-def get_word_table(conn: Connection, user_id: int) -> list[dict]:
+def get_word_table_data(conn: Connection, user_id: int) -> list[dict]:
     query = conn.execute(text("""
         SELECT
             w.id,
@@ -37,6 +37,19 @@ def get_word_table(conn: Connection, user_id: int) -> list[dict]:
         "av_s_per_syllable": float(row.av_s_per_syllable) if row.av_s_per_syllable is not None else None,
         "accuracy": float(row.accuracy) if row.accuracy is not None else None,
     } for row in rows]
+
+
+def get_sentences_table_data(conn: Connection, user_id: int) -> list[dict]:
+    query = conn.execute(text("""
+        SELECT s.id, s.target, s.source
+        FROM sentences s
+        JOIN sentence_results sr ON s.id = sr.sentence_id
+        WHERE sr.user_id = :user_id
+        """), {"user_id": user_id})
+
+    rows = query.fetchall()
+
+    return [{"id": row.id, "target": row.target, "source": row.source} for row in rows]
 
 
 def get_hero_metrics(conn: Connection, user_id: int) -> dict:
@@ -94,9 +107,9 @@ def get_cumulative_word_chart_data(conn: Connection, user_id: int) -> list[dict]
 
 @router.get("/dashboard/words")
 def get_dashboard_words(user_id: Annotated[int, Depends(decode_access_token)], conn: Annotated[Connection, Depends(get_read_connection)]) -> dict:
-    word_table = get_word_table(conn, user_id)
+    words_table_data = get_word_table_data(conn, user_id)
 
-    return {"words": word_table}
+    return {"words": words_table_data}
 
 
 @router.get("/dashboard/hero-metrics")
@@ -111,3 +124,10 @@ def get_word_chart_data(user_id: Annotated[int, Depends(decode_access_token)], c
     cumulative_words = get_cumulative_word_chart_data(conn, user_id)
 
     return {"cumulative_words": cumulative_words}
+
+
+@router.get("/dashboard/sentences")
+def get_dashboard_sentences(user_id: Annotated[int, Depends(decode_access_token)], conn: Annotated[Connection, Depends(get_read_connection)]) -> dict:
+    sentences_table_data = get_sentences_table_data(conn, user_id)
+
+    return {"sentences": sentences_table_data}

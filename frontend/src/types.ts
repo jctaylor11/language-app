@@ -50,3 +50,9 @@ export type WordChartDataPoint = {
   series_date: number;
   cum_words: number;
 };
+
+export type SentenceEntry = {
+  id: number;
+  target: string;
+  source: string;
+};

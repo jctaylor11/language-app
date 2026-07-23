@@ -3,6 +3,7 @@ import { Outlet, Link } from "react-router";
 const links = [
   { to: "/dashboard", label: "Overview" },
   { to: "/dashboard/vocabulary", label: "Vocab Vault" },
+  { to: "/dashboard/sentences", label: "Sentence Vault" },
 ];
 
 export default function DashboardLayout() {
