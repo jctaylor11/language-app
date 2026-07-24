@@ -106,28 +106,28 @@ def get_cumulative_word_chart_data(conn: Connection, user_id: int) -> list[dict]
 
 
 @router.get("/dashboard/words")
-def get_dashboard_words(user_id: Annotated[int, Depends(decode_access_token)], conn: Annotated[Connection, Depends(get_read_connection)]) -> dict:
+def get_dashboard_words(conn: Annotated[Connection, Depends(get_read_connection)], user_id: Annotated[int, Depends(decode_access_token)]) -> dict:
     words_table_data = get_word_table_data(conn, user_id)
 
     return {"words": words_table_data}
 
 
 @router.get("/dashboard/hero-metrics")
-def get_dashboard_hero_metrics(user_id: Annotated[int, Depends(decode_access_token)], conn: Annotated[Connection, Depends(get_read_connection)]) -> dict:
+def get_dashboard_hero_metrics(conn: Annotated[Connection, Depends(get_read_connection)], user_id: Annotated[int, Depends(decode_access_token)]) -> dict:
     hero_metrics = get_hero_metrics(conn, user_id)
 
     return {"metrics": hero_metrics}
 
 
 @router.get("/dashboard/word-chart-data")
-def get_word_chart_data(user_id: Annotated[int, Depends(decode_access_token)], conn: Annotated[Connection, Depends(get_read_connection)]) -> dict:
+def get_word_chart_data(conn: Annotated[Connection, Depends(get_read_connection)], user_id: Annotated[int, Depends(decode_access_token)]) -> dict:
     cumulative_words = get_cumulative_word_chart_data(conn, user_id)
 
     return {"cumulative_words": cumulative_words}
 
 
 @router.get("/dashboard/sentences")
-def get_dashboard_sentences(user_id: Annotated[int, Depends(decode_access_token)], conn: Annotated[Connection, Depends(get_read_connection)]) -> dict:
+def get_dashboard_sentences(conn: Annotated[Connection, Depends(get_read_connection)], user_id: Annotated[int, Depends(decode_access_token)]) -> dict:
     sentences_table_data = get_sentences_table_data(conn, user_id)
 
     return {"sentences": sentences_table_data}

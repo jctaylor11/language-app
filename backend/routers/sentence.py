@@ -124,9 +124,9 @@ def insert_sentences_words(conn: Connection, sentences: list[SentencePair]) -> N
 
 @router.post("/sentences")
 def get_sentence_batch(
-    user_id: Annotated[int, Depends(decode_access_token)],
     read_conn: Annotated[Connection, Depends(get_read_connection)],     # Two connections so that a single conn isn't kept open over slow LLM call
     write_conn: Annotated[Connection, Depends(get_write_connection)],
+    user_id: Annotated[int, Depends(decode_access_token)],
     payload: SentenceRequest
 ):
     """Returns a batch of sentences for the user.
@@ -162,7 +162,7 @@ def insert_sentence_result(conn: Connection, user_id: int, sentence_id: int, sta
 
 
 @router.post("/sentence-results")
-def create_sentence_result(user_id: Annotated[int, Depends(decode_access_token)], payload: SentenceResult, conn: Annotated[Connection, Depends(get_write_connection)]):      # TODO: batch these and send via beacon on page close
+def create_sentence_result(conn: Annotated[Connection, Depends(get_write_connection)], user_id: Annotated[int, Depends(decode_access_token)], payload: SentenceResult):      # TODO: batch these and send via beacon on page close
     """Records the user's result for a single reviewed sentence."""
     insert_sentence_result(conn, user_id, payload.sentence_id, payload.status)
 

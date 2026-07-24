@@ -44,7 +44,7 @@ def insert_vocab_results(conn: Connection, user_id: int, vocab_results: VocabRes
 
 
 @router.get("/words")
-def get_word_batch(user_id: Annotated[int, Depends(decode_access_token)], conn: Annotated[Connection, Depends(get_read_connection)]) -> dict:
+def get_word_batch(conn: Annotated[Connection, Depends(get_read_connection)], user_id: Annotated[int, Depends(decode_access_token)]) -> dict:
     """Fetch batch of words to show to user"""
     word_batch = sample_word_batch(conn, user_id)
 
@@ -52,7 +52,7 @@ def get_word_batch(user_id: Annotated[int, Depends(decode_access_token)], conn: 
 
 
 @router.post("/vocab-results")
-def create_vocab_results(user_id: Annotated[int, Depends(decode_access_token)], vocab_results: VocabResults, conn: Annotated[Connection, Depends(get_write_connection)]) -> dict:
+def create_vocab_results(conn: Annotated[Connection, Depends(get_write_connection)], user_id: Annotated[int, Depends(decode_access_token)], vocab_results: VocabResults) -> dict:
     """Save user's response data for each word in the session batch"""
     results_saved = insert_vocab_results(conn, user_id, vocab_results)
 
