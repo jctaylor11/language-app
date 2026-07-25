@@ -1,6 +1,7 @@
 from unittest.mock import patch
-from sqlalchemy import text
+from sqlalchemy import text, insert
 
+from backend.db.models import Sentence
 from backend.schemas import SentencePair
 from backend.tests.conftest import TEST_USER_ID
 
@@ -10,7 +11,7 @@ def test_get_sentence_batch(client, access_token, seed_user_words):
     client.cookies.set("access_token", access_token)
 
     with patch("backend.routers.sentence.generate_sentences", return_value=mock_sentences):
-        response = client.post(f"/sentences", json={"num_words": 3})
+        response = client.post(f"/sentences", json={"known_proportion": 80})
 
     assert response.status_code == 200
     data = response.json()
@@ -37,16 +38,22 @@ def test_create_sentence_result(client, access_token, conn):
     assert data["saved_sentence_id"] == sentence_id
 
 
-def test_get_sentence_batch_excludes_completed_sentences(client, access_token, conn):
-    result = conn.execute(text("""
-        INSERT INTO sentences (target, source, lemma_count) VALUES
-            ('문장 하나', 'sentence one', 2),
-            ('문장 둘', 'sentence two', 2),
-            ('문장 셋', 'sentence three', 2),
-            ('문장 넷', 'sentence four', 2)
-        RETURNING id
-    """))
+def test_get_sentence_batch_excludes_completed_sentences(client, access_token, seed_user_words, conn):
+    known_word_id = seed_user_words[0]  # One known word is all the coverage maths needs - each sentence has lemma_count 1 and that word as its only lemma
+
+    result = conn.execute(insert(Sentence).returning(Sentence.id), [
+        {"target": "물을 마십니다.", "source": "I drink water.", "lemma_count": 1},
+        {"target": "밥을 먹습니다.", "source": "I eat a meal.", "lemma_count": 1},
+        {"target": "물을 마셔요.", "source": "I drink water.", "lemma_count": 1},
+        {"target": "밥을 먹어요.", "source": "I eat a meal.", "lemma_count": 1},
+    ])
     sentence_ids = [row.id for row in result.fetchall()]
+
+    # One known word per sentence == 100% coverage which clears the HAVING threshold
+    conn.execute(text("""
+        INSERT INTO sentence_words (sentence_id, word_id)
+        VALUES (:sentence_id, :word_id)
+    """), [{"sentence_id": sentence_id, "word_id": known_word_id} for sentence_id in sentence_ids])
 
     completed_sentence_id = sentence_ids[0]
     conn.execute(text("""
@@ -56,8 +63,8 @@ def test_get_sentence_batch_excludes_completed_sentences(client, access_token, c
 
     client.cookies.set("access_token", access_token)
 
-    with patch("backend.routers.sentence.generate_sentences"):  # Guard: enough cached sentences means the LLM path is never reached
-        response = client.post("/sentences")
+    # 3 sentences stay eligible >= NUM_SENTENCES_IN_BATCH so that cache path is taken instead of LLM path
+    response = client.post("/sentences", json={"known_proportion": 80})
 
     assert response.status_code == 200
     data = response.json()
