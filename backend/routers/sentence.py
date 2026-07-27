@@ -46,6 +46,8 @@ def get_eligible_sentences(conn: Connection, user_id: int, known_words_proportio
     """
 
     print(f"KNOWN WORDS PROPORTION: {known_words_proportion}")
+    lower_bound = known_words_proportion - 0.1
+    upper_bound = known_words_proportion + 0.1
 
     eligible_sentences = conn.execute(text("""
         WITH users_words AS (
@@ -62,10 +64,11 @@ def get_eligible_sentences(conn: Connection, user_id: int, known_words_proportio
                 AND sr.sentence_id = s.id
             )
         GROUP BY s.id, s.target, s.source, s.lemma_count
-        HAVING COUNT(s.id) >= :known_words_proportion * s.lemma_count
+        HAVING COUNT(s.id) >= :lower_bound * s.lemma_count 
+            AND COUNT(s.id) <= :upper_bound * s.lemma_count
         LIMIT 50
-        """), {"user_id": user_id, "known_words_proportion": known_words_proportion})
-    
+        """), {"user_id": user_id, "lower_bound": lower_bound, "upper_bound": upper_bound})
+
     sentences = [SentencePair(id=row.id, target=row.target, source=row.source) for row in eligible_sentences]
     
     return sentences
