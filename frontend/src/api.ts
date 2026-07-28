@@ -87,14 +87,14 @@ export async function sendVocabResults(
 }
 
 export async function fetchSentencePairs(
-  knownProportion: number,
+  knownPercent: number,
 ): Promise<SentencePair[]> {
   try {
     const sentencesUrl = `${BASE_URL}/sentences`;
     const response = await fetchWithAuth(sentencesUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ known_proportion: knownProportion }),
+      body: JSON.stringify({ known_percent: knownPercent }),
     });
     const sentencesData = await response.json();
     return sentencesData.sentences;

@@ -5,12 +5,12 @@ import { fetchSentencePairs, sendSentenceResult } from "../api";
 import type { SentencePair } from "../types";
 
 function SentenceControl({
-  proportionValue,
-  onProportionChange,
+  percentValue,
+  onPercentChange,
   onStart,
 }: {
-  proportionValue: number;
-  onProportionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  percentValue: number;
+  onPercentChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onStart: () => void;
 }) {
   return (
@@ -28,8 +28,8 @@ function SentenceControl({
             min="0"
             max="100"
             step="20"
-            value={proportionValue}
-            onChange={(e) => onProportionChange(e)}
+            value={percentValue}
+            onChange={(e) => onPercentChange(e)}
           />
         </div>
         <button
@@ -70,7 +70,7 @@ function SentenceCard({
 }
 
 export default function SentenceSession() {
-  const [knownProportion, setKnownProportion] = useState(80);
+  const [knownPercent, setKnownPercent] = useState(80);
   const [started, setStarted] = useState(false);
   const [inputText, setInputText] = useState("");
   const [sentencePairIndex, setSentencePairIndex] = useState(0);
@@ -82,12 +82,12 @@ export default function SentenceSession() {
     isFetchingNextPage,
   } = useInfiniteQuery({
     // useInfiniteQuery appends batches instead of replace on refetch
-    queryKey: ["sentencePairs", knownProportion],
-    queryFn: () => fetchSentencePairs(knownProportion),
+    queryKey: ["sentencePairs", knownPercent],
+    queryFn: () => fetchSentencePairs(knownPercent),
     initialPageParam: 0,
     getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
     staleTime: Infinity, // Prevent background refetching mid-session
-    enabled: started, // Otherwise it will default to true on mount, which will cause it to fetch sentences before the user has submitted preferences (e.g knownProportion)
+    enabled: started, // Otherwise it will default to true on mount, which will cause it to fetch sentences before the user has submitted preferences (e.g knownPercent)
   });
 
   const sentencePairs = sentencePairsData?.pages.flat() ?? []; // Pages only needed so refetch doesn't replace data
@@ -138,8 +138,8 @@ export default function SentenceSession() {
 
   return (
     <SentenceControl
-      proportionValue={knownProportion}
-      onProportionChange={(e) => setKnownProportion(Number(e.target.value))}
+      percentValue={knownPercent}
+      onPercentChange={(e) => setKnownPercent(Number(e.target.value))}
       onStart={() => setStarted(true)}
     />
   );

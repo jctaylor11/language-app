@@ -11,7 +11,7 @@ def test_get_sentence_batch(client, access_token, seed_user_words):
     client.cookies.set("access_token", access_token)
 
     with patch("backend.routers.sentence.generate_sentences", return_value=mock_sentences):
-        response = client.post(f"/sentences", json={"known_proportion": 80})
+        response = client.post(f"/sentences", json={"known_percent": 80})
 
     assert response.status_code == 200
     data = response.json()
@@ -63,8 +63,8 @@ def test_get_sentence_batch_excludes_completed_sentences(client, access_token, s
 
     client.cookies.set("access_token", access_token)
 
-    # 3 sentences stay eligible >= NUM_SENTENCES_IN_BATCH so that cache path is taken instead of LLM path
-    response = client.post("/sentences", json={"known_proportion": 80})
+    # 3 sentences stay eligible >= NUM_SENTENCES_IN_BATCH so that cache path is taken instead of LLM path. 100 requested since the seeded sentences are fully known, which the 80 band (70-90%) would exclude
+    response = client.post("/sentences", json={"known_percent": 100})
 
     assert response.status_code == 200
     data = response.json()

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from backend.enums import SentenceResultStatus, VocabResultStatus
 
@@ -19,7 +19,7 @@ class SentencePair(BaseModel):
 
 
 class SentenceRequest(BaseModel):
-    known_proportion: int
+    known_percent: int = Field(ge=0, le=100)
 
 
 class WordResult(BaseModel):

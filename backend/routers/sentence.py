@@ -14,6 +14,7 @@ router = APIRouter()
 
 NUM_WORDS_SAMPLED = 10
 NUM_SENTENCES_IN_BATCH = 3
+PROPORTION_BAND_PERCENT = 10    # Can't promise more precision than ±10%, requested percentage becomes a range
 
 def sample_user_words_for_generation(conn: Connection, user_id: int, num_words_sampled: int) -> list[str]:
     # Words for LLM prompt - should only be a small sample, since excessive words wastes tokens without improving results
@@ -34,20 +35,21 @@ def sample_user_words_for_generation(conn: Connection, user_id: int, num_words_s
     return user_words
 
 
-def get_eligible_sentences(conn: Connection, user_id: int, known_words_proportion: float = 0.7) -> list[SentencePair]:
-    """Fetch existing sentences from the cache that the user has not already done, which have the desired proportion of known words from their vocab vault.
+def get_eligible_sentences(conn: Connection, user_id: int, known_words_percent: int) -> list[SentencePair]:
+    """Fetch existing sentences from the cache that the user has not already done, whose proportion of known words from their vocab vault falls within the requested band.
 
     Args:
-        known_words_proportion: The desired proportion of the sentence's lemmas that matches the user's known words. ie 0.8 means 20% of the sentence would be new words
+        known_words_percent: Midpoint (or endpoint at edges) of the accepted band of known-word coverage. 80 accepts sentences where 70-90% of the lemmas are words the user already knows. 100 accepts 80-100%. 
 
     Returns:
-        A list of eligible sentence pairs from the cache with the desired proportion of known words : unknown words
+        A list of eligible sentence pairs from the cache within that band
 
     """
-
-    print(f"KNOWN WORDS PROPORTION: {known_words_proportion}")
-    lower_bound = known_words_proportion - 0.1
-    upper_bound = known_words_proportion + 0.1
+    # Band slides inwards so that every request gets the same width
+    max_lower_bound = 100 - 2 * PROPORTION_BAND_PERCENT
+    min_upper_bound = 2 * PROPORTION_BAND_PERCENT
+    lower_percent = max(0, min(max_lower_bound, known_words_percent - PROPORTION_BAND_PERCENT))
+    upper_percent = max(min_upper_bound, min(100, known_words_percent + PROPORTION_BAND_PERCENT))
 
     eligible_sentences = conn.execute(text("""
         WITH users_words AS (
@@ -64,10 +66,10 @@ def get_eligible_sentences(conn: Connection, user_id: int, known_words_proportio
                 AND sr.sentence_id = s.id
             )
         GROUP BY s.id, s.target, s.source, s.lemma_count
-        HAVING COUNT(s.id) >= :lower_bound * s.lemma_count 
-            AND COUNT(s.id) <= :upper_bound * s.lemma_count
+        HAVING 100 * COUNT(s.id) >= :lower_percent * s.lemma_count      -- Scaled by 100 rather than dividing, so the band edges compare as exact integers
+            AND 100 * COUNT(s.id) <= :upper_percent * s.lemma_count
         LIMIT 50
-        """), {"user_id": user_id, "lower_bound": lower_bound, "upper_bound": upper_bound})
+        """), {"user_id": user_id, "lower_percent": lower_percent, "upper_percent": upper_percent})
 
     sentences = [SentencePair(id=row.id, target=row.target, source=row.source) for row in eligible_sentences]
     
@@ -137,8 +139,7 @@ def get_sentence_batch(
     First serves any applicable sentences that already exist in the cached sentences. If none applicable exist, it generates new sentences via LLM API,
     lemmatises them, and inserts the sentences and associated data into the sentences cache.
     """
-    known_words_proportion = payload.known_proportion / 100   # The frontend slider is 0 - 100, but this must be converted to decimal
-    eligible_sentences_in_cache = get_eligible_sentences(read_conn, user_id, known_words_proportion)
+    eligible_sentences_in_cache = get_eligible_sentences(read_conn, user_id, payload.known_percent)
 
     if len(eligible_sentences_in_cache) >= NUM_SENTENCES_IN_BATCH:    # Sufficient sentences already fetched, can return them rather than generate any
         eligible_sentences = {"sentences": [{"id": sentence.id, "target": sentence.target, "source": sentence.source} for sentence in eligible_sentences_in_cache]}    # Early return since no need to lemmatise etc - sentences from db are already lemmatised
