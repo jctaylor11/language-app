@@ -4,6 +4,15 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { fetchSentencePairs, sendSentenceResult } from "../api";
 import type { SentencePair } from "../types";
 
+const BAND_HALF_WIDTH_PERCENT = 10; // Mirrors PROPORTION_BAND_PERCENT in backend/routers/sentence.py
+
+function formatKnownBand(percentValue: number): string {
+  const lowerPercent = percentValue - BAND_HALF_WIDTH_PERCENT;
+  const upperPercent = percentValue + BAND_HALF_WIDTH_PERCENT;
+
+  return `${lowerPercent}-${upperPercent}%`;
+}
+
 function SentenceControl({
   percentValue,
   onPercentChange,
@@ -20,14 +29,17 @@ function SentenceControl({
         <p className="mb-4">Based on the words you know.</p>
         <div>
           <label className="block mb-2">
-            Select desired % of known words in the sentence:
+            Known words in each sentence: {formatKnownBand(percentValue)}
           </label>
+          {/* Stops are band centres (10-90%) and the thumb matches the backend's applicable 20% range. Thumb is w-18, which is 20% of the w-90 track to match 20% band, so it stretches the width of the band instead of a single point */}
           <input
-            className="w-full"
+            className="w-full h-6 appearance-none rounded-sm bg-gray-400
+              [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:w-18 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:rounded-sm [&::-webkit-slider-thumb]:bg-gray-700
+              [&::-moz-range-thumb]:h-6 [&::-moz-range-thumb]:w-18 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-sm [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-gray-700"
             type="range"
-            min="0"
-            max="100"
-            step="20"
+            min="10"
+            max="90"
+            step="10"
             value={percentValue}
             onChange={(e) => onPercentChange(e)}
           />
@@ -70,7 +82,7 @@ function SentenceCard({
 }
 
 export default function SentenceSession() {
-  const [knownPercent, setKnownPercent] = useState(80);
+  const [knownPercent, setKnownPercent] = useState(90); // 80-100% band - the closest bucket to the ~80% comprehensible input target
   const [started, setStarted] = useState(false);
   const [inputText, setInputText] = useState("");
   const [sentencePairIndex, setSentencePairIndex] = useState(0);

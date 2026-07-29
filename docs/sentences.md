@@ -6,6 +6,7 @@
 - staleTime: Infinity means no automatic refetch. After the initial render, the next page is only explicitly fetched with fetchNextPage
 - fetchNextPage is only fired when the (total - current index) <= 3
 - fetchNextPage hits fetchSentencePairs, which hits POST /sentences
+- The percentage of known words is selected as a range using a slider of width 20%, and is sent to backend as a point. The backend derives the upper and lower bounds
 
 ## Backend (POST /sentences)
 
@@ -22,6 +23,7 @@
 ## Edge cases
 
 - lemma_count could be inflated since one surface word can be split into multiple lemmas (e.g 공부해 -> 공부 + 하다), and therefore a user who knows 공부 only gets half credit. TODO: verify the extract_lemmas output and test proportions are as expected.
+- Extreme values on the band (e.g 80-100%) include fully known sentences with no new words
 
 ## Design ideas
 
@@ -39,7 +41,3 @@
 ### Sentence evals
 
 - Eval on the sentences generated to see if they can be returned. Even if they do not meet user's constraints, they should still be cached if they are correct as a Korean sentence
-
-### Sentence generation slider
-
-- Change the slider to be like a wide button which covers the step width (ie 20%) - hence if they choose 100%, it's actually 80-100%. This inherently changes it from a single point to a width, which more accurately represents the precision. See [log](log.md#2026-07-21---sentences-control-slider-has-wide-step)
