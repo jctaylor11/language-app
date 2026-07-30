@@ -152,7 +152,7 @@ def get_sentence_batch(
     
     user_words = sample_user_words_for_generation(read_conn, user_id, NUM_WORDS_SAMPLED)   # User words needed to get sentences bespoke for the user
 
-    sentences = generate_sentences(user_words, NUM_SENTENCES_IN_BATCH)  # If no eligible sentences already exist in the sentences cache
+    sentences = generate_sentences(user_words, NUM_SENTENCES_IN_BATCH, lb_known_percent, ub_known_percent)  # If no eligible sentences already exist in the sentences cache
 
     sentences = lemmatise_sentences(sentences)  # Lemmatisation allows sentence words to be matched against the words table by standardised citation form. Needed for sentence_words inserts and lemma_count
 

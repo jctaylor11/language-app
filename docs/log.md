@@ -19,7 +19,7 @@ Outcome: Implemented.
 ### 2026-07-21 - sentences: control slider has wide step
 
 The step for the slider for proportion of known words for the sentence generation has a wide step of 20 due to precision. Anything lower would imply more precision of what we can gaurantee. A tolerance of ±10% seems feasible. 20 was also chosen since it covers 80% - which research suggests is the optimal percentage for comprehensible input.
-Update: Step changed to 10, band set to 20.
+Update: Step changed to 10, band set to 20. The band slider of width 20% dropped the 80% midpoint, and setting a step of 10 now restores it.
 
 Outcome: Implemented.
 
