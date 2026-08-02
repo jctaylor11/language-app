@@ -1,16 +1,24 @@
-### 2026-07-31 - sentences: filter generated sentences based on known percent request
+### 2026-08-01 - sentences: queued sentence in frontend get sent in payload to sentences API
 
-The LLM is unrealiable, especailly since it only sees a sample of known words rather than the full thing. The generated sentences therefore cannot be returned directly, and they must be evaluated deterministically. More sentences than required are therefore generated and the eligible ones are returned. Since the generated sentences are processed and added to the sentences cache with their words mapped in sentence_words table, the same cache path that previously returned no results (calling get_eligible_sentences) will now surface the generated sentences (assuming they are eligible). This same function therefore serves as an evaluation to filter the eligible sentences.
+When finding eligible sentences, the SQL query first looks at sentences in the cachewhich contain a target percentage of known words from the user's word vault and excludes the sentences they've already done by looking at the user's sentence results. The eligible sentences are then queued in the frontend. As the user works through the sentences, another batched is refetched when then remaining sentences in the queue hit a threshold number (e.g 3 remaining). The sentences in the queue will not be in the sentence results, and therefore the refetch could still select these queued sentences. In doing so, the user would see the same sentence twice. Therefore, the payload for the fetchSentencePairs client API must be changed to send the IDs of sentences which are in the queue, and these will be excluded in the cache path query when fetching sentences.
+
+Outcome: Implemented.
+
+### 2026-07-31 - sentences: filter generated sentences based on known percent request using same cache query, after generated sentences are cached
+
+The LLM is unrealiable, especailly since it only sees a sample of known words rather than the full thing. The generated sentences therefore cannot be returned directly, and they must be evaluated deterministically. More sentences than required are therefore generated and the eligible ones are returned. Since the generated sentences are processed and added to the sentences cache with their words mapped in sentence_words table, the same cache path that previously returned no results (calling get_eligible_sentences) will now surface the generated sentences (assuming they are eligible). This same function therefore serves as an evaluation to filter the eligible sentences, which keeps the sentence eligibility logic in one place, and keeping the vocab in the SQL.
 
 Consequences: The connection to the function was changed from read_conn to write_conn, since it must be the same connection as the one that writes the generated sentences to the database - since the transaction is only committed when the endpoint returns.
 
 Rejected alternatives:
 
-- A dedicated function that would count the proportion of known lemmas, taking the user's full vocab vault into consideration.
+- A dedicated function that would count the proportion of known lemmas, taking the user's full vocab vault into consideration. This would create two different implementations of the same rule, and would require all vocab to be queried from the database and compared in python.
+
+Outcome: Implemented.
 
 ### 2026-07-31 - sentences: generation prompt keeps a sampled vocabulary
 
-The generation prompt only sees a sample of the user's words, while the eligibility check measures the known proportion against all of their user_words. The LLM fills the rest of each sentence from general Korean, and some of those words will happen to be ones the user already knows, so actual coverage lands at or above the requested percentage. As the user's vault grows,the number of chance of general collision colliding with user words outside of the sample increases, especailly at the low end of the slider (e.g 0-20% known requested). Generating words a user does not know requires knowing which words they do know, which the LLM does not have a complete picture of.
+The generation prompt only sees a sample of the user's words, while the eligibility check measures the known proportion against all of their user_words. The LLM fills the rest of each sentence from general Korean, and some of those words will happen to be ones the user already knows, so actual coverage lands at or above the requested percentage. As the user's vault grows,the number of chance of general collision colliding with user words outside of the sample increases, especailly at the low end of the slider (e.g 0-20% known requested). Generating words a user does not know requires knowing which words they do know, which the LLM does not have a complete picture of. The solution to this is an open question, with considerations in [design ideas](sentences.md#known-percent-band-accuracy-for-generated-sentences)
 
 The rejected consideration was to add more context by sending the full vocabulary in the prompt. This is not viable since it increases cost and reduces instruction adherence since. LLMs (especially cheap and fast models) are not optimised for counting and selectively focus attention (e.g they'll ingore words at the end of the list). Design consideration for resolving this are in [Known percent band accuracy for generated sentences](sentences.md#known-percent-band-accuracy-for-generated-sentences).
 

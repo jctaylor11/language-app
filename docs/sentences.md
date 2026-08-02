@@ -14,10 +14,10 @@
 2. get_eligible_sentences - check cache for sentences that meet requirements
 3. if >= 3 eligible sentences, return them with id (early exit, no LLM generation)
 4. else generate_sentences (LLM)
-5. TODO: [Design idea](sentences.md#sentence-evals)
-6. lemmatise_sentences - allows the words to be standardised and matched to the words in words table
-7. insert_sentences - inserts sentence and gets IDs back
-8. insert_sentences_words - inserts the words for said sentences
+5. lemmatise_sentences - allows the words to be standardised and matched to the words in words table
+6. insert_sentences - inserts sentence and gets IDs back
+7. insert_sentences_words - inserts the words for said sentences
+8. Sentence evaluation through get_eligible_sentences refetch - the updated cache should now contain eligible sentences from the generation, and therefore serves as an evaluation of the generated sentences
 9. returns the sentences with their newly assigned id
 
 ## Edge cases
@@ -25,6 +25,7 @@
 - lemma_count could be inflated since one surface word can be split into multiple lemmas (e.g 공부해 -> 공부 + 하다), and therefore a user who knows 공부 only gets half credit. TODO: verify the extract_lemmas output and test proportions are as expected.
 - Extreme values on the band (e.g 80-100%) include fully known sentences with no new words
 - Since the generation prompt only takes a sample of words, the lower end of the preferred percentage of known words becomes increasingly less reliable, especially for more advanced users, since the chance of using a known word outside of the sample increases. TODO: [Design idea](sentences.md#known-percent-band-accuracy-for-generated-sentences)
+- If the generated sentences are not eligible, the get_eligible_sentences refetch will return a placeholder. How this is handled needs to be solved - [Design ideas](sentences.md#handling-ineligible-generated-sentences)
 
 ## Design ideas
 
@@ -45,6 +46,6 @@
   - Generate more sentences than the batch needs and let the eligibility filter cull the ones that miss the band. Treats the symptom rather than the cause, and a request for a low known percentage may leave too few survivors
   - Sample the words most due for review rather than at random, so a small sample is at least a purposeful one. Depends on word confidence scoring - see [Constraint-aware eligibility query](sentences.md#constraint-aware-eligibility-query)
 
-### Sentence evals
+### Handling ineligible generated sentences
 
-- Eval on the sentences generated to see if they can be returned. Even if they do not meet user's constraints, they should still be cached if they are correct as a Korean sentence
+- Solutions could include dropping a constraint, or increasing the number of generated sentences

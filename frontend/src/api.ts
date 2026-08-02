@@ -88,15 +88,20 @@ export async function sendVocabResults(
 
 export async function fetchSentencePairs(
   knownPercent: number,
+  sentencesAlreadyQueued: number[] = [],
 ): Promise<SentencePair[]> {
   try {
     const sentencesUrl = `${BASE_URL}/sentences`;
     const response = await fetchWithAuth(sentencesUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ known_percent: knownPercent }),
+      body: JSON.stringify({
+        known_percent: knownPercent,
+        sentences_already_queued: sentencesAlreadyQueued,
+      }),
     });
     const sentencesData = await response.json();
+    console.log("Fetched sentences:", sentencesData);
     return sentencesData.sentences;
   } catch (error) {
     console.error("Failed to get sentences:", error);

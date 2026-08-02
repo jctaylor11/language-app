@@ -20,6 +20,7 @@ class SentencePair(BaseModel):
 
 class SentenceRequest(BaseModel):
     known_percent: int = Field(ge=0, le=100)
+    sentences_already_queued: list[int] = []
 
 
 class WordResult(BaseModel):

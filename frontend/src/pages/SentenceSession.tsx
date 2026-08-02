@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { fetchSentencePairs, sendSentenceResult } from "../api";
@@ -86,6 +86,7 @@ export default function SentenceSession() {
   const [started, setStarted] = useState(false);
   const [inputText, setInputText] = useState("");
   const [sentencePairIndex, setSentencePairIndex] = useState(0);
+  const queuedSentenceIdsRef = useRef<number[]>([]); // queryFn needs the latest sentencePairs, but referencing it directly creates a TS type cycle (its type depends on this hook's own return)
 
   const {
     data: sentencePairsData,
@@ -95,7 +96,11 @@ export default function SentenceSession() {
   } = useInfiniteQuery({
     // useInfiniteQuery appends batches instead of replace on refetch
     queryKey: ["sentencePairs", knownPercent],
-    queryFn: () => fetchSentencePairs(knownPercent),
+    queryFn: () =>
+      fetchSentencePairs(
+        knownPercent,
+        queuedSentenceIdsRef.current.slice(sentencePairIndex),
+      ),
     initialPageParam: 0,
     getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
     staleTime: Infinity, // Prevent background refetching mid-session
@@ -103,6 +108,7 @@ export default function SentenceSession() {
   });
 
   const sentencePairs = sentencePairsData?.pages.flat() ?? []; // Pages only needed so refetch doesn't replace data
+  queuedSentenceIdsRef.current = sentencePairs.map((pair) => pair.id);
 
   function advanceSentencePair() {
     const nextIndex = sentencePairIndex + 1;

@@ -52,7 +52,7 @@ def sample_user_words_for_generation(conn: Connection, user_id: int, num_words_s
     return user_words
 
 
-def get_eligible_sentences(conn: Connection, user_id: int, lb_known_percent: int, ub_known_percent: int) -> list[SentencePair]:
+def get_eligible_sentences(conn: Connection, user_id: int, lb_known_percent: int, ub_known_percent: int, sentences_already_queued: list[int] = []) -> list[SentencePair]:
     """Fetch existing sentences from the cache that the user has not already done, whose proportion of known words from their vocab vault falls within the given band."""
     eligible_sentences = conn.execute(text("""
         WITH users_words AS (
@@ -68,11 +68,12 @@ def get_eligible_sentences(conn: Connection, user_id: int, lb_known_percent: int
             WHERE sr.user_id = :user_id
                 AND sr.sentence_id = s.id
             )
+        AND NOT (s.id = ANY(:sentences_already_queued))     -- Exclude sentences already queued from the last fetch, so that the user doesn't see duplicates
         GROUP BY s.id, s.target, s.source, s.lemma_count
         HAVING 100 * COUNT(s.id) >= :lower_percent * s.lemma_count      -- Scaled by 100 rather than dividing, so the band edges compare as exact integers
             AND 100 * COUNT(s.id) <= :upper_percent * s.lemma_count
         LIMIT 3
-        """), {"user_id": user_id, "lower_percent": lb_known_percent, "upper_percent": ub_known_percent})
+        """), {"user_id": user_id, "lower_percent": lb_known_percent, "upper_percent": ub_known_percent, "sentences_already_queued": sentences_already_queued})
 
     sentences = [SentencePair(id=row.id, target=row.target, source=row.source) for row in eligible_sentences]
     
@@ -144,7 +145,7 @@ def get_sentence_batch(
     """
     lb_known_percent, ub_known_percent = calculate_band_bounds(payload.known_percent)
 
-    eligible_sentences_in_cache = get_eligible_sentences(read_conn, user_id, lb_known_percent, ub_known_percent)
+    eligible_sentences_in_cache = get_eligible_sentences(read_conn, user_id, lb_known_percent, ub_known_percent, payload.sentences_already_queued)  # Sentences already queued for the user are excluded from the eligible sentences returned, so that the user doesn't see duplicates in a single session
 
     if len(eligible_sentences_in_cache) >= NUM_SENTENCES_IN_BATCH:    # Sufficient sentences already fetched, can return them rather than generate any
         eligible_sentences = {"sentences": [{"id": sentence.id, "target": sentence.target, "source": sentence.source} for sentence in eligible_sentences_in_cache]}    # Early return since no need to lemmatise etc - sentences from db are already lemmatised
@@ -160,10 +161,10 @@ def get_sentence_batch(
 
     insert_sentences_words(write_conn, generated_sentences)
 
-    eligible_sentences = get_eligible_sentences(write_conn, user_id, lb_known_percent, ub_known_percent)
+    eligible_sentences = get_eligible_sentences(write_conn, user_id, lb_known_percent, ub_known_percent, payload.sentences_already_queued)
 
-    if len(eligible_sentences) < NUM_SENTENCES_IN_BATCH:
-        return {"sentences": [{"id": 0, "target": "Failed to get eligible sentences", "source": "Failed to get eligible sentences"}]}
+    if len(eligible_sentences) < NUM_SENTENCES_IN_BATCH:  
+        return {"sentences": [{"id": 0, "target": "Failed to get eligible sentences", "source": "Failed to get eligible sentences"}]}  
 
     return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in eligible_sentences]}
 
