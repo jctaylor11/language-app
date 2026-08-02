@@ -71,7 +71,7 @@ def get_eligible_sentences(conn: Connection, user_id: int, lb_known_percent: int
         GROUP BY s.id, s.target, s.source, s.lemma_count
         HAVING 100 * COUNT(s.id) >= :lower_percent * s.lemma_count      -- Scaled by 100 rather than dividing, so the band edges compare as exact integers
             AND 100 * COUNT(s.id) <= :upper_percent * s.lemma_count
-        LIMIT 50
+        LIMIT 3
         """), {"user_id": user_id, "lower_percent": lb_known_percent, "upper_percent": ub_known_percent})
 
     sentences = [SentencePair(id=row.id, target=row.target, source=row.source) for row in eligible_sentences]
@@ -150,17 +150,22 @@ def get_sentence_batch(
         eligible_sentences = {"sentences": [{"id": sentence.id, "target": sentence.target, "source": sentence.source} for sentence in eligible_sentences_in_cache]}    # Early return since no need to lemmatise etc - sentences from db are already lemmatised
         return eligible_sentences
     
-    user_words = sample_user_words_for_generation(read_conn, user_id, NUM_WORDS_SAMPLED)   # User words needed to get sentences bespoke for the user
+    user_words_sample = sample_user_words_for_generation(read_conn, user_id, NUM_WORDS_SAMPLED)   # User words needed to get sentences bespoke for the user
 
-    sentences = generate_sentences(user_words, NUM_SENTENCES_IN_BATCH, lb_known_percent, ub_known_percent)  # If no eligible sentences already exist in the sentences cache
+    generated_sentences = generate_sentences(user_words_sample, NUM_SENTENCES_IN_BATCH, lb_known_percent, ub_known_percent)  # If no eligible sentences already exist in the sentences cache
 
-    sentences = lemmatise_sentences(sentences)  # Lemmatisation allows sentence words to be matched against the words table by standardised citation form. Needed for sentence_words inserts and lemma_count
+    generated_sentences = lemmatise_sentences(generated_sentences)  # Lemmatisation allows sentence words to be matched against the words table by standardised citation form. Needed for sentence_words inserts and lemma_count
 
-    sentences = insert_sentences(write_conn, sentences)  # Returns with IDs
+    generated_sentences = insert_sentences(write_conn, generated_sentences)  # Returns with IDs
 
-    insert_sentences_words(write_conn, sentences)
+    insert_sentences_words(write_conn, generated_sentences)
 
-    return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in sentences]}
+    eligible_sentences = get_eligible_sentences(write_conn, user_id, lb_known_percent, ub_known_percent)
+
+    if len(eligible_sentences) < NUM_SENTENCES_IN_BATCH:
+        return {"sentences": [{"id": 0, "target": "Failed to get eligible sentences", "source": "Failed to get eligible sentences"}]}
+
+    return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in eligible_sentences]}
 
 
 def insert_sentence_result(conn: Connection, user_id: int, sentence_id: int, status: SentenceResultStatus) -> None:
