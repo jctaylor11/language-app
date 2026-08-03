@@ -2,7 +2,7 @@
 
 ## Frontend
 
-## Backend (POST /sentences)
+## Backend (GET /words, POST /vocab-results)
 
 ## Edge cases
 
@@ -13,13 +13,17 @@
 - Similar to the sentence generation control in Sentences. Bounding the start has benefits:
   - Informs about the page/purpose of so the user understand the program better (ie algorithm automatically selects which word - either review word or a new work - based on their data, SRS etc. They just need to focus on what it throws at them and the algorithm handles the rest)
   - Hides the 'loading' transition which fetching from database - words could be fetched the moment the page mounts.
-  - Provides scope for options. For example, this could address the session time open question [Open question time](#session-time-vs-no-time), [Open question known split](#session-known-vs-unknown-option)
+  - Provides scope for options. [Open question known split](#session-known-vs-unknown-option)
+
+### Assess response time with time-into-session
+
+- It's possible the time into the session may influence the user's response - e.g rushing at the end to get more words in, or feeling fresh at the start to go faster. This data should be considered - and if there are negative patterns (e.g rushing at the end), could neglect this data.
+
+### Clear 'Go again' CTA along with the session summary
+
+- It's very easy to do just a 2 minute session, less easy to commit to a 10 minute session. However, someone who starts the 2 minutes is likely to continue - and they could do 10 minutes with 5x 2 minutes. Which also equate to 5 summaries (ie 5 rewards), which will likely keep them engaged.
 
 ## Open questions
-
-### Session time vs no time?
-
-- Should a vocab session be timed (e.g a 2 minute sprint), or should it be a free input/exploration thing. Without bounding it with time, it could feel too much like an open loop and get boring quickly. However, bounding it with time could feel too forced if someone wants to go at their own pressure. Perhaps the user could choose an option between time sprints vs untimed free - however, this will influence the data (such as response time). Perhaps this could be solved by storing which setting was used in the results - then the raw data is there to calculate with.
 
 ### Session known vs unknown option?
 

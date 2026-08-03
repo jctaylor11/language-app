@@ -1,3 +1,39 @@
+### 2026-08-02 - vocab: summary provided at the end of the session
+
+The summary screen closes the psychological loop and is the feedback from the session which serves as the 'reward' - especially considering Mihaly Csikszentmihalyi emphasises the immediate feedback is necessary for engagement and deep work/flow. The summary screen should feel like a reward - visible progress, words added, some sort of metric added.
+
+### 2026-08-02 - vocab: vocab session kept only at 2 minutes
+
+A user wanting to do 10 minutes can easily do 5x 2 minute sessions. In doing so, they get 5x rewards, and are likely to stay engaged and build a habit. Rewards stay proportional to effort input. On the contrary, if someone can select their timer, and chooses 10 minutes - they could get bored and leave early, and the habit breaks. It also makes sessions comparable - sessions of different lengths aren't necessarily equal. There will be a clear CTA in the summary for the user to seamlessly repeat the session if they want longer.
+
+Rejected alternatives:
+
+- Letting the user choose the session length. This adds friction at exactly the point where inertia to start should be removed, and sessions of different lengths are no longer comparable.
+
+### 2026-08-02 - sessions: vocab sessions are bound by time, sentences are bound by count
+
+I think vocab and sentence sessions need a defined start and finish to close the loop psychologically, with feedback shown at the end (e.g result summary). Closing the loop makes effort and reward feel connected. If you complete something and there's no acknowledgement, the brain doesn't get a clean signal that the work is done - the effort feels like it disappeared, and a habit isn't likely to develop. This bounding will define a 'session' - and therefore changes the current definition of 'session' from a browser tab, to a bound and measured session.
+
+- Vocab session bound by time:
+  - Lowers activation energy to get started as there is no uncertainty with the user's commitment. It's a lot easier to commit to doing 2 minutes, than it is to do 40 words, even if the two are ultimately the same.
+  - Response time data is less likely to be influenced: the user is more likely to go at their natural pace since their session time is fixed. Hence also, the UI should not encourage time pressure (e.g obvious countdown etc). It's possible the user may rush near the end of the session, though this is detectable since time-into-session is derivable from vocab_results.answered_at and sessions.started_at - [design idea](vocab.md#assess-response-time-with-time-into-session)
+  - Releases a progress metric regarding words done per session on the dashboard - this way the user more-so sees progress from time investment, rather than time saved from time investment (e.g "34 words in 2 minutes, up from 26 last week" is more rewarding than something like "2 minutes for 30 words, down from 3 minutes last week").
+
+- Sentences bound by count:
+  - Sentences are less-so something to bash through, and instead take ones time with and internalise the vocab/review any unknown words and piece together the grammar. The most rewarding metric also from sentences is seeing the review count increase rapidly since multiple words are seen at once.
+  - Sentence generation costs, therefore less churn is more cost effective, and setting count targets makes each one more likely to be valued by the user.
+
+Consequences:
+
+- Definition of session changes from an active browser tab to a session bound by time/count.
+- Migration required to add bound_type and bound_value as a column in sessions table.
+- The sentence flow must start creating sessions. SentenceResult.session_id is currently nullable and no session row is ever created in the sentences path - a bound run of sentences is now a session, so insert_session applies there too.
+- completed_at changes meaning. It is currently re-stamped on every result flush, so it holds 'last activity' rather than 'finished'. It should now be set when the bound is reached, which also requires distinguishing a completed session from one the user abandoned early (otherwise the two are indistinguishable in every dashboard metric).
+
+Rejected alternatives:
+
+- Unbounding session: Considered that timed session could feel too forced if someone wants to go at their own pace without pressure. However, the closed loop/feedback/reward seems necessary to maintain engagement.
+
 ### 2026-08-01 - sentences: queued sentence in frontend get sent in payload to sentences API
 
 When finding eligible sentences, the SQL query first looks at sentences in the cachewhich contain a target percentage of known words from the user's word vault and excludes the sentences they've already done by looking at the user's sentence results. The eligible sentences are then queued in the frontend. As the user works through the sentences, another batched is refetched when then remaining sentences in the queue hit a threshold number (e.g 3 remaining). The sentences in the queue will not be in the sentence results, and therefore the refetch could still select these queued sentences. In doing so, the user would see the same sentence twice. Therefore, the payload for the fetchSentencePairs client API must be changed to send the IDs of sentences which are in the queue, and these will be excluded in the cache path query when fetching sentences.
