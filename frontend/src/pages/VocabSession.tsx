@@ -79,7 +79,7 @@ export default function VocabSession() {
     // New time needed to calculate how long they took to answer
     wordShownTime.current = Date.now();
 
-    // Advance the counter
+    // Increment the word index to advance the word
     const nextWordIndex = wordIndex + 1;
     setWordIndex(nextWordIndex);
 
