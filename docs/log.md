@@ -1,3 +1,7 @@
+### 2026-08-05 - vocab: session does not persist over refreshes
+
+The user refreshing most likely implies they are want to restart the session. Therefore the session should not be saved in localStorage. The session can just be set and stored with useMutation hook
+
 ### 2026-08-02 - vocab: summary provided at the end of the session
 
 The summary screen closes the psychological loop and is the feedback from the session which serves as the 'reward' - especially considering Mihaly Csikszentmihalyi emphasises the immediate feedback is necessary for engagement and deep work/flow. The summary screen should feel like a reward - visible progress, words added, some sort of metric added.
@@ -16,7 +20,7 @@ I think vocab and sentence sessions need a defined start and finish to close the
 
 - Vocab session bound by time:
   - Lowers activation energy to get started as there is no uncertainty with the user's commitment. It's a lot easier to commit to doing 2 minutes, than it is to do 40 words, even if the two are ultimately the same.
-  - Response time data is less likely to be influenced: the user is more likely to go at their natural pace since their session time is fixed. Hence also, the UI should not encourage time pressure (e.g obvious countdown etc). It's possible the user may rush near the end of the session, though this is detectable since time-into-session is derivable from vocab_results.answered_at and sessions.started_at - [design idea](vocab.md#assess-response-time-with-time-into-session)
+  - Response time data is less likely to be influenced: the user is more likely to go at their natural pace since their session time is fixed. Hence also, the UI should not encourage time pressure (e.g countdown should not be obvious etc). It's possible the user may rush near the end of the session, though this is detectable since time-into-session is derivable from vocab_results.answered_at and sessions.started_at - [design idea](vocab.md#assess-response-time-with-time-into-session)
   - Releases a progress metric regarding words done per session on the dashboard - this way the user more-so sees progress from time investment, rather than time saved from time investment (e.g "34 words in 2 minutes, up from 26 last week" is more rewarding than something like "2 minutes for 30 words, down from 3 minutes last week").
 
 - Sentences bound by count:

@@ -9,3 +9,8 @@ class VocabResultStatus(enum.Enum):
 class SentenceResultStatus(enum.Enum):
     correct = "correct"
     skipped = "skipped"
+
+
+class SessionBoundType(enum.Enum):
+    time = "time"
+    count = "count"
