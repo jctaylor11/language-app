@@ -8,6 +8,7 @@ import type {
   DashboardHeroMetrics,
   WordChartDataPoint,
   SentenceEntry,
+  SessionRequest,
 } from "./types";
 
 const BASE_URL = "http://localhost:8000";
@@ -48,25 +49,18 @@ export async function fetchWords(): Promise<WordPair[]> {
   return wordsData.word_batch;
 }
 
-export async function fetchSession(): Promise<number> {
+export async function fetchSession(
+  sessionRequest: SessionRequest,
+): Promise<number> {
   const sessionUrl = `${BASE_URL}/sessions`;
   const response = await fetchWithAuth(sessionUrl, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(sessionRequest),
   });
   const sessionData: SessionResponse = await response.json();
   console.log("Session", sessionData);
   return sessionData.session_id;
-}
-
-export async function getOrCreateSession(): Promise<number> {
-  const storedSession = sessionStorage.getItem("sessionId"); // So sessionId persists across refresh - session defined as tab session currently
-  if (!storedSession) {
-    const fetchedSession = await fetchSession();
-    sessionStorage.setItem("sessionId", String(fetchedSession));
-    return fetchedSession;
-  } else {
-    return Number(storedSession);
-  }
 }
 
 export async function sendVocabResults(

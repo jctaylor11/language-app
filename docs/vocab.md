@@ -2,16 +2,18 @@
 
 ## Frontend
 
-- On mount, getOrCreateSession reads sessionId from sessionStorage. If none,a creates one with POST /sessions. Session is defined as a browser tab.
+- VocabControl is rendered until a session exists. Its onStart calls startSession, which resets sessionPosition to 1 and calls the useMutation
+- The mutation calls fetchSession, which POSTs to /sessions with bound_type and bound_value (currently time and 120 for vocab sessions). sessionId is held in the mutation's data so that a refresh resets it
+- Session creation is a useMutation rather than a useQuery because it writes. A query would re-run on window focus, retry and StrictMode, creating a session row each time
 - useInfiniteQuery hook is used to fetch words, in pages (appended, not replaced). staleTime: Infinity means no automatic refetch - only fetched with fetchNextPage when remaining words <= 3
 - fetchNextPage hits fetchWords, which hits GET /words - a random batch of 5, with no level or review awareness yet (TODO: [Design idea](vocab.md#add-vocab-control))
 - Word pages are flattened into one array and wordIndex is an index into it
 - inputText is state rather than a ref so the input stays controlled and each keypress re-renders the card
-- Each keypress runs handleInputChange, which compares the input against currentWord.source. If it matches, it builds the results, advances the word, then sends them oer POST /vocab-results. Results are built before advanceWord (which resets wordShownTime) and sendVocabResults is awaited after it, so the response time stays accurate and the UI isn't held up
+- Each keypress runs handleInputChange, which compares the input against currentWord.source. If it matches, it builds the results, advances the word, then sends them over POST /vocab-results. Results are built before advanceWord (which resets wordShownTime) and sendVocabResults is awaited after it, so the response time stays accurate and the UI isn't held up
 - handleKeyDown catches tab/esc with preventDefault and advances word with 'skipped' status
 - keystrokes and wordShownTime are refs to avoid a re-render per keypress
-- sessionPosition storesd in sessionStorage to survive reload alongside sessionId
-- if currentWord is undefined, the Loading... branch is rendered
+- sessionPosition is a ref and is reset to 1 on every startSession
+- Absence of sessionId renders the VocabControl. This session check comes first so that words are prefetched behind the control start screen, so the user isn't knowingly waiting on the fetch
 
 ## Backend (GET /words, POST /vocab-results)
 

@@ -1,9 +1,26 @@
 import React, { useState, useRef } from "react";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 
 import type { WordPair, WordResults, VocabResults } from "../types";
-import { fetchWords, getOrCreateSession, sendVocabResults } from "../api";
+import { fetchSession, fetchWords, sendVocabResults } from "../api";
 import { calcIncorrectInput } from "../utils";
+
+function VocabControl({ onStart }: { onStart: () => void }) {
+  return (
+    <div className="flex justify-center bg-[#dddddd] w-120 mx-auto px-10 py-5">
+      <div className="flex flex-col text-[14px] w-90">
+        <h1 className="text-[28px] font-bold">Vocab Session</h1>
+        <p className="mb-4">Optimal words to review.</p>
+        <button
+          onClick={() => onStart()}
+          className="border px-6 py-1 mt-4 rounded cursor-pointer bg-gray-100 hover:bg-[#dddddd] active:bg-gray-200"
+        >
+          Start Session
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function WordCard({
   wordPair,
@@ -41,12 +58,12 @@ export default function VocabSession() {
   const [inputText, setInputText] = useState<string>("");
   const [wordIndex, setWordIndex] = useState(0);
 
+  const sessionPosition = useRef<number>(1);
   const keystrokes = useRef<string>("");
   const wordShownTime = useRef<number>(Date.now());
 
-  const { data: session } = useQuery({
-    queryKey: ["session"],
-    queryFn: () => getOrCreateSession(),
+  const { mutate: sessionMutate, data: sessionId } = useMutation({
+    mutationFn: () => fetchSession({ bound_type: "time", bound_value: 120 }),
   });
 
   const { data: wordsData, fetchNextPage } = useInfiniteQuery({
@@ -61,20 +78,15 @@ export default function VocabSession() {
 
   const currentWord: WordPair | undefined = words[wordIndex];
 
-  function getSessionPosition(): number {
-    const stored = sessionStorage.getItem("sessionPosition");
-    return stored ? Number(stored) : 1;
-  }
-
-  function advanceSessionPosition() {
-    const newSessionPosition = getSessionPosition() + 1;
-    sessionStorage.setItem("sessionPosition", String(newSessionPosition));
+  function startSession() {
+    sessionMutate();
+    sessionPosition.current = 1;
   }
 
   async function advanceWord() {
     setInputText("");
     keystrokes.current = "";
-    advanceSessionPosition();
+    sessionPosition.current++;
 
     // New time needed to calculate how long they took to answer
     wordShownTime.current = Date.now();
@@ -101,7 +113,7 @@ export default function VocabSession() {
       currentWord.source,
       keystrokes.current,
     );
-    const session_position = getSessionPosition();
+    const session_position = sessionPosition.current;
 
     let status: string;
     if (skipped) {
@@ -130,20 +142,20 @@ export default function VocabSession() {
   }
 
   async function handleInputChange(input: string) {
-    if (!currentWord || !session) return; // Defensive
+    if (!currentWord || !sessionId) return; // Defensive
 
     setInputText(input);
 
     // Check whether input matches the answer
     if (input === currentWord.source) {
-      const vocabResults = buildVocabResults(currentWord, session);
+      const vocabResults = buildVocabResults(currentWord, sessionId);
       await advanceWord(); // Timer is reset in advanceWord - therefore placed before sendVocabResults (so its not waiting) and after vocabResults is built (else time sent immediately after started)
       await sendVocabResults(vocabResults);
     }
   }
 
   async function handleKeyDown(e: React.KeyboardEvent) {
-    if (!currentWord || !session) return;
+    if (!currentWord || !sessionId) return;
 
     const key = e.key;
     if (key === "Escape" || key === "Tab") {
@@ -151,7 +163,7 @@ export default function VocabSession() {
 
       // Build results before advancing to capture response time accurately since time updates on advanceWord
       const skipped = true;
-      const vocabResults = buildVocabResults(currentWord, session, skipped);
+      const vocabResults = buildVocabResults(currentWord, sessionId, skipped);
       await advanceWord(); // advanceWord before network request to priorise UI speed
       await sendVocabResults(vocabResults);
     }
@@ -164,6 +176,12 @@ export default function VocabSession() {
     keystrokes.current = keystrokes.current + recorded;
   }
 
+  // There will only be a session ID after the user has clicked the start button. Having a separate state for the started would cause a race condition
+  if (!sessionId) {
+    return <VocabControl onStart={() => startSession()} />;
+  }
+
+  // Loading check is after the conditional checking for session - loading will happen in the background before the user presses start button
   if (!currentWord) {
     return <div>Loading...</div>;
   }

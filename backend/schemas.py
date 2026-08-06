@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from backend.enums import SentenceResultStatus, VocabResultStatus
+from backend.enums import SentenceResultStatus, VocabResultStatus, SessionBoundType
 
 
 class SentenceResult(BaseModel):
@@ -39,3 +39,8 @@ class VocabResults(BaseModel):
 
 class GoogleToken(BaseModel):
     credential: str
+
+
+class SessionBounds(BaseModel):
+    bound_type: SessionBoundType
+    bound_value: int

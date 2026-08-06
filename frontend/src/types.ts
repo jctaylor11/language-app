@@ -56,3 +56,8 @@ export type SentenceEntry = {
   target: string;
   source: string;
 };
+
+export type SessionRequest = {
+  bound_type: "time" | "count";
+  bound_value: number;
+};

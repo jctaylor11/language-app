@@ -1,6 +1,8 @@
 ### 2026-08-05 - vocab: session does not persist over refreshes
 
-The user refreshing most likely implies they are want to restart the session. Therefore the session should not be saved in localStorage. The session can just be set and stored with useMutation hook
+The user refreshing the page most likely implies they are wanting to restart the session. Therefore the session should not be saved in sessionStorage - it should be closed, ready for a new one to start on click. The session can therefore just be set and stored with useMutation hook - the state is required so updates cause a re-render, and removing session storage means it will not persist through a refresh.
+
+Outcome: Implemented.
 
 ### 2026-08-02 - vocab: summary provided at the end of the session
 
