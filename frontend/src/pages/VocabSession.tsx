@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 
 import type { WordPair, WordResults, VocabResults } from "../types";
@@ -20,6 +20,35 @@ function VocabControl({ onStart }: { onStart: () => void }) {
       </div>
     </div>
   );
+}
+
+function Timer({
+  sessionStartTime,
+  onFinish,
+}: {
+  sessionStartTime: number;
+  onFinish: () => void;
+}) {
+  const timerDurationS = 120;
+  const [timeRemaining, setTimeRemaining] = useState(timerDurationS);
+
+  useEffect(() => {
+    const timerInterval = setInterval(() => {
+      const currentTime = Date.now();
+      const timeElapsedMs = currentTime - sessionStartTime;
+      const secondsLeft = Math.ceil(timerDurationS - timeElapsedMs / 1000); // As a variable since the closed over state is the original timeRemaining, and remaining time is needed for <= 0 conditional
+      setTimeRemaining(secondsLeft);
+
+      if (secondsLeft <= 0) {
+        clearInterval(timerInterval);
+        onFinish(); // Updates state in parent component to render the summary component in place of everything currently being rendered for the session
+      }
+    }, 1000);
+
+    return () => clearInterval(timerInterval); // Would be called on unmount, but also when the sessionStartTime changes (e.g. if the user restarts the session) - so the old interval is cleared and a new one is created with the new start time
+  }, [sessionStartTime]);
+
+  return <div>{timeRemaining}</div>;
 }
 
 function WordCard({
@@ -54,16 +83,28 @@ function WordCard({
   );
 }
 
+function SessionSummary() {
+  return <div>Placeholder for summary results component</div>;
+}
+
 export default function VocabSession() {
   const [inputText, setInputText] = useState<string>("");
   const [wordIndex, setWordIndex] = useState(0);
+  const [sessionStartTime, setSessionStartTime] = useState(0);
+  const [sessionFinished, setSessionFinished] = useState(false);
 
   const sessionPosition = useRef<number>(1);
   const keystrokes = useRef<string>("");
-  const wordShownTime = useRef<number>(Date.now());
+  const wordShownTime = useRef<number>(0);
 
   const { mutate: sessionMutate, data: sessionId } = useMutation({
     mutationFn: () => fetchSession({ bound_type: "time", bound_value: 120 }),
+    onSuccess: () => {
+      const sessionStart = Date.now();
+      sessionPosition.current = 1;
+      setSessionStartTime(sessionStart);
+      wordShownTime.current = sessionStart;
+    },
   });
 
   const { data: wordsData, fetchNextPage } = useInfiniteQuery({
@@ -77,11 +118,6 @@ export default function VocabSession() {
   const words = wordsData?.pages.flat() ?? [];
 
   const currentWord: WordPair | undefined = words[wordIndex];
-
-  function startSession() {
-    sessionMutate();
-    sessionPosition.current = 1;
-  }
 
   async function advanceWord() {
     setInputText("");
@@ -176,9 +212,13 @@ export default function VocabSession() {
     keystrokes.current = keystrokes.current + recorded;
   }
 
+  if (sessionFinished) {
+    return <SessionSummary />;
+  }
+
   // There will only be a session ID after the user has clicked the start button. Having a separate state for the started would cause a race condition
   if (!sessionId) {
-    return <VocabControl onStart={() => startSession()} />;
+    return <VocabControl onStart={() => sessionMutate()} />;
   }
 
   // Loading check is after the conditional checking for session - loading will happen in the background before the user presses start button
@@ -188,6 +228,10 @@ export default function VocabSession() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Timer
+        sessionStartTime={sessionStartTime}
+        onFinish={() => setSessionFinished(true)}
+      />
       <WordCard
         wordPair={currentWord}
         inputText={inputText}

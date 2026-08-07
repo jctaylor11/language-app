@@ -2,18 +2,19 @@
 
 ## Frontend
 
-- VocabControl is rendered until a session exists. Its onStart calls startSession, which resets sessionPosition to 1 and calls the useMutation
+- VocabControl is rendered until a session exists. Its onStart calls sessionMutate directly
 - The mutation calls fetchSession, which POSTs to /sessions with bound_type and bound_value (currently time and 120 for vocab sessions). sessionId is held in the mutation's data so that a refresh resets it
 - Session creation is a useMutation rather than a useQuery because it writes. A query would re-run on window focus, retry and StrictMode, creating a session row each time
+- onSuccess holds all of the session setup, so nothing is initialised for a session that failed to be created
 - useInfiniteQuery hook is used to fetch words, in pages (appended, not replaced). staleTime: Infinity means no automatic refetch - only fetched with fetchNextPage when remaining words <= 3
 - fetchNextPage hits fetchWords, which hits GET /words - a random batch of 5, with no level or review awareness yet (TODO: [Design idea](vocab.md#add-vocab-control))
 - Word pages are flattened into one array and wordIndex is an index into it
 - inputText is state rather than a ref so the input stays controlled and each keypress re-renders the card
 - Each keypress runs handleInputChange, which compares the input against currentWord.source. If it matches, it builds the results, advances the word, then sends them over POST /vocab-results. Results are built before advanceWord (which resets wordShownTime) and sendVocabResults is awaited after it, so the response time stays accurate and the UI isn't held up
 - handleKeyDown catches tab/esc with preventDefault and advances word with 'skipped' status
-- keystrokes and wordShownTime are refs to avoid a re-render per keypress
-- sessionPosition is a ref and is reset to 1 on every startSession
-- Absence of sessionId renders the VocabControl. This session check comes first so that words are prefetched behind the control start screen, so the user isn't knowingly waiting on the fetch
+- keystrokes and wordShownTime are refs to avoid a re-render per keypress. wordShownTime starts at 0 so time spent on the VocabControl isn't counted into the first word
+- Timer derives timeRemaining from the sessionStartTime prop against Date.now() rather than decrementing a counter to avoid drift
+- sessionFinished is checked before the other render branches since sessionId and currentWord are both still set when the timer fires. The session check precedes loading so words prefetch behind the control
 
 ## Backend (GET /words, POST /vocab-results)
 
@@ -31,6 +32,8 @@
 4. Returns the number of results saved
 
 ## Edge cases
+
+- The current word when the timer ends is dropped intentionally - the user cannot finish their word in order to keep the 2 minute integrity
 
 ## Design ideas
 

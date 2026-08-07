@@ -1,3 +1,21 @@
+### 2026-08-07 - vocab: custom timer built with timestamps instead of third party timer package
+
+Decided to build my own custom timer using setInterval and the useEffect hook dependent on the sessionStartTime updating. Rejected the alternative of using the established react-timer-hook since it would add a dependency without adding value. It additionally does not abstract away logic keeping everything understood, there are no unnecessary imports, and the edge cases it would resolve are handled (e.g drift) since it's a function of timestamps.
+
+Outcome: Implemented.
+
+### 2026-08-07 - vocab: timer takes sessionStart time as a prop and derives countdown from this
+
+Decided to strictly calculate all time related variables as a function of timestamps (current and session start time) by passing the sessionStart as a prop. The rejected alternative was to deduct 1 from the countdown timer on every iteration of the setInterval's 1000ms interval. This would seem to deliver the same result, but could drift such that 120 seconds becomes longer than 120 seconds since it does not guarantee precise intervals, execution is not guaranteed to run on schedule (e.g main thread may be busy), throttling etc.
+
+Outcome: Implemented.
+
+### 2026-08-07 - vocab: onSuccess used for all logic to start the session
+
+Previously a startSession function was called when the user clicked the start button. This would handle all the start game logic (e.g mutation to fetch session, session position counter, timer, first word shown time). However, this could cause drift - for example, if the mutation failed the other functions would still run. Therefore it was changed that button would call the mutation, and the startSession logic was moved to the onSuccess handler of the useMutation hook.
+
+Outcome: Implemented.
+
 ### 2026-08-05 - vocab: session does not persist over refreshes
 
 The user refreshing the page most likely implies they are wanting to restart the session. Therefore the session should not be saved in sessionStorage - it should be closed, ready for a new one to start on click. The session can therefore just be set and stored with useMutation hook - the state is required so updates cause a re-render, and removing session storage means it will not persist through a refresh.
@@ -16,13 +34,19 @@ Rejected alternatives:
 
 - Letting the user choose the session length. This adds friction at exactly the point where inertia to start should be removed, and sessions of different lengths are no longer comparable.
 
+Updates:
+
+- When I was doing mental maths training, I found it almost addictive to do since
+
+Outcome: Implemented.
+
 ### 2026-08-02 - sessions: vocab sessions are bound by time, sentences are bound by count
 
 I think vocab and sentence sessions need a defined start and finish to close the loop psychologically, with feedback shown at the end (e.g result summary). Closing the loop makes effort and reward feel connected. If you complete something and there's no acknowledgement, the brain doesn't get a clean signal that the work is done - the effort feels like it disappeared, and a habit isn't likely to develop. This bounding will define a 'session' - and therefore changes the current definition of 'session' from a browser tab, to a bound and measured session.
 
 - Vocab session bound by time:
   - Lowers activation energy to get started as there is no uncertainty with the user's commitment. It's a lot easier to commit to doing 2 minutes, than it is to do 40 words, even if the two are ultimately the same.
-  - Response time data is less likely to be influenced: the user is more likely to go at their natural pace since their session time is fixed. Hence also, the UI should not encourage time pressure (e.g countdown should not be obvious etc). It's possible the user may rush near the end of the session, though this is detectable since time-into-session is derivable from vocab_results.answered_at and sessions.started_at - [design idea](vocab.md#assess-response-time-with-time-into-session)
+  - Response time data is less likely to be influenced: the user is more likely to go at their natural pace since their session time is fixed. Hence also, the UI should not encourage time pressure (e.g countdown should not be obvious. It should still exist to track time - just not as a central component to compete against). It's possible the user may rush near the end of the session, though this is detectable since time-into-session is derivable from vocab_results.answered_at and sessions.started_at - [design idea](vocab.md#assess-response-time-with-time-into-session)
   - Releases a progress metric regarding words done per session on the dashboard - this way the user more-so sees progress from time investment, rather than time saved from time investment (e.g "34 words in 2 minutes, up from 26 last week" is more rewarding than something like "2 minutes for 30 words, down from 3 minutes last week").
 
 - Sentences bound by count:
