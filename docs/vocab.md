@@ -34,6 +34,7 @@
 ## Edge cases
 
 - The current word when the timer ends is dropped intentionally - the user cannot finish their word in order to keep the 2 minute integrity
+- Words can current repeat in the same session. This raises the consideration regarding 'words reviewed'. Currently, two of the same words coming in the same session count as two reviewed.
 
 ## Design ideas
 
@@ -51,6 +52,10 @@
 ### Clear 'Go again' CTA along with the session summary
 
 - It's very easy to do just a 2 minute session, less easy to commit to a 10 minute session. However, someone who starts the 2 minutes is likely to continue - and they could do 10 minutes with 5x 2 minutes. Which also equate to 5 summaries (ie 5 rewards), which will likely keep them engaged.
+
+### Words being reviewed can only appear once in one session
+
+- Currently words can get sampled twice in the same session, and therefore the user could review the same word multiple times and this counts as multiple reviews for that session. However, seeing the same word twice in quick succession is redundant. There could be a filter that stops the same word from appearing twice in the same session. This would keep integrity with the 'words reviewed' metric in the session summary. However one consideration - what about for new users where they don't have many words? Though, arguable, if they don't have many words, that is a time moreso for exploration of words to guage their level (Bayesian priors) rather than focusing on review. Exploration is more valuable earlier on, and review is more valuable later on.
 
 ## Open questions
 

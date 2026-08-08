@@ -61,3 +61,8 @@ export type SessionRequest = {
   bound_type: "time" | "count";
   bound_value: number;
 };
+
+export type SessionSummaryData = {
+  new_words: number;
+  total_reviewed: number;
+};

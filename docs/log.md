@@ -1,3 +1,13 @@
+### 2026-08-08 - vocab: summary results count the same word seen twice as two reviews
+
+The 'total reviews' metric for that session is simply a count for the number of words reviewed in that session, whether they are repeated or not. It excludes words that have been skipped, since they get totally ignored. This is better than the rejected alternative of making it count only the distinct words reviewed in that session, and therefore double as a way for user's to guage their relative overall speed of churning through words. However, for the 'new words' metric, it only counts distinct words to represent the new words that have been added to their vault from that session.
+
+### 2026-08-08 - vocab: summary data is pulled from database at end of session
+
+At the end of the session, the frontend requests the words that have actually been added to their database in that session. This allows data outside of the session to be considered (e.g all their known words) so metrics like new words that session can be determined, as well as metrics relative to previous session (for example, "up x% since last week" style metrics). It also maintains data integrity by pulling from the source of truth, rather than assuming
+
+Rejected alternative: Building and storing the data client-side. However, this wouldn't allow comparisons to see which words are new.
+
 ### 2026-08-07 - vocab: custom timer built with timestamps instead of third party timer package
 
 Decided to build my own custom timer using setInterval and the useEffect hook dependent on the sessionStartTime updating. Rejected the alternative of using the established react-timer-hook since it would add a dependency without adding value. It additionally does not abstract away logic keeping everything understood, there are no unnecessary imports, and the edge cases it would resolve are handled (e.g drift) since it's a function of timestamps.

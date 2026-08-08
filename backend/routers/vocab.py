@@ -43,6 +43,35 @@ def insert_vocab_results(conn: Connection, user_id: int, vocab_results: VocabRes
     return len(vocab_results.word_results)
 
 
+def get_session_summary(conn: Connection, user_id: int, session_id: int) -> dict:
+    result = conn.execute(text("""
+        WITH session_results AS (
+            SELECT word_id, started_at 
+            FROM vocab_results vr
+            JOIN sessions s ON s.id = vr.session_id
+            WHERE session_id = :session_id
+            AND vr.user_id = :user_id
+            AND status != 'skipped')		-- Intentionally doesn't count as reviewed if skipped
+        SELECT 
+            (SELECT COUNT(*) FROM session_results) AS total_reviewed,
+            (SELECT COUNT(DISTINCT(word_id))
+                FROM session_results sr
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM vocab_results vr2
+                    WHERE vr2.user_id = :user_id
+                    AND vr2.session_id != :session_id				-- Kept in addition to time filter to ensure integrity, in case of potential server/browser clock mismatch
+                    AND sr.word_id = vr2.word_id
+                    AND vr2.answered_at < sr.started_at  	-- Defensive, otherwise if called in future it won't be accurate if later session covered the word
+                    AND vr2.status != 'skipped')			-- Otherwise words that have previously been skipped won't be considered new
+            ) AS new_words;
+    """), {"user_id": user_id, "session_id": session_id})
+
+    row = result.fetchone()
+
+    return row._asdict()
+
+
 @router.get("/words")
 def get_word_batch(conn: Annotated[Connection, Depends(get_read_connection)], user_id: Annotated[int, Depends(decode_access_token)]) -> dict:
     """Fetch batch of words to show to user"""
@@ -57,3 +86,11 @@ def create_vocab_results(conn: Annotated[Connection, Depends(get_write_connectio
     results_saved = insert_vocab_results(conn, user_id, vocab_results)
 
     return {"results_saved": results_saved}
+
+
+@router.get("/vocab-sessions/{session_id}/summary")
+def get_vocab_session_summary(conn: Annotated[Connection, Depends(get_read_connection)], user_id: Annotated[int, Depends(decode_access_token)], session_id: int) -> dict:
+    """Fetch summary metrics for the given vocab session"""
+    session_summary = get_session_summary(conn, user_id, session_id)
+
+    return {"session_summary": session_summary}
