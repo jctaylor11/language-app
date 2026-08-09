@@ -57,6 +57,8 @@
 
 - Currently words can get sampled twice in the same session, and therefore the user could review the same word multiple times and this counts as multiple reviews for that session. However, seeing the same word twice in quick succession is redundant. There could be a filter that stops the same word from appearing twice in the same session. This would keep integrity with the 'words reviewed' metric in the session summary. However one consideration - what about for new users where they don't have many words? Though, arguable, if they don't have many words, that is a time moreso for exploration of words to guage their level (Bayesian priors) rather than focusing on review. Exploration is more valuable earlier on, and review is more valuable later on.
 
+### Set timer from backend variable, rather than trusting frontend
+
 ## Open questions
 
 ### Session known vs unknown option?

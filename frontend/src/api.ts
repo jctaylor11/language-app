@@ -9,6 +9,7 @@ import type {
   WordChartDataPoint,
   SentenceEntry,
   SessionRequest,
+  VocabSessionSummary,
 } from "./types";
 
 const BASE_URL = "http://localhost:8000";
@@ -217,4 +218,21 @@ export async function getSentenceEntries(): Promise<SentenceEntry[]> {
   const sentenceEntries = await response.json();
 
   return sentenceEntries.sentences;
+}
+
+export async function getVocabSummary(
+  sessionId: number,
+): Promise<VocabSessionSummary> {
+  const vocabSessionSummaryUrl = `${BASE_URL}/vocab-sessions/${sessionId}/summary`;
+  const response = await fetchWithAuth(vocabSessionSummaryUrl, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get vocab session summary: ${response.status}`);
+  }
+
+  const vocabSummary = await response.json();
+
+  return vocabSummary.summary;
 }

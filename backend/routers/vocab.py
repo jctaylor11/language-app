@@ -93,4 +93,4 @@ def get_vocab_session_summary(conn: Annotated[Connection, Depends(get_read_conne
     """Fetch summary metrics for the given vocab session"""
     session_summary = get_session_summary(conn, user_id, session_id)
 
-    return {"session_summary": session_summary}
+    return {"summary": session_summary}

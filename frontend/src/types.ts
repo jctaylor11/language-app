@@ -62,7 +62,7 @@ export type SessionRequest = {
   bound_value: number;
 };
 
-export type SessionSummaryData = {
+export type VocabSessionSummary = {
   new_words: number;
   total_reviewed: number;
 };

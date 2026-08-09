@@ -1,8 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation } from "@tanstack/react-query";
 
 import type { WordPair, WordResults, VocabResults } from "../types";
-import { fetchSession, fetchWords, sendVocabResults } from "../api";
+import {
+  fetchSession,
+  fetchWords,
+  sendVocabResults,
+  getVocabSummary,
+} from "../api";
 import { calcIncorrectInput } from "../utils";
 
 function VocabControl({ onStart }: { onStart: () => void }) {
@@ -29,7 +34,7 @@ function Timer({
   sessionStartTime: number;
   onFinish: () => void;
 }) {
-  const timerDurationS = 120;
+  const timerDurationS = 10;
   const [timeRemaining, setTimeRemaining] = useState(timerDurationS);
 
   useEffect(() => {
@@ -83,8 +88,53 @@ function WordCard({
   );
 }
 
-function SessionSummary() {
-  return <div>Placeholder for summary results component</div>;
+function SessionSummary({
+  handleNewSession,
+  sessionId,
+}: {
+  handleNewSession: () => void;
+  sessionId: number;
+}) {
+  const sessionSummary = useQuery({
+    queryKey: ["vocabSummary", sessionId],
+    queryFn: () => getVocabSummary(sessionId),
+  });
+
+  if (sessionSummary.isPending) {
+    return <p>Loading...</p>;
+  }
+
+  if (sessionSummary.isError) {
+    return <p>Error: {sessionSummary.error.message}</p>;
+  }
+
+  const newWords = sessionSummary.data.new_words;
+  const totalReviewed = sessionSummary.data.total_reviewed;
+
+  return (
+    <div className="flex flex-col items-center gap-6 bg-[#dddddd] w-120 mx-auto px-10 py-5 m-20">
+      <div id="summary-metrics" className="flex gap-16 mt-5">
+        <div className="text-center">
+          <div className="text-xs text-neutral-500 uppercase">New Words</div>
+          <div className="text-xl text-gray-500 font-mono mt-2">{newWords}</div>
+        </div>
+        <div className="text-center">
+          <div className="text-xs text-neutral-500 uppercase">
+            Total Reviewed
+          </div>
+          <div className="text-xl text-gray-500 font-mono mt-2">
+            {totalReviewed}
+          </div>
+        </div>
+      </div>
+      <button
+        onClick={() => handleNewSession()}
+        className="border px-6 py-1 mt-1 rounded cursor-pointer bg-gray-100 hover:bg-[#dddddd] active:bg-gray-200"
+      >
+        New Session
+      </button>
+    </div>
+  );
 }
 
 export default function VocabSession() {
@@ -97,13 +147,18 @@ export default function VocabSession() {
   const keystrokes = useRef<string>("");
   const wordShownTime = useRef<number>(0);
 
-  const { mutate: sessionMutate, data: sessionId } = useMutation({
+  const {
+    mutate: sessionMutate,
+    data: sessionId,
+    isPending: sessionPending,
+  } = useMutation({
     mutationFn: () => fetchSession({ bound_type: "time", bound_value: 120 }),
     onSuccess: () => {
       const sessionStart = Date.now();
       sessionPosition.current = 1;
       setSessionStartTime(sessionStart);
       wordShownTime.current = sessionStart;
+      setSessionFinished(false);
     },
   });
 
@@ -212,8 +267,8 @@ export default function VocabSession() {
     keystrokes.current = keystrokes.current + recorded;
   }
 
-  if (sessionFinished) {
-    return <SessionSummary />;
+  if (sessionPending) {
+    return <div>Loading...</div>;
   }
 
   // There will only be a session ID after the user has clicked the start button. Having a separate state for the started would cause a race condition
@@ -221,7 +276,12 @@ export default function VocabSession() {
     return <VocabControl onStart={() => sessionMutate()} />;
   }
 
-  // Loading check is after the conditional checking for session - loading will happen in the background before the user presses start button
+  if (sessionFinished) {
+    return (
+      <SessionSummary handleNewSession={sessionMutate} sessionId={sessionId} />
+    );
+  }
+
   if (!currentWord) {
     return <div>Loading...</div>;
   }
