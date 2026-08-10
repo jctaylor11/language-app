@@ -15,7 +15,8 @@
 - keystrokes and wordShownTime are refs to avoid a re-render per keypress. wordShownTime starts at 0 so time spent on the VocabControl isn't counted into the first word
 - Timer derives timeRemaining from the sessionStartTime prop against Date.now() rather than decrementing a counter to avoid drift
 - SessionSummary fetches metrics from database with useQuery to ensure faithful representation by gating on the number of in-flight requests being 0 (from useIsMutating)
-- 'New Session' calls sessionMutate again. onSuccess resets sessionFinished, but wordIndex is not reset so the word queue carries over
+- 'New Session' calls sessionMutate again. onSuccess resets sessionFinished
+- Time onFinish increments wordIndex so the first word of the new session is fresh
 
 ## Backend (GET /words, POST /vocab-results, GET /vocab-sessions/{session_id}/summary)
 
@@ -41,7 +42,7 @@
 
 ## Edge cases
 
-- The current word when the timer ends is dropped intentionally - the user cannot finish their word in order to keep the 2 minute integrity
+- The current word when the timer ends is dropped and skipped intentionally - 2 minute session time is protected, and having it as the first word for the next would systematically lower response time since the user has already seen it
 - Words can current repeat in the same session. This raises the consideration regarding 'words reviewed'. Currently, two of the same words coming in the same session count as two reviewed.
 
 ## Design ideas

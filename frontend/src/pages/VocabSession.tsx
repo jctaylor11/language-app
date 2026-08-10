@@ -15,7 +15,7 @@ import {
 } from "../api";
 import { calcIncorrectInput } from "../utils";
 
-const SESSION_DURATION_S = 120;
+const SESSION_DURATION_S = 10;
 
 function VocabControl({ onStart }: { onStart: () => void }) {
   return (
@@ -168,8 +168,10 @@ export default function VocabSession() {
     onSuccess: () => {
       const sessionStart = Date.now();
       sessionPosition.current = 1;
-      setSessionStartTime(sessionStart);
       wordShownTime.current = sessionStart;
+      setSessionStartTime(sessionStart);
+      setInputText("");
+      keystrokes.current = "";
       setSessionFinished(false);
     },
   });
@@ -189,9 +191,16 @@ export default function VocabSession() {
 
   const words = wordsData?.pages.flat() ?? [];
 
+  // Append new batch if falls below threshold, checked every time words list or word index changes (after every commit)
+  useEffect(() => {
+    if (words.length - wordIndex <= 3) {
+      fetchNextPage();
+    }
+  }, [words.length, wordIndex, fetchNextPage]);
+
   const currentWord: WordPair | undefined = words[wordIndex];
 
-  async function advanceWord() {
+  function advanceWord() {
     setInputText("");
     keystrokes.current = "";
     sessionPosition.current++;
@@ -202,11 +211,6 @@ export default function VocabSession() {
     // Increment the word index to advance the word
     const nextWordIndex = wordIndex + 1;
     setWordIndex(nextWordIndex);
-
-    // Append new batch if falls below threshold
-    if (words.length - nextWordIndex <= 3) {
-      fetchNextPage();
-    }
   }
 
   function buildVocabResults(
@@ -249,7 +253,7 @@ export default function VocabSession() {
     return vocabResults;
   }
 
-  async function handleInputChange(input: string) {
+  function handleInputChange(input: string) {
     if (!currentWord || !sessionId) return; // Defensive
 
     setInputText(input);
@@ -257,12 +261,12 @@ export default function VocabSession() {
     // Check whether input matches the answer
     if (input === currentWord.source) {
       const vocabResults = buildVocabResults(currentWord, sessionId);
-      await advanceWord(); // wordShownTime is reset in advanceWord - therefore placed after building the results
+      advanceWord(); // wordShownTime is reset in advanceWord - therefore placed after building the results
       resultsMutate(vocabResults);
     }
   }
 
-  async function handleKeyDown(e: React.KeyboardEvent) {
+  function handleKeyDown(e: React.KeyboardEvent) {
     if (!currentWord || !sessionId) return;
 
     const key = e.key;
@@ -272,7 +276,7 @@ export default function VocabSession() {
       // Build results before advancing to capture response time accurately since time updates on advanceWord
       const skipped = true;
       const vocabResults = buildVocabResults(currentWord, sessionId, skipped);
-      await advanceWord(); // wordShownTime is reset in advanceWord - therefore placed after building results
+      advanceWord(); // wordShownTime is reset in advanceWord - therefore placed after building results
       resultsMutate(vocabResults);
     }
 
@@ -309,7 +313,10 @@ export default function VocabSession() {
       <Timer
         timerDurationS={SESSION_DURATION_S}
         sessionStartTime={sessionStartTime}
-        onFinish={() => setSessionFinished(true)}
+        onFinish={() => {
+          setSessionFinished(true);
+          setWordIndex((index) => index + 1); // Skips the last (not done) word seen as the timer expired
+        }}
       />
       <WordCard
         wordPair={currentWord}

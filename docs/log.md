@@ -1,3 +1,9 @@
+### 2026-08-10 - vocab: word index advances at the end of a session
+
+Since the words list is held in cache, when another session starts (after timer expires) the same queued words are shown to the user. Previously, this would mean that the final (not-done) word as the timer expired from the previous session is shown to the user as the first word on the next session. It was changed to advance the word onFinish as the timer expires so the last word is not shown as the first. Two main reasons: If the user has already seen the word, they would have already subconsciously thought of it, therefore the first word is systematically faster than usual. Additionally, it could feel as though the next session is just a continuation, which could make each session feel less like a 'closed loop' and lower session integrity.
+
+Outcome: Implemented.
+
 ### 2026-08-10 - vocab: results are sent through useMutation so in-flight flushes are observable
 
 Results were sent with an awaited fetch inside the event handler, and therefore was not possible for anything else to see if the promise had been resolved. Since the summary query fires immediately as the timer ends, it could beat the last query to the database and therefore undercount the metrics. This is especially the case that users could be rushing to get the last word in. Decided to change it to go through useMutation, which records each flush in the shared mutation cache. This can be accessed by useIsMutating, so that SessionSummary gates its query on the number of in-flight requests being 0.
