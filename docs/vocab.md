@@ -14,9 +14,10 @@
 - handleKeyDown catches tab/esc with preventDefault and advances word with 'skipped' status
 - keystrokes and wordShownTime are refs to avoid a re-render per keypress. wordShownTime starts at 0 so time spent on the VocabControl isn't counted into the first word
 - Timer derives timeRemaining from the sessionStartTime prop against Date.now() rather than decrementing a counter to avoid drift
-- sessionFinished is checked before the other render branches since sessionId and currentWord are both still set when the timer fires. The session check precedes loading so words prefetch behind the control
+- SessionSummary fetches metrics from database with useQuery to ensure faithful representation
+- 'New Session' calls sessionMutate again. onSuccess resets sessionFinished, but wordIndex is not reset so the word queue carries over
 
-## Backend (GET /words, POST /vocab-results)
+## Backend (GET /words, POST /vocab-results, GET /vocab-sessions/{session_id}/summary)
 
 ### GET /words
 
@@ -30,6 +31,13 @@
 2. insert_vocab_results inserts batch of results into vocab_results. It is the raw data for everything derived later (e.g dashboard, confidence scoring)
 3. sessions.completed_at is re-stamped with NOW() on every flush, so it currently means 'last activity' gets updated until it is truly the last activity
 4. Returns the number of results saved
+
+### GET /vocab-sessions/{session_id}/summary
+
+1. session_results CTE narrows vocab_results to that session and user, excluding skipped
+2. total_reviewed counts every row, so the same word answered twice in one session counts twice
+3. new_words counts distinct words with no earlier non-skipped result from another session
+4. Returns both as summary metrics
 
 ## Edge cases
 
@@ -58,6 +66,8 @@
 - Currently words can get sampled twice in the same session, and therefore the user could review the same word multiple times and this counts as multiple reviews for that session. However, seeing the same word twice in quick succession is redundant. There could be a filter that stops the same word from appearing twice in the same session. This would keep integrity with the 'words reviewed' metric in the session summary. However one consideration - what about for new users where they don't have many words? Though, arguable, if they don't have many words, that is a time moreso for exploration of words to guage their level (Bayesian priors) rather than focusing on review. Exploration is more valuable earlier on, and review is more valuable later on.
 
 ### Set timer from backend variable, rather than trusting frontend
+
+Currently the timer is set by a variable passed in from the frontend.
 
 ## Open questions
 
