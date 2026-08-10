@@ -1,5 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useQuery, useInfiniteQuery, useMutation } from "@tanstack/react-query";
+import {
+  useQuery,
+  useInfiniteQuery,
+  useMutation,
+  useIsMutating,
+} from "@tanstack/react-query";
 
 import type { WordPair, WordResults, VocabResults } from "../types";
 import {
@@ -98,9 +103,12 @@ function SessionSummary({
   handleNewSession: () => void;
   sessionId: number;
 }) {
+  const flushesInFlight = useIsMutating({ mutationKey: ["vocabResults"] });
+
   const sessionSummary = useQuery({
     queryKey: ["vocabSummary", sessionId],
     queryFn: () => getVocabSummary(sessionId),
+    enabled: flushesInFlight === 0, // Otherwise last result may still be in flight which would undercount results
   });
 
   if (sessionSummary.isPending) {
@@ -164,6 +172,11 @@ export default function VocabSession() {
       wordShownTime.current = sessionStart;
       setSessionFinished(false);
     },
+  });
+
+  const { mutate: resultsMutate } = useMutation({
+    mutationKey: ["vocabResults"],
+    mutationFn: sendVocabResults,
   });
 
   const { data: wordsData, fetchNextPage } = useInfiniteQuery({
@@ -244,8 +257,8 @@ export default function VocabSession() {
     // Check whether input matches the answer
     if (input === currentWord.source) {
       const vocabResults = buildVocabResults(currentWord, sessionId);
-      await advanceWord(); // Timer is reset in advanceWord - therefore placed before sendVocabResults (so its not waiting) and after vocabResults is built (else time sent immediately after started)
-      await sendVocabResults(vocabResults);
+      await advanceWord(); // wordShownTime is reset in advanceWord - therefore placed after building the results
+      resultsMutate(vocabResults);
     }
   }
 
@@ -259,8 +272,8 @@ export default function VocabSession() {
       // Build results before advancing to capture response time accurately since time updates on advanceWord
       const skipped = true;
       const vocabResults = buildVocabResults(currentWord, sessionId, skipped);
-      await advanceWord(); // advanceWord before network request to priorise UI speed
-      await sendVocabResults(vocabResults);
+      await advanceWord(); // wordShownTime is reset in advanceWord - therefore placed after building results
+      resultsMutate(vocabResults);
     }
 
     // Filter out meaningless keys, replace Backspace with a clean and distinct symbol

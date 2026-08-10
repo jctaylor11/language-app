@@ -10,11 +10,11 @@
 - fetchNextPage hits fetchWords, which hits GET /words - a random batch of 5, with no level or review awareness yet (TODO: [Design idea](vocab.md#add-vocab-control))
 - Word pages are flattened into one array and wordIndex is an index into it
 - inputText is state rather than a ref so the input stays controlled and each keypress re-renders the card
-- Each keypress runs handleInputChange, which compares the input against currentWord.source. If it matches, it builds the results, advances the word, then sends them over POST /vocab-results. Results are built before advanceWord (which resets wordShownTime) and sendVocabResults is awaited after it, so the response time stays accurate and the UI isn't held up
+- Each keypress runs handleInputChange, which compares the input against currentWord.source. If it matches, it builds the results, advances the word, then sends them over POST /vocab-results. Results are built before advanceWord since advanceWord resets the wordShownTime
 - handleKeyDown catches tab/esc with preventDefault and advances word with 'skipped' status
 - keystrokes and wordShownTime are refs to avoid a re-render per keypress. wordShownTime starts at 0 so time spent on the VocabControl isn't counted into the first word
 - Timer derives timeRemaining from the sessionStartTime prop against Date.now() rather than decrementing a counter to avoid drift
-- SessionSummary fetches metrics from database with useQuery to ensure faithful representation
+- SessionSummary fetches metrics from database with useQuery to ensure faithful representation by gating on the number of in-flight requests being 0 (from useIsMutating)
 - 'New Session' calls sessionMutate again. onSuccess resets sessionFinished, but wordIndex is not reset so the word queue carries over
 
 ## Backend (GET /words, POST /vocab-results, GET /vocab-sessions/{session_id}/summary)

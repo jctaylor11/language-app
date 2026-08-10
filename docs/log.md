@@ -1,3 +1,9 @@
+### 2026-08-10 - vocab: results are sent through useMutation so in-flight flushes are observable
+
+Results were sent with an awaited fetch inside the event handler, and therefore was not possible for anything else to see if the promise had been resolved. Since the summary query fires immediately as the timer ends, it could beat the last query to the database and therefore undercount the metrics. This is especially the case that users could be rushing to get the last word in. Decided to change it to go through useMutation, which records each flush in the shared mutation cache. This can be accessed by useIsMutating, so that SessionSummary gates its query on the number of in-flight requests being 0.
+
+Outcome: Implemented.
+
 ### 2026-08-08 - vocab: summary results count the same word seen twice as two reviews
 
 The 'total reviews' metric for that session is simply a count for the number of words reviewed in that session, whether they are repeated or not. It excludes words that have been skipped, since they get totally ignored. This is better than the rejected alternative of making it count only the distinct words reviewed in that session, and therefore double as a way for user's to gauge their relative overall speed of churning through words. However, for the 'new words' metric, it only counts distinct words to represent the new words that have been added to their vault from that session.
