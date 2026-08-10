@@ -10,6 +10,8 @@ import {
 } from "../api";
 import { calcIncorrectInput } from "../utils";
 
+const SESSION_DURATION_S = 120;
+
 function VocabControl({ onStart }: { onStart: () => void }) {
   return (
     <div className="flex justify-center bg-[#dddddd] w-120 mx-auto px-10 py-5">
@@ -28,13 +30,14 @@ function VocabControl({ onStart }: { onStart: () => void }) {
 }
 
 function Timer({
+  timerDurationS,
   sessionStartTime,
   onFinish,
 }: {
+  timerDurationS: number;
   sessionStartTime: number;
   onFinish: () => void;
 }) {
-  const timerDurationS = 10;
   const [timeRemaining, setTimeRemaining] = useState(timerDurationS);
 
   useEffect(() => {
@@ -152,7 +155,8 @@ export default function VocabSession() {
     data: sessionId,
     isPending: sessionPending,
   } = useMutation({
-    mutationFn: () => fetchSession({ bound_type: "time", bound_value: 120 }),
+    mutationFn: () =>
+      fetchSession({ bound_type: "time", bound_value: SESSION_DURATION_S }),
     onSuccess: () => {
       const sessionStart = Date.now();
       sessionPosition.current = 1;
@@ -267,6 +271,7 @@ export default function VocabSession() {
     keystrokes.current = keystrokes.current + recorded;
   }
 
+  // Start button will flash without this, which if clicked would create an orphan session
   if (sessionPending) {
     return <div>Loading...</div>;
   }
@@ -289,6 +294,7 @@ export default function VocabSession() {
   return (
     <div className="min-h-screen flex flex-col">
       <Timer
+        timerDurationS={SESSION_DURATION_S}
         sessionStartTime={sessionStartTime}
         onFinish={() => setSessionFinished(true)}
       />
