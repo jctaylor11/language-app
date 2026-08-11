@@ -7,20 +7,26 @@ from backend.tests.conftest import TEST_USER_ID
 
 
 def test_get_sentence_batch(client, access_token, seed_user_words):
-    mock_sentences = [SentencePair(target="우리는 매일 물을 마십니다.", source="We drink water every day.")]
+    # Must be at least 3 sentence, since 3 in a batch, and they must be of applicable known_percent with the argument in http fetch
+    mock_sentences = [
+        SentencePair(target="우리는 매일 물을 마십니다.", source="We drink water every day."),  # 1/4 lemmas known (물) = 25%
+        SentencePair(target="저 사람은 학교 도서관에서 책을 읽습니다.", source="That person reads a book at the school library."),  # 1/6 lemmas known (사람) = 16.7%
+        SentencePair(target="그는 새로운 자동차를 운전해서 회사에 갔습니다.", source="He drove his new car to the office."),  # 1/5 lemmas known (가다) = 20%
+    ]
     client.cookies.set("access_token", access_token)
 
+    # Patched to avoid LLM API call
     with patch("backend.routers.sentence.generate_sentences", return_value=mock_sentences):
-        response = client.post(f"/sentences", json={"known_percent": 80})
+        response = client.post(f"/sentences", json={"known_percent": 20})
 
     assert response.status_code == 200
     data = response.json()
     assert "sentences" in data
-    assert len(data["sentences"]) == 1
-    sentence = data["sentences"][0]
-    assert isinstance(sentence["id"], int)
-    assert sentence["target"] == mock_sentences[0].target
-    assert sentence["source"] == mock_sentences[0].source
+    assert len(data["sentences"]) == 3
+    returned_pairs = {(sentence["target"], sentence["source"]) for sentence in data["sentences"]}
+    expected_pairs = {(mock_sentence.target, mock_sentence.source) for mock_sentence in mock_sentences}
+    assert returned_pairs == expected_pairs  # Order isn't guaranteed since the eligibility query has no ORDER BY
+    assert all(isinstance(sentence["id"], int) for sentence in data["sentences"])
 
 
 def test_create_sentence_result(client, access_token, conn):

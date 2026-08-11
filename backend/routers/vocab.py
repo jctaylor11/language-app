@@ -50,7 +50,7 @@ def get_session_summary(conn: Connection, user_id: int, session_id: int) -> dict
             FROM vocab_results vr
             JOIN sessions s ON s.id = vr.session_id
             WHERE session_id = :session_id
-            AND vr.user_id = :user_id
+            AND vr.user_id = :user_id       -- Isolates between users despite no checking that the session belongs to the requester - since it filters for that user
             AND status != 'skipped')		-- Intentionally doesn't count as reviewed if skipped
         SELECT 
             (SELECT COUNT(*) FROM session_results) AS total_reviewed,
