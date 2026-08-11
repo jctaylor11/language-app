@@ -15,7 +15,7 @@ import {
 } from "../api";
 import { calcIncorrectInput } from "../utils";
 
-const SESSION_DURATION_S = 10;
+const SESSION_DURATION_S = 120;
 
 function VocabControl({ onStart }: { onStart: () => void }) {
   return (
@@ -153,6 +153,7 @@ export default function VocabSession() {
   const [wordIndex, setWordIndex] = useState(0);
   const [sessionStartTime, setSessionStartTime] = useState(0);
   const [sessionFinished, setSessionFinished] = useState(false);
+  const [score, setScore] = useState(0);
 
   const sessionPosition = useRef<number>(1);
   const keystrokes = useRef<string>("");
@@ -171,6 +172,7 @@ export default function VocabSession() {
       wordShownTime.current = sessionStart;
       setSessionStartTime(sessionStart);
       setInputText("");
+      setScore(0);
       keystrokes.current = "";
       setSessionFinished(false);
     },
@@ -260,6 +262,7 @@ export default function VocabSession() {
 
     // Check whether input matches the answer
     if (input === currentWord.source) {
+      setScore((prev) => prev + 1);
       const vocabResults = buildVocabResults(currentWord, sessionId);
       advanceWord(); // wordShownTime is reset in advanceWord - therefore placed after building the results
       resultsMutate(vocabResults);
@@ -310,14 +313,17 @@ export default function VocabSession() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Timer
-        timerDurationS={SESSION_DURATION_S}
-        sessionStartTime={sessionStartTime}
-        onFinish={() => {
-          setSessionFinished(true);
-          setWordIndex((index) => index + 1); // Skips the last (not done) word seen as the timer expired
-        }}
-      />
+      <div className="flex justify-between">
+        <Timer
+          timerDurationS={SESSION_DURATION_S}
+          sessionStartTime={sessionStartTime}
+          onFinish={() => {
+            setSessionFinished(true);
+            setWordIndex((index) => index + 1); // Skips the last (not done) word seen as the timer expired
+          }}
+        />
+        <div>{score}</div>
+      </div>
       <WordCard
         wordPair={currentWord}
         inputText={inputText}

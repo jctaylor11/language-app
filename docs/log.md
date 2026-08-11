@@ -1,3 +1,11 @@
+### 2026-08-11 - vocab: score incremented and displayed for each non-skipped word answered
+
+A score universally increments one for every non-skipped word, and is saved client-side rather than dependent on server side. Decided to keep it client-side to make feedback immediate and low latency (rather than waiting for a request to round trip), and it decouples it from any batching logic for sending results. The tradeoff is that a failed POST will cause the summary to disagree with the live running score, though this is unlikely, and unlikely to be noticed given it occurs on another screen. If it happens to occur often, I can add a retry.
+
+Incrementing client side is different logic to the final summary score, which is fetched from the server, since it's acceptable for a slight delay in loading the summary, combines external data (e.g new word calculation), and is more important to be faithful than the live on-screen running count.
+
+Outcome: Implemented.
+
 ### 2026-08-10 - vocab: word index advances at the end of a session
 
 Since the words list is held in cache, when another session starts (after timer expires) the same queued words are shown to the user. Previously, this would mean that the final (not-done) word as the timer expired from the previous session is shown to the user as the first word on the next session. It was changed to advance the word onFinish as the timer expires so the last word is not shown as the first. Two main reasons: If the user has already seen the word, they would have already subconsciously thought of it, therefore the first word is systematically faster than usual. Additionally, it could feel as though the next session is just a continuation, which could make each session feel less like a 'closed loop' and lower session integrity.

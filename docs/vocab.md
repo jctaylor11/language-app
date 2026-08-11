@@ -16,7 +16,8 @@
 - Timer derives timeRemaining from the sessionStartTime prop against Date.now() rather than decrementing a counter to avoid drift
 - SessionSummary fetches metrics from database with useQuery to ensure faithful representation by gating on the number of in-flight requests being 0 (from useIsMutating)
 - 'New Session' calls sessionMutate again. onSuccess resets sessionFinished
-- Time onFinish increments wordIndex so the first word of the new session is fresh
+- Timer onFinish increments wordIndex so the first word of the new session is fresh
+- A score is incremented and displayed top right for each non-skipped word submitted
 
 ## Backend (GET /words, POST /vocab-results, GET /vocab-sessions/{session_id}/summary)
 
