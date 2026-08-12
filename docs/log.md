@@ -16,6 +16,8 @@ One of the main purposes of this summary screen also is for psychology: They div
 
 A sentence session is a fixed number of sentences submitted, as decided in [Decision Log](log.md#2026-08-02---sessions-vocab-sessions-are-bound-by-time-sentences-are-bound-by-count). Skipped sentences don't count towards the five since it's 'any five sentences', rather than any specific five. Five was chosen since the commitment is small, similar to two minutes for vocab. A session of ten sentences feels like more a commitment, whereas a user can simply do ten sentences over two sessions.
 
+Outcome: Implemented.
+
 ### 2026-08-11 - vocab: score incremented and displayed for each non-skipped word answered
 
 A score universally increments one for every non-skipped word, and is saved client-side rather than dependent on server side. Decided to keep it client-side to make feedback immediate and low latency (rather than waiting for a request to round trip), and it decouples it from any batching logic for sending results. The tradeoff is that a failed POST will cause the summary to disagree with the live running score, though this is unlikely, and unlikely to be noticed given it occurs on another screen. If it happens to occur often, I can add a retry.

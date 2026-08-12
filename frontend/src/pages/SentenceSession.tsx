@@ -5,7 +5,7 @@ import { fetchSession, fetchSentencePairs, sendSentenceResult } from "../api";
 import type { SentencePair, SentenceResults } from "../types";
 
 const BAND_HALF_WIDTH_PERCENT = 10; // Mirrors PROPORTION_BAND_PERCENT in backend/routers/sentence.py
-const SESSION_COUNT = 5;
+const SENTENCES_PER_SESSION = 5;
 
 function formatKnownBand(percentValue: number): string {
   const lowerPercent = percentValue - BAND_HALF_WIDTH_PERCENT;
@@ -85,10 +85,38 @@ function SentenceCard({
   );
 }
 
+function SessionSummary({
+  handleNewSession,
+}: {
+  handleNewSession: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-6 bg-[#dddddd] w-120 mx-auto px-10 py-5 m-20">
+      <div id="summary-metrics" className="flex gap-16 mt-5">
+        <div className="text-center">
+          <div className="text-xs text-neutral-500 uppercase">
+            Total Reviewed
+          </div>
+          <div className="text-xl text-gray-500 font-mono mt-2">
+            Metric placeholder
+          </div>
+        </div>
+      </div>
+      <button
+        onClick={() => handleNewSession()}
+        className="border px-6 py-1 mt-1 rounded cursor-pointer bg-gray-100 hover:bg-[#dddddd] active:bg-gray-200"
+      >
+        New Session
+      </button>
+    </div>
+  );
+}
+
 export default function SentenceSession() {
   const [knownPercent, setKnownPercent] = useState(90); // 80-100% band - the closest bucket to the ~80% comprehensible input target
   const [inputText, setInputText] = useState("");
   const [sentencePairIndex, setSentencePairIndex] = useState(0);
+  const [completedSentencesCount, setCompletedSentencesCount] = useState(0);
 
   const queuedSentenceIdsRef = useRef<number[]>([]); // queryFn needs the latest sentencePairs, but referencing it directly creates a TS type cycle (its type depends on this hook's own return)
 
@@ -100,8 +128,11 @@ export default function SentenceSession() {
     mutationFn: () =>
       fetchSession({
         bound_type: "count",
-        bound_value: SESSION_COUNT,
+        bound_value: SENTENCES_PER_SESSION,
       }),
+    onSuccess: () => {
+      setCompletedSentencesCount(0);
+    },
   });
 
   const { mutate: resultsMutate } = useMutation({
@@ -176,7 +207,7 @@ export default function SentenceSession() {
         sentencePairs[sentencePairIndex],
         sessionId,
       );
-
+      setCompletedSentencesCount((prev) => prev + 1);
       advanceSentencePair();
       resultsMutate(sentenceResults);
     }
@@ -199,6 +230,10 @@ export default function SentenceSession() {
     }
   }
 
+  if (completedSentencesCount >= SENTENCES_PER_SESSION) {
+    return <SessionSummary handleNewSession={sessionMutate} />;
+  }
+
   if (sessionPending) {
     return <div>Loading...</div>;
   }
@@ -219,11 +254,14 @@ export default function SentenceSession() {
   }
 
   return (
-    <SentenceCard
-      sentencePair={sentencePairs[sentencePairIndex]}
-      inputText={inputText}
-      onInputChange={handleInputChange}
-      onKeyDown={handleKeyDown}
-    />
+    <>
+      <div className="flex justify-end">{completedSentencesCount}</div>
+      <SentenceCard
+        sentencePair={sentencePairs[sentencePairIndex]}
+        inputText={inputText}
+        onInputChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+      />
+    </>
   );
 }
