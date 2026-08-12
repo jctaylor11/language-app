@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 
 import { fetchSentencePairs, sendSentenceResult } from "../api";
-import type { SentencePair } from "../types";
+import type { SentencePair, SentenceResults } from "../types";
 
 const BAND_HALF_WIDTH_PERCENT = 10; // Mirrors PROPORTION_BAND_PERCENT in backend/routers/sentence.py
 
@@ -91,6 +91,11 @@ export default function SentenceSession() {
   const [sentencePairIndex, setSentencePairIndex] = useState(0);
   const queuedSentenceIdsRef = useRef<number[]>([]); // queryFn needs the latest sentencePairs, but referencing it directly creates a TS type cycle (its type depends on this hook's own return)
 
+  const { mutate: resultsMutate } = useMutation({
+    mutationKey: ["sentenceResults"],
+    mutationFn: sendSentenceResult,
+  });
+
   const {
     data: sentencePairsData,
     fetchNextPage,
@@ -113,6 +118,27 @@ export default function SentenceSession() {
   const sentencePairs = sentencePairsData?.pages.flat() ?? []; // Pages only needed so refetch doesn't replace data
   queuedSentenceIdsRef.current = sentencePairs.map((pair) => pair.id);
 
+  function buildSentenceResults(
+    currentSentencePair: SentencePair,
+    skipped: boolean = false,
+  ): SentenceResults {
+    const sentence_id = currentSentencePair.id;
+
+    let status: string;
+    if (skipped) {
+      status = "skipped";
+    } else {
+      status = "correct";
+    }
+
+    const sentenceResults: SentenceResults = {
+      sentence_id,
+      status,
+    };
+
+    return sentenceResults;
+  }
+
   function advanceSentencePair() {
     const nextIndex = sentencePairIndex + 1;
 
@@ -133,10 +159,12 @@ export default function SentenceSession() {
     const cleanedInput = input.toLowerCase().replace(/[^\w\s]/g, "");
 
     if (cleanedInput === cleanedSourceSentence) {
-      const completedSentenceId = sentencePairs[sentencePairIndex].id; // Need to save the value before its incremented in advanceSentencePair
-      advanceSentencePair(); // Placed before addUserSentence to prioritise what the user sees
+      const sentenceResults = buildSentenceResults(
+        sentencePairs[sentencePairIndex],
+      );
 
-      sendSentenceResult(completedSentenceId, "correct"); // Consider awaiting (investigate any race condition)
+      advanceSentencePair();
+      resultsMutate(sentenceResults);
     }
   }
 
@@ -145,9 +173,12 @@ export default function SentenceSession() {
     if (key === "Escape" || key === "Tab") {
       e.preventDefault();
 
-      const completedSentenceId = sentencePairs[sentencePairIndex].id; // Need to save the value before its incremented in advanceSentencePair
-      sendSentenceResult(completedSentenceId, "skipped"); // It must be acknowledged as skipped, otherwise it could just come back around in the next batch
+      const sentenceResults = buildSentenceResults(
+        sentencePairs[sentencePairIndex],
+        true,
+      );
       advanceSentencePair();
+      resultsMutate(sentenceResults);
     }
   }
 

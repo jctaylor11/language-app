@@ -10,6 +10,7 @@ import type {
   SentenceEntry,
   SessionRequest,
   VocabSessionSummary,
+  SentenceResults,
 } from "./types";
 
 const BASE_URL = "http://localhost:8000";
@@ -105,18 +106,14 @@ export async function fetchSentencePairs(
 }
 
 export async function sendSentenceResult(
-  sentenceId: number,
-  status: string,
+  sentenceResults: SentenceResults,
 ): Promise<void> {
   try {
     const userSentencesUrl = `${BASE_URL}/sentence-results`;
     const response = await fetchWithAuth(userSentencesUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sentence_id: sentenceId,
-        status: status,
-      }),
+      body: JSON.stringify(sentenceResults),
     });
     const addUserSentenceConfirmation = await response.json();
     console.log(addUserSentenceConfirmation);

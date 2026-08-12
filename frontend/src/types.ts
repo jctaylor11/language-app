@@ -32,6 +32,11 @@ export type SentencePair = {
   source: string;
 };
 
+export type SentenceResults = {
+  sentence_id: number;
+  status: string;
+};
+
 export type WordEntry = {
   id: number;
   target: string;
