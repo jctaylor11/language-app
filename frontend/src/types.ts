@@ -34,6 +34,7 @@ export type SentencePair = {
 
 export type SentenceResults = {
   sentence_id: number;
+  session_id: number;
   status: string;
 };
 

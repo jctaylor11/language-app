@@ -59,6 +59,7 @@
   - Resolves the issue around what happens
   - New words should be considered a 'reward' for doing well, rather than abundant - having the option to generate sentences with 0% known words defeats this and makes it complicated about what happens with those new words.
   - Keeping it 80% minimum keeps things simple and focused on comprehensible input and word review, which is the primary purpose of the sentence generation. Leave word exploration to the vocab algorithm.
+  - Without the user's input required, I can also prefetch the second the page mounts so the user doesn't need to wait for the sentences to load
 
 ### Skip budget and sentence budget
 

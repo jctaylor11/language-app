@@ -7,7 +7,7 @@ from backend.enums import SentenceResultStatus, VocabResultStatus, SessionBoundT
 
 class SentenceResult(BaseModel):
     sentence_id: int
-    #TODO: session_id: int - add when session is wired to sentences too, NULL until then
+    session_id: int
     status: SentenceResultStatus
 
 

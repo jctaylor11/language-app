@@ -1,3 +1,11 @@
+### 2026-08-12 - sentences: session completed_at time is updated each flush
+
+Every time a result is input, the completed_at time for the respective session is updated with the current time. By updating on insert, the last update remains accurate as the completed time since nothing overwrites it afterwards. This same pattern applies in vocab. It catches sessions that may have been interrupted, and bases it on the final insert rather than making any assumptions as in the rejected alternatives.
+
+Rejected alternative: Assuming the done time based on when the timer is reached, or once a sentence count is reached.
+
+Outcome: Implemented.
+
 ### 2026-08-12 - sentences: summary screen is only the total words reviewed
 
 The main purpose of the sentences session is to review words in context, while the main purpose of vocab is both review and new word exploration. Therefore, though vocab shows both new words and word exploration, the summary for the sentences session is only the total words reviewed.

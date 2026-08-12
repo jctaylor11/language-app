@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
 import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 
-import { fetchSentencePairs, sendSentenceResult } from "../api";
+import { fetchSession, fetchSentencePairs, sendSentenceResult } from "../api";
 import type { SentencePair, SentenceResults } from "../types";
 
 const BAND_HALF_WIDTH_PERCENT = 10; // Mirrors PROPORTION_BAND_PERCENT in backend/routers/sentence.py
+const SESSION_COUNT = 5;
 
 function formatKnownBand(percentValue: number): string {
   const lowerPercent = percentValue - BAND_HALF_WIDTH_PERCENT;
@@ -86,22 +87,29 @@ function SentenceCard({
 
 export default function SentenceSession() {
   const [knownPercent, setKnownPercent] = useState(90); // 80-100% band - the closest bucket to the ~80% comprehensible input target
-  const [started, setStarted] = useState(false);
   const [inputText, setInputText] = useState("");
   const [sentencePairIndex, setSentencePairIndex] = useState(0);
+
   const queuedSentenceIdsRef = useRef<number[]>([]); // queryFn needs the latest sentencePairs, but referencing it directly creates a TS type cycle (its type depends on this hook's own return)
+
+  const {
+    mutate: sessionMutate,
+    data: sessionId,
+    isPending: sessionPending,
+  } = useMutation({
+    mutationFn: () =>
+      fetchSession({
+        bound_type: "count",
+        bound_value: SESSION_COUNT,
+      }),
+  });
 
   const { mutate: resultsMutate } = useMutation({
     mutationKey: ["sentenceResults"],
     mutationFn: sendSentenceResult,
   });
 
-  const {
-    data: sentencePairsData,
-    fetchNextPage,
-    isLoading,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
+  const { data: sentencePairsData, fetchNextPage } = useInfiniteQuery({
     // useInfiniteQuery appends batches instead of replace on refetch
     queryKey: ["sentencePairs", knownPercent],
     queryFn: () =>
@@ -112,7 +120,7 @@ export default function SentenceSession() {
     initialPageParam: 0,
     getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
     staleTime: Infinity, // Prevent background refetching mid-session
-    enabled: started, // Otherwise it will default to true on mount, which will cause it to fetch sentences before the user has submitted preferences (e.g knownPercent)
+    enabled: !!sessionId, // Since the user needs to submit preferences - Otherwise it will default to true on mount and fetch before user's preference. Double inversion resolves the 'false' being undefined
   });
 
   const sentencePairs = sentencePairsData?.pages.flat() ?? []; // Pages only needed so refetch doesn't replace data
@@ -120,9 +128,11 @@ export default function SentenceSession() {
 
   function buildSentenceResults(
     currentSentencePair: SentencePair,
+    session: number,
     skipped: boolean = false,
   ): SentenceResults {
     const sentence_id = currentSentencePair.id;
+    const session_id = session;
 
     let status: string;
     if (skipped) {
@@ -133,6 +143,7 @@ export default function SentenceSession() {
 
     const sentenceResults: SentenceResults = {
       sentence_id,
+      session_id,
       status,
     };
 
@@ -151,6 +162,8 @@ export default function SentenceSession() {
   }
 
   function handleInputChange(input: string) {
+    if (!sentencePairs[sentencePairIndex] || !sessionId) return; // Defensive
+
     setInputText(input);
 
     const cleanedSourceSentence = sentencePairs[sentencePairIndex].source
@@ -161,6 +174,7 @@ export default function SentenceSession() {
     if (cleanedInput === cleanedSourceSentence) {
       const sentenceResults = buildSentenceResults(
         sentencePairs[sentencePairIndex],
+        sessionId,
       );
 
       advanceSentencePair();
@@ -169,12 +183,15 @@ export default function SentenceSession() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
+    if (!sentencePairs[sentencePairIndex] || !sessionId) return; // Defensive
+
     const key = e.key;
     if (key === "Escape" || key === "Tab") {
       e.preventDefault();
 
       const sentenceResults = buildSentenceResults(
         sentencePairs[sentencePairIndex],
+        sessionId,
         true,
       );
       advanceSentencePair();
@@ -182,29 +199,31 @@ export default function SentenceSession() {
     }
   }
 
-  if (started) {
-    if (
-      isLoading ||
-      (isFetchingNextPage && !sentencePairs[sentencePairIndex])
-    ) {
-      // && required else it will show 'loading' whenever refetch is happening in background
-      return <div>Loading...</div>;
-    }
+  if (sessionPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (!sessionId) {
     return (
-      <SentenceCard
-        sentencePair={sentencePairs[sentencePairIndex]}
-        inputText={inputText}
-        onInputChange={handleInputChange}
-        onKeyDown={handleKeyDown}
+      <SentenceControl
+        percentValue={knownPercent}
+        onPercentChange={(e) => setKnownPercent(Number(e.target.value))}
+        onStart={() => sessionMutate()}
       />
     );
   }
 
+  // Intentionally last guard since run before !sessionId would also show no sentence pairs
+  if (!sentencePairs[sentencePairIndex]) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <SentenceControl
-      percentValue={knownPercent}
-      onPercentChange={(e) => setKnownPercent(Number(e.target.value))}
-      onStart={() => setStarted(true)}
+    <SentenceCard
+      sentencePair={sentencePairs[sentencePairIndex]}
+      inputText={inputText}
+      onInputChange={handleInputChange}
+      onKeyDown={handleKeyDown}
     />
   );
 }

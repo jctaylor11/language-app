@@ -169,16 +169,26 @@ def get_sentence_batch(
     return {"sentences": [{"id": row.id, "target": row.target, "source": row.source} for row in eligible_sentences]}
 
 
-def insert_sentence_result(conn: Connection, user_id: int, sentence_id: int, status: SentenceResultStatus) -> None:
+def insert_sentence_result(conn: Connection, user_id: int, sentence_result: SentenceResult) -> int:
     conn.execute(text("""
-        INSERT INTO sentence_results (user_id, sentence_id, status)
-        VALUES (:user_id, :sentence_id, :status)
-    """), {"user_id": user_id, "sentence_id": sentence_id, "status": status.value})
+        INSERT INTO sentence_results (user_id, session_id, sentence_id, status)
+        VALUES (:user_id, :session_id, :sentence_id, :status)
+    """), {"user_id": user_id, "session_id": sentence_result.session_id, "sentence_id": sentence_result.sentence_id, "status": sentence_result.status.value})
+
+    # Session's completed_at value is updated each flush - final update accurate logs completion
+    conn.execute(text("""
+        UPDATE sessions
+        SET completed_at = NOW()
+        WHERE id = :session_id
+    """), {"session_id": sentence_result.session_id})
+
+    # Different return than the vocab equivalent since shape is different (vocab's payload is a list of results, sentences is just one)
+    return sentence_result.sentence_id
 
 
 @router.post("/sentence-results")
-def create_sentence_result(conn: Annotated[Connection, Depends(get_write_connection)], user_id: Annotated[int, Depends(decode_access_token)], payload: SentenceResult):      # TODO: batch these and send via beacon on page close
+def create_sentence_result(conn: Annotated[Connection, Depends(get_write_connection)], user_id: Annotated[int, Depends(decode_access_token)], payload: SentenceResult) -> dict:      # TODO: Consider batching these and send via beacon on page close
     """Records the user's result for a single reviewed sentence."""
-    insert_sentence_result(conn, user_id, payload.sentence_id, payload.status)
+    saved_sentence_id = insert_sentence_result(conn, user_id, payload)
 
-    return {"saved_sentence_id": payload.sentence_id}
+    return {"saved_sentence_id": saved_sentence_id}
