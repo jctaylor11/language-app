@@ -59,10 +59,12 @@ function SentenceCard({
   sentencePair,
   inputText,
   onInputChange,
+  onKeyDown,
 }: {
   sentencePair: SentencePair;
   inputText: string;
   onInputChange: (input: string) => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
 }) {
   const targetSentence = sentencePair.target;
   const sourceSentence = sentencePair.source;
@@ -76,6 +78,7 @@ function SentenceCard({
         className="bg-transparent border-t border-b text-center border-gray-500 outline-none w-64 text-xl"
         value={inputText}
         onChange={(e) => onInputChange(e.target.value)}
+        onKeyDown={onKeyDown}
       />
     </div>
   );
@@ -137,6 +140,17 @@ export default function SentenceSession() {
     }
   }
 
+  function handleKeyDown(e: React.KeyboardEvent) {
+    const key = e.key;
+    if (key === "Escape" || key === "Tab") {
+      e.preventDefault();
+
+      const completedSentenceId = sentencePairs[sentencePairIndex].id; // Need to save the value before its incremented in advanceSentencePair
+      sendSentenceResult(completedSentenceId, "skipped"); // It must be acknowledged as skipped, otherwise it could just come back around in the next batch
+      advanceSentencePair();
+    }
+  }
+
   if (started) {
     if (
       isLoading ||
@@ -150,6 +164,7 @@ export default function SentenceSession() {
         sentencePair={sentencePairs[sentencePairIndex]}
         inputText={inputText}
         onInputChange={handleInputChange}
+        onKeyDown={handleKeyDown}
       />
     );
   }

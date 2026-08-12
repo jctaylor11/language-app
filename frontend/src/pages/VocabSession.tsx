@@ -178,6 +178,7 @@ export default function VocabSession() {
     },
   });
 
+  // Sent as a mutation instead of an async function for pending state, which provides useIsMutating to check for in flight requests before showing summary
   const { mutate: resultsMutate } = useMutation({
     mutationKey: ["vocabResults"],
     mutationFn: sendVocabResults,

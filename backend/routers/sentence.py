@@ -66,7 +66,7 @@ def get_eligible_sentences(conn: Connection, user_id: int, lb_known_percent: int
             SELECT 1
             FROM sentence_results sr
             WHERE sr.user_id = :user_id
-                AND sr.sentence_id = s.id
+                AND sr.sentence_id = s.id   -- Includes skipped sentences, they will not reappear after skipped
             )
         AND NOT (s.id = ANY(:sentences_already_queued))     -- Exclude sentences already queued from the last fetch, so that the user doesn't see duplicates
         GROUP BY s.id, s.target, s.source, s.lemma_count

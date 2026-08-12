@@ -49,3 +49,27 @@
 ### Handling ineligible generated sentences
 
 - Solutions could include dropping a constraint, or increasing the number of generated sentences
+
+### Remove user's option to choose % of known words in the sentences
+
+- Instead, it should just be a button that generates sentences using words that they know. Reasons behind this consideration are as follows:
+  - Low reliability, leading to low integrity - for example, it may be difficult to guarantee '40-60%' of the sentence is known
+  - The choice is arbitrary. Why would a user specifically want 40-60%? More likely to cognitive overload from choice.
+  - The actual purpose of the program is comprehensible input, which the research supports is 80% known. One brain can fill in the other 20% from context. Therefore, it should really be 80% minimum - and evaluation can just check that 80% are known
+  - Resolves the issue around what happens
+  - New words should be considered a 'reward' for doing well, rather than abundant - having the option to generate sentences with 0% known words defeats this and makes it complicated about what happens with those new words.
+  - Keeping it 80% minimum keeps things simple and focused on comprehensible input and word review, which is the primary purpose of the sentence generation. Leave word exploration to the vocab algorithm.
+
+### Skip budget and sentence budget
+
+- For sentences, I need to add some sort of skip guard - e.g if a user continuously presses skip, they could continuously up LLM credits to no end. There could perhaps be something like, the user gets only 5 skips in a days or something. Similarly, there should be a sentence budget - perhaps more generous, like they can do 100 sentences a day.
+
+### Skip is marked with timestamp
+
+Currently (as planned) if a sentence is skipped, it will be excluded forever - the user will never see the sentence again. This is inefficient and more likely to lead to unnecessary LLM calls. Therefore, it could be better to mark a skip with a timestamp and after a set period it becomes available in the pool again.
+
+## Open questions
+
+### What happens to new words that arise in sentences
+
+Current thoughts are that they are marked and given priority in the algorithm's selection of the next word. Therefore, the user can see them in sentences, and are more likely to see it again in the vocab session - but is not added to their vault/known words pipeline until it does come up.
