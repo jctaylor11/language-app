@@ -72,3 +72,7 @@ export type VocabSessionSummary = {
   new_words: number;
   total_reviewed: number;
 };
+
+export type SentenceSessionSummary = {
+  total_reviewed: number;
+};

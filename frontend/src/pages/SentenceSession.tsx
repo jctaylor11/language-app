@@ -1,7 +1,17 @@
 import { useRef, useState } from "react";
-import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
+import {
+  useQuery,
+  useInfiniteQuery,
+  useMutation,
+  useIsMutating,
+} from "@tanstack/react-query";
 
-import { fetchSession, fetchSentencePairs, sendSentenceResult } from "../api";
+import {
+  fetchSession,
+  fetchSentencePairs,
+  sendSentenceResult,
+  getSentencesSummary,
+} from "../api";
 import type { SentencePair, SentenceResults } from "../types";
 
 const BAND_HALF_WIDTH_PERCENT = 10; // Mirrors PROPORTION_BAND_PERCENT in backend/routers/sentence.py
@@ -87,9 +97,29 @@ function SentenceCard({
 
 function SessionSummary({
   handleNewSession,
+  sessionId,
 }: {
   handleNewSession: () => void;
+  sessionId: number;
 }) {
+  const flushesInFlight = useIsMutating({ mutationKey: ["sentenceResults"] });
+
+  const sessionSummary = useQuery({
+    queryKey: ["sentencesSummary", sessionId],
+    queryFn: () => getSentencesSummary(sessionId),
+    enabled: flushesInFlight === 0, // Ensure the final sentence has been inserted into the database before summary is fetched
+  });
+
+  if (sessionSummary.isPending) {
+    return <p>Loading...</p>;
+  }
+
+  if (sessionSummary.isError) {
+    return <p>Error: {sessionSummary.error.message}</p>;
+  }
+
+  const totalReviewed = sessionSummary.data.total_reviewed;
+
   return (
     <div className="flex flex-col items-center gap-6 bg-[#dddddd] w-120 mx-auto px-10 py-5 m-20">
       <div id="summary-metrics" className="flex gap-16 mt-5">
@@ -98,7 +128,7 @@ function SessionSummary({
             Total Reviewed
           </div>
           <div className="text-xl text-gray-500 font-mono mt-2">
-            Metric placeholder
+            {totalReviewed}
           </div>
         </div>
       </div>
@@ -230,10 +260,7 @@ export default function SentenceSession() {
     }
   }
 
-  if (completedSentencesCount >= SENTENCES_PER_SESSION) {
-    return <SessionSummary handleNewSession={sessionMutate} />;
-  }
-
+  // Intentionally above check for existence of sessionId, since session pending implies no session ID exists yet
   if (sessionPending) {
     return <div>Loading...</div>;
   }
@@ -245,6 +272,12 @@ export default function SentenceSession() {
         onPercentChange={(e) => setKnownPercent(Number(e.target.value))}
         onStart={() => sessionMutate()}
       />
+    );
+  }
+
+  if (completedSentencesCount >= SENTENCES_PER_SESSION) {
+    return (
+      <SessionSummary handleNewSession={sessionMutate} sessionId={sessionId} />
     );
   }
 

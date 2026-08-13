@@ -12,6 +12,8 @@ The main purpose of the sentences session is to review words in context, while t
 
 One of the main purposes of this summary screen also is for psychology: They divide session such to close the loop for each session, they provide immediate feedback, and show visible progress through the metrics.
 
+Outcome: Implemented.
+
 ### 2026-08-12 - sentences: sentence session is five correct sentences
 
 A sentence session is a fixed number of sentences submitted, as decided in [Decision Log](log.md#2026-08-02---sessions-vocab-sessions-are-bound-by-time-sentences-are-bound-by-count). Skipped sentences don't count towards the five since it's 'any five sentences', rather than any specific five. Five was chosen since the commitment is small, similar to two minutes for vocab. A session of ten sentences feels like more a commitment, whereas a user can simply do ten sentences over two sessions.

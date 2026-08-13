@@ -186,9 +186,32 @@ def insert_sentence_result(conn: Connection, user_id: int, sentence_result: Sent
     return sentence_result.sentence_id
 
 
+def get_session_summary(conn: Connection, user_id: int, session_id: int):
+    result = conn.execute(text("""
+        SELECT COUNT(*) AS total_reviewed
+        FROM sentence_results
+        JOIN sentence_words
+        ON sentence_results.sentence_id = sentence_words.sentence_id
+        WHERE user_id = :user_id
+        AND session_id = :session_id
+    """), {"user_id": user_id, "session_id": session_id})
+
+    row = result.fetchone()
+
+    return row._asdict()
+
+
 @router.post("/sentence-results")
 def create_sentence_result(conn: Annotated[Connection, Depends(get_write_connection)], user_id: Annotated[int, Depends(decode_access_token)], payload: SentenceResult) -> dict:      # TODO: Consider batching these and send via beacon on page close
     """Records the user's result for a single reviewed sentence."""
     saved_sentence_id = insert_sentence_result(conn, user_id, payload)
 
     return {"saved_sentence_id": saved_sentence_id}
+
+
+@router.get("/sentence-sessions/{session_id}/summary")
+def get_sentence_session_summary(conn: Annotated[Connection, Depends(get_read_connection)], user_id: Annotated[int, Depends(decode_access_token)], session_id: int) -> dict:
+    """Fetch summary metrics for the given sentence session"""
+    session_summary = get_session_summary(conn, user_id, session_id)
+
+    return {"summary": session_summary}

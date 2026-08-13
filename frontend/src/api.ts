@@ -11,6 +11,7 @@ import type {
   SessionRequest,
   VocabSessionSummary,
   SentenceResults,
+  SentenceSessionSummary,
 } from "./types";
 
 const BASE_URL = "http://localhost:8000";
@@ -232,4 +233,23 @@ export async function getVocabSummary(
   const vocabSummary = await response.json();
 
   return vocabSummary.summary;
+}
+
+export async function getSentencesSummary(
+  sessionId: number,
+): Promise<SentenceSessionSummary> {
+  const sentenceSessionSummaryUrl = `${BASE_URL}/sentence-sessions/${sessionId}/summary`;
+  const response = await fetchWithAuth(sentenceSessionSummaryUrl, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to get sentence session summary: ${response.status}`,
+    );
+  }
+
+  const sentenceSummary = await response.json();
+
+  return sentenceSummary.summary;
 }
