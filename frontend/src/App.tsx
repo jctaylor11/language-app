@@ -3,6 +3,7 @@ import VocabSession from "./pages/VocabSession";
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import VocabTable from "./pages/dashboard/VocabTable";
 import SentenceSession from "./pages/SentenceSession";
+import SessionLog from "./pages/dashboard/SessionLog";
 import RootLayout from "./RootLayout";
 import DashboardIndex from "./pages/dashboard/DashboardIndex";
 import Login from "./pages/Login";
@@ -28,6 +29,7 @@ export default function App() {
                   <Route index element={<DashboardIndex />} />
                   <Route path="vocabulary" element={<VocabTable />} />
                   <Route path="sentences" element={<SentenceVault />} />
+                  <Route path="session-log" element={<SessionLog />} />
                 </Route>
               </Route>
               <Route path="/" element={<Home />} />

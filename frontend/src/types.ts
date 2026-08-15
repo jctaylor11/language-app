@@ -77,3 +77,10 @@ export type VocabSessionSummary = {
 export type SentenceSessionSummary = {
   total_reviewed: number;
 };
+
+export type SessionLogEntry = {
+  session_id: number;
+  started_at: string;
+  session_type: "vocab" | "sentence";
+  total_reviewed: number;
+};

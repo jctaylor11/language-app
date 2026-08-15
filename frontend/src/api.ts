@@ -12,6 +12,7 @@ import type {
   VocabSessionSummary,
   SentenceResults,
   SentenceSessionSummary,
+  SessionLogEntry,
 } from "./types";
 
 const BASE_URL = "http://localhost:8000";
@@ -252,4 +253,19 @@ export async function getSentencesSummary(
   const sentenceSummary = await response.json();
 
   return sentenceSummary.summary;
+}
+
+export async function getSessionLog(): Promise<SessionLogEntry[]> {
+  const sessionLogUrl = `${BASE_URL}/sessions/log`;
+  const response = await fetchWithAuth(sessionLogUrl, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get session log: ${response.status}`);
+  }
+
+  const sessionLog = await response.json();
+
+  return sessionLog.session_log;
 }
