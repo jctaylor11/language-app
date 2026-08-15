@@ -105,7 +105,7 @@ def test_get_session_summary_excludes_words_answered_in_an_earlier_session(clien
     client.cookies.set("access_token", access_token)
 
     earlier_session_id = conn.execute(text(
-        "INSERT INTO sessions (user_id, bound_type, bound_value) VALUES (:user_id, 'time', 120) RETURNING id"
+        "INSERT INTO sessions (user_id, bound_type, bound_value, session_type) VALUES (:user_id, 'time', 120, 'vocab') RETURNING id"
     ), {"user_id": TEST_USER_ID}).scalar()
 
     # Word answered correctly in an earlier session, well before the current session started
@@ -146,7 +146,7 @@ def test_get_session_summary_excludes_other_users_data(client, access_token, see
     )).scalar()
 
     other_session_id = conn.execute(text(
-        "INSERT INTO sessions (user_id, bound_type, bound_value) VALUES (:user_id, 'time', 120) RETURNING id"
+        "INSERT INTO sessions (user_id, bound_type, bound_value, session_type) VALUES (:user_id, 'time', 120, 'vocab') RETURNING id"
     ), {"user_id": other_user_id}).scalar()
 
     conn.execute(text("""
@@ -166,7 +166,7 @@ def test_get_session_summary_counts_previously_skipped_word_as_new(client, acces
     client.cookies.set("access_token", access_token)
 
     earlier_session_id = conn.execute(text(
-        "INSERT INTO sessions (user_id, bound_type, bound_value) VALUES (:user_id, 'time', 120) RETURNING id"
+        "INSERT INTO sessions (user_id, bound_type, bound_value, session_type) VALUES (:user_id, 'time', 120, 'vocab') RETURNING id"
     ), {"user_id": TEST_USER_ID}).scalar()
 
     # Word only skipped in an earlier session - a skip shouldn't count as "already known"

@@ -3,7 +3,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy import Enum, ForeignKey, func
 
-from backend.enums import SessionBoundType, VocabResultStatus, SentenceResultStatus
+from backend.enums import SessionBoundType, VocabResultStatus, SentenceResultStatus, SessionType
 
 
 class Base(DeclarativeBase):
@@ -37,6 +37,7 @@ class Session(Base):
     bound_value: Mapped[int]    # Unit depends on bound_type: seconds for time, number of sentences for count
     started_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
     completed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
+    session_type: Mapped[SessionType] = mapped_column(Enum(SessionType, name="session_type"))
 
 
 class VocabResult(Base):

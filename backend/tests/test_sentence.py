@@ -135,7 +135,7 @@ def test_get_session_summary_excludes_sentences_reviewed_in_an_earlier_session(c
     client.cookies.set("access_token", access_token)
 
     result = conn.execute(text(
-        "INSERT INTO sessions (user_id, bound_type, bound_value) VALUES (:user_id, 'count', 5) RETURNING id"
+        "INSERT INTO sessions (user_id, bound_type, bound_value, session_type) VALUES (:user_id, 'count', 5, 'sentence') RETURNING id"
     ), {"user_id": TEST_USER_ID})
     earlier_session_id = result.scalar()
 
@@ -164,7 +164,7 @@ def test_get_session_summary_excludes_other_users_data(client, access_token, see
     other_user_id = result.scalar()
 
     result = conn.execute(text(
-        "INSERT INTO sessions (user_id, bound_type, bound_value) VALUES (:user_id, 'count', 5) RETURNING id"
+        "INSERT INTO sessions (user_id, bound_type, bound_value, session_type) VALUES (:user_id, 'count', 5, 'sentence') RETURNING id"
     ), {"user_id": other_user_id})
     other_session_id = result.scalar()
 

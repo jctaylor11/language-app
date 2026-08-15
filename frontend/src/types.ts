@@ -66,6 +66,7 @@ export type SentenceEntry = {
 export type SessionRequest = {
   bound_type: "time" | "count";
   bound_value: number;
+  session_type: "vocab" | "sentence";
 };
 
 export type VocabSessionSummary = {

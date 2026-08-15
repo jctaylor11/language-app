@@ -1,3 +1,21 @@
+### 2026-08-15 - sessions table: add a column specifically for session type
+
+Previously the type was inferred by the bounds (bound my time is a vocab session, bound by count was a sentence session). I decided to change it to an explicit column in the table for the type, which removes its dependency.
+
+Rejected alternative: Infer session type from the bound type. Having it dependent on the bound type value makes it fragile to future decisions, and may seem confusing later seeing conditionals on the bound type to label the session type in the sessions log.
+
+### 2026-08-14 - session log: specific sessions can be fetched as a route
+
+The specific session date (for example, the words pertaining to a certain session) are valuable to see, but of a different granularity to the table of the sessions themselves. As per the previous decision also, it would not be helpful to include these on the session page itself. Therefore, each session has its own dedicated page where the session details create the fetch route and page. This also makes the data predicatable in terms of where it can be found (e.g editing the url directly). It is also suitable having it own page, given it gives room for extra data and future decisions regarding what data is helpful to be displayed.
+
+Rejected alternatives: Dropdown list or floating component. However this confines how much information can be usefully displayed, and makes it more difficult to find the session contents themselves if they are not addressable with their own route and page as one would first have to load and look through the sessions list.
+
+### 2026-08-14 - session log: dashboard page added for sessions
+
+It's important that the user can see more granular progress build over time aside from just aggregated metrics, such as total words and total reviewed. This can be achieved with a session log, which displays all the session they have done over time.
+
+Rejected alternative: It was considered to have a log show the date, followed by the contents of each session for that day, with a divider between sessions. In this way, there would be all of the words/sentences done in each session, in order of their session position, with a divider with each new session. This was rejected due to scale - for example, 5 sessions a day (10 minutes) with 50 words per session would be 7,500 words in a month. There is no useful way to organise this data, and deeper pages would never been seen. It would get unwiedly. It's therefore better to abstract each session into just one.
+
 ### 2026-08-12 - sentences: session completed_at time is updated each flush
 
 Every time a result is input, the completed_at time for the respective session is updated with the current time. By updating on insert, the last update remains accurate as the completed time since nothing overwrites it afterwards. This same pattern applies in vocab. It catches sessions that may have been interrupted, and bases it on the final insert rather than making any assumptions as in the rejected alternatives.

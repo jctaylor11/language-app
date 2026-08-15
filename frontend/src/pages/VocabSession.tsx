@@ -165,7 +165,11 @@ export default function VocabSession() {
     isPending: sessionPending,
   } = useMutation({
     mutationFn: () =>
-      fetchSession({ bound_type: "time", bound_value: SESSION_DURATION_S }),
+      fetchSession({
+        bound_type: "time",
+        bound_value: SESSION_DURATION_S,
+        session_type: "vocab",
+      }),
     onSuccess: () => {
       const sessionStart = Date.now();
       sessionPosition.current = 1;

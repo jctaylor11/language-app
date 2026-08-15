@@ -159,6 +159,7 @@ export default function SentenceSession() {
       fetchSession({
         bound_type: "count",
         bound_value: SENTENCES_PER_SESSION,
+        session_type: "sentence",
       }),
     onSuccess: () => {
       setCompletedSentencesCount(0);

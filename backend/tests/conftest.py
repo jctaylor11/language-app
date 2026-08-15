@@ -53,7 +53,7 @@ def access_token(seed_user) -> str:
 
 @pytest.fixture
 def seed_session(conn, seed_user):
-    result = conn.execute(text("INSERT INTO sessions (id, user_id, bound_type, bound_value) VALUES (:session_id, :user_id, :bound_type, :bound_value) RETURNING id"), {"session_id": TEST_SESSION_ID, "user_id": TEST_USER_ID, "bound_type": "time", "bound_value": 120})
+    result = conn.execute(text("INSERT INTO sessions (id, user_id, bound_type, bound_value, session_type) VALUES (:session_id, :user_id, :bound_type, :bound_value, :session_type) RETURNING id"), {"session_id": TEST_SESSION_ID, "user_id": TEST_USER_ID, "bound_type": "time", "bound_value": 120, "session_type": "vocab"})
     return result.scalar()
 
 

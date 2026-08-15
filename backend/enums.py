@@ -14,3 +14,8 @@ class SentenceResultStatus(enum.Enum):
 class SessionBoundType(enum.Enum):
     time = "time"
     count = "count"
+
+
+class SessionType(enum.Enum):
+    vocab = "vocab"
+    sentence = "sentence"
