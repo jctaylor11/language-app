@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { getSessionLog } from "../../api";
+import SessionLogTable from "../../components/SessionLogTable";
 
 export default function SessionLog() {
   const sessionLog = useQuery({
@@ -18,14 +19,7 @@ export default function SessionLog() {
 
   return (
     <div>
-      {sessionLog.data.map((row) => (
-        <div key={row.session_id}>
-          {row.session_id}
-          {row.started_at}
-          {row.session_type}
-          {row.total_reviewed}
-        </div>
-      ))}
+      <SessionLogTable sessionLogEntries={sessionLog.data} />
     </div>
   );
 }

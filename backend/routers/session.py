@@ -36,7 +36,7 @@ def get_session_log_data(conn: Connection, user_id: int) -> list[dict]:
             AND sentence_results.status != 'skipped'
             GROUP BY sentence_results.session_id, sessions.session_type, sessions.started_at
         ) 
-        ORDER BY session_id;
+        ORDER BY started_at DESC, session_id;
     """), {"user_id": user_id})
 
     rows = result.fetchall()
