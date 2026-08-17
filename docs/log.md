@@ -12,6 +12,8 @@ The specific session date (for example, the words pertaining to a certain sessio
 
 Rejected alternatives: Dropdown list or floating component. However this confines how much information can be usefully displayed, and makes it more difficult to find the session contents themselves if they are not addressable with their own route and page as one would first have to load and look through the sessions list.
 
+Amendment 2026-08-17: A summary of the details expand into a row in the log table rather than a separate page, while also updating the URL. The user then has an option to click to see a more advanced view which takes them to another page. This keeps the addressability mentioned above with the `session-log/:sessionId` route, and keeps the log in view to move between sessions rather than getting redirected.
+
 ### 2026-08-14 - session log: dashboard page added for sessions
 
 It's important that the user can see more granular progress build over time aside from just aggregated metrics, such as total words and total reviewed. This can be achieved with a session log, which displays all the session they have done over time.
