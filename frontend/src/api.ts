@@ -269,3 +269,18 @@ export async function getSessionLog(): Promise<SessionLogEntry[]> {
 
   return sessionLog.session_log;
 }
+
+export async function getSessionOverview(sessionId: number): Promise<string[]> {
+  const sessionOverviewUrl = `${BASE_URL}/sessions/overview/${sessionId}`;
+  const response = await fetchWithAuth(sessionOverviewUrl, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get session overview: ${response.status}`);
+  }
+
+  const sessionOverview = await response.json();
+
+  return sessionOverview.session_overview;
+}

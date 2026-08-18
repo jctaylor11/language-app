@@ -1,14 +1,45 @@
 import { Fragment } from "react";
 import { useNavigate, useParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 
 import type { SessionLogEntry } from "../types";
 import { formatSessionDate } from "../utils";
+import { getSessionOverview } from "../api";
 
-type Props = {
+type SessionLogTableProps = {
   sessionLogEntries: SessionLogEntry[];
 };
 
-export default function SessionLogTable({ sessionLogEntries }: Props) {
+type SessionOverviewProps = {
+  sessionId: number;
+};
+
+function SessionOverview({ sessionId }: SessionOverviewProps) {
+  const sessionOverview = useQuery({
+    queryKey: ["sessionOverview", sessionId],
+    queryFn: () => getSessionOverview(sessionId),
+  });
+
+  if (sessionOverview.isPending) {
+    return <p>Loading...</p>;
+  }
+
+  if (sessionOverview.isError) {
+    return <p>Error: {sessionOverview.error.message}</p>;
+  }
+
+  return (
+    <ul>
+      {sessionOverview.data.map((target, index) => (
+        <li key={index}>{target}</li>
+      ))}
+    </ul>
+  );
+}
+
+export default function SessionLogTable({
+  sessionLogEntries,
+}: SessionLogTableProps) {
   const { sessionId } = useParams(); // To pull the session ID return from the toggleSession navigation
   const expandedSessionId = Number(sessionId); // NaN when no session is in the URL so none expanded
   const navigate = useNavigate();
@@ -75,7 +106,7 @@ export default function SessionLogTable({ sessionLogEntries }: Props) {
                       colSpan={4}
                       className="px-6 py-3 text-xs bg-neutral-50 border-b border-neutral-200"
                     >
-                      Placeholder: session {entry.session_id} summary
+                      <SessionOverview sessionId={entry.session_id} />
                     </td>
                   </tr>
                 )}

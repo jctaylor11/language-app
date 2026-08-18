@@ -43,6 +43,29 @@ def get_session_log_data(conn: Connection, user_id: int) -> list[dict]:
 
     return [row._asdict() for row in rows]
 
+def get_session_overview_data(conn: Connection, user_id: int, session_id: int) -> list[str]:
+    params = {"user_id": user_id, "session_id": session_id}
+    result = conn.execute(text("""
+        SELECT target
+        FROM vocab_results vr
+        JOIN words w ON vr.word_id = w.id
+        WHERE user_id = :user_id
+            AND session_id = :session_id
+            AND status != 'skipped'
+        UNION ALL (
+            SELECT target
+            FROM sentence_results sr
+            JOIN sentences s ON sr.sentence_id = s.id
+            WHERE user_id = :user_id
+                AND session_id = :session_id
+                AND status != 'skipped'
+            );
+    """), params)
+
+    rows = result.fetchall()
+
+    return [row.target for row in rows]
+
 @router.post("/sessions")
 def create_session(conn: Annotated[Connection, Depends(get_write_connection)], user_id: Annotated[int, Depends(decode_access_token)], session_request: SessionRequest) -> dict:
     session_id = insert_session(conn, user_id, session_request)
@@ -54,3 +77,9 @@ def get_session_log(conn: Annotated[Connection, Depends(get_read_connection)], u
     session_log = get_session_log_data(conn, user_id)
 
     return {"session_log": session_log}
+
+@router.get("/sessions/overview/{session_id}")
+def get_session_overview(conn: Annotated[Connection, Depends(get_read_connection)], user_id: Annotated[int, Depends(decode_access_token)], session_id: int) -> dict:
+    session_overview = get_session_overview_data(conn, user_id, session_id)
+
+    return {"session_overview": session_overview}
