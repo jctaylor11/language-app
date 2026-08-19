@@ -21,22 +21,25 @@ def insert_session(conn: Connection, user_id: int, session_request: SessionReque
 
 def get_session_log_data(conn: Connection, user_id: int) -> list[dict]:
     result = conn.execute(text("""
-        SELECT sessions.id AS session_id, sessions.started_at AS started_at, sessions.session_type AS session_type, COUNT(*) AS total_reviewed
-        FROM sessions
-        JOIN vocab_results ON sessions.id = vocab_results.session_id
-        WHERE sessions.user_id = :user_id
-        AND vocab_results.status != 'skipped'
-        GROUP BY sessions.id, sessions.session_type, sessions.started_at
-        UNION ALL (
-            SELECT sentence_results.session_id, sessions.started_at, sessions.session_type, COUNT(*)
-            FROM sentence_results
-            JOIN sentence_words ON sentence_words.sentence_id = sentence_results.sentence_id
-            JOIN sessions ON sessions.id = sentence_results.session_id
+        WITH session_log AS (
+            SELECT sessions.id AS session_id, sessions.started_at AS started_at, sessions.session_type AS session_type, COUNT(*) AS total_reviewed
+            FROM sessions
+            JOIN vocab_results ON sessions.id = vocab_results.session_id
             WHERE sessions.user_id = :user_id
-            AND sentence_results.status != 'skipped'
-            GROUP BY sentence_results.session_id, sessions.session_type, sessions.started_at
-        ) 
-        ORDER BY started_at DESC, session_id;
+            AND vocab_results.status != 'skipped'
+            GROUP BY sessions.id, sessions.session_type, sessions.started_at
+            UNION ALL (
+                SELECT sentence_results.session_id, sessions.started_at, sessions.session_type, COUNT(*)
+                FROM sentence_results
+                JOIN sentence_words ON sentence_words.sentence_id = sentence_results.sentence_id
+                JOIN sessions ON sessions.id = sentence_results.session_id
+                WHERE sessions.user_id = :user_id
+                AND sentence_results.status != 'skipped'
+                GROUP BY sentence_results.session_id, sessions.session_type, sessions.started_at
+            ))
+        SELECT session_id, started_at, session_type, total_reviewed, ROW_NUMBER() OVER (ORDER BY started_at, session_id) AS session_number
+        FROM session_log
+        ORDER BY session_number DESC
     """), {"user_id": user_id})
 
     rows = result.fetchall()

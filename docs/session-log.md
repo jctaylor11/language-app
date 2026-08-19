@@ -3,7 +3,7 @@
 ## Frontend
 
 - SessionLog fetches session log data through getSessionLog on page mount with useQuery and returns the SessionLogTable component with the log data passed in as a prop
-- SessionLogTable returns a table with fields Date, Type, Total Reviewed, and loops through the session log data to render each session as a row with the respective fields
+- SessionLogTable returns a table with fields Date, Type, Total Reviewed, preceded by an unlabelled index column holding session_number, and loops through the session log data to render each session as a row with the respective fields
 - Each row can be clicked to expand a session summary, and which row is expanded is derived from URL rather than state to keep the session addressable
 - Clicking the row passes that row's sessionId to toggleSession which navigates to the corresponding session's URL
 - The expanded sessionId is pulled from the URL using useParams with the corresponding sessionId parameter defined in App.tsx route paths
@@ -15,9 +15,9 @@
 ### GET /sessions/log
 
 1. user_id is injected server side via decode_access_token
-2. get_session_log_data UNION ALLs vocab_results and sentence_results, excluding skipped and grouped by session, so one row is returned per session whichever table it came from
-3. Selects session_id, started_at, session_type, and total_reviewed count
-4. Ordered by newest first, then session_id, and returned as session_log
+2. get_session_log_data UNION ALLs vocab_results and sentence_results in the session_log CTE, excluding skipped and grouped by session, so one row is returned per session whichever table it came from
+3. Selects session_id, started_at, session_type, total_reviewed count, and session_number from ROW_NUMBER() window function ordered oldest first
+4. Ordered by session_number descending (newest first) and returned as session_log
 
 ### GET /sessions/overview/{session_id}
 

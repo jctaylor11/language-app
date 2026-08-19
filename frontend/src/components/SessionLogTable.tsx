@@ -62,6 +62,7 @@ export default function SessionLogTable({
       <table className="w-full text-sm">
         <thead className="border-b border-neutral-200">
           <tr>
+            <th className="w-12 pl-6 pr-2 py-3" /> {/* Index column, deliberately unlabelled */}
             <th className="w-48 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
               Date
             </th>
@@ -79,12 +80,15 @@ export default function SessionLogTable({
 
             let rowClassName =
               "cursor-pointer transition-colors hover:bg-neutral-50";
-            let cellClassName = "px-6 py-2 text-xs border-b border-neutral-200";
+            let cellBorderClassName = "border-b border-neutral-200";
 
             if (isExpanded) {
               rowClassName = "cursor-pointer bg-neutral-50";
-              cellClassName = "px-6 py-2 text-xs border-b border-transparent"; // Transparent rather than removed so the row keeps its height
+              cellBorderClassName = "border-b border-transparent"; // Transparent rather than removed so the row keeps its height
             }
+
+            const cellClassName = `px-6 py-2 text-xs ${cellBorderClassName}`;
+            const indexCellClassName = `pl-6 pr-2 py-2 text-xs text-right font-mono text-neutral-400 ${cellBorderClassName}`;
 
             return (
               // Fragment as each row needs a prop, for key for identification for expansion
@@ -93,6 +97,7 @@ export default function SessionLogTable({
                   onClick={() => toggleSession(entry.session_id)}
                   className={rowClassName}
                 >
+                  <td className={indexCellClassName}>{entry.session_number}</td>
                   <td className={cellClassName}>
                     {formatSessionDate(entry.started_at)}
                   </td>
@@ -105,6 +110,7 @@ export default function SessionLogTable({
                 </tr>
                 {isExpanded && (
                   <tr>
+                    <td className="bg-neutral-50 border-b border-neutral-200" />
                     <td
                       colSpan={3}
                       className="px-6 py-3 text-xs bg-neutral-50 border-b border-neutral-200"

@@ -1,3 +1,11 @@
+### 2026-08-19 - session log: session number shown as index and computed in SQL
+
+The session number is added to the log to make visible how many sessions have been done. This is added as an index with the most recent entry displayed first (and numbered last). It was decided to compute the session number in SQL rather than to show the `index + 1` on each iteration at render time since it serves as identity and therefore persists over any pagination, and contains all logic for the table to SQL with React simply to render the results.
+
+Rejected alternative: Compute index in frontend using that row's index position + 1. However this makes it unfixed - for example, if introducing pagination or sorting. It also fragments the table logic across both SQL and React, rather than all contained server side.
+
+Outcome: Implemented.
+
 ### 2026-08-18 - session log: session overview is one endpoint unioning both results tables
 
 The expanded row shows what was done in a session, however a session is either vocab or sentences which sit in different tables. I decided on a single endpoint with one query that UNION ALLs which combines the vocab and sentences, which both have the `target` column, albeit of different type (words vs sentences). Since both branches have effectively the same column, nulls are not needed, and since sentences and vocab are mutually exclusive for one session, each session maps to only one.

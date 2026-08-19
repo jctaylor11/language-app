@@ -80,6 +80,7 @@ export type SentenceSessionSummary = {
 
 export type SessionLogEntry = {
   session_id: number;
+  session_number: number;
   started_at: string;
   session_type: "vocab" | "sentence";
   total_reviewed: number;
