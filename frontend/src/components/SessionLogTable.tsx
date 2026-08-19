@@ -29,9 +29,11 @@ function SessionOverview({ sessionId }: SessionOverviewProps) {
   }
 
   return (
-    <ul>
+    <ul className="grid grid-cols-4 gap-x-8">
       {sessionOverview.data.map((target, index) => (
-        <li key={index}>{target}</li>
+        <li key={index} className="py-0.5">
+          {target}
+        </li>
       ))}
     </ul>
   );
@@ -60,17 +62,14 @@ export default function SessionLogTable({
       <table className="w-full text-sm">
         <thead className="border-b border-neutral-200">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+            <th className="w-48 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
               Date
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+            <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
               Type
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
               Total Reviewed
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              Session Link
             </th>
           </tr>
         </thead>
@@ -78,32 +77,36 @@ export default function SessionLogTable({
           {sessionLogEntries.map((entry) => {
             const isExpanded = entry.session_id === expandedSessionId;
 
+            let rowClassName =
+              "cursor-pointer transition-colors hover:bg-neutral-50";
+            let cellClassName = "px-6 py-2 text-xs border-b border-neutral-200";
+
+            if (isExpanded) {
+              rowClassName = "cursor-pointer bg-neutral-50";
+              cellClassName = "px-6 py-2 text-xs border-b border-transparent"; // Transparent rather than removed so the row keeps its height
+            }
+
             return (
               // Fragment as each row needs a prop, for key for identification for expansion
               <Fragment key={entry.session_id}>
-                <tr>
-                  <td className="px-6 py-2 text-xs border-b border-neutral-200">
+                <tr
+                  onClick={() => toggleSession(entry.session_id)}
+                  className={rowClassName}
+                >
+                  <td className={cellClassName}>
                     {formatSessionDate(entry.started_at)}
                   </td>
-                  <td className="px-6 py-2 text-xs border-b border-neutral-200 capitalize">
+                  <td className={`${cellClassName} capitalize`}>
                     {entry.session_type}
                   </td>
-                  <td className="px-6 py-2 text-xs border-b border-neutral-200 capitalize">
+                  <td className={`${cellClassName} font-mono text-right`}>
                     {entry.total_reviewed}
-                  </td>
-                  <td className="px-6 py-2 text-xs border-b border-neutral-200">
-                    <button
-                      onClick={() => toggleSession(entry.session_id)}
-                      className="underline cursor-pointer"
-                    >
-                      {entry.session_type === "vocab" ? "Words" : "Sentences"}
-                    </button>
                   </td>
                 </tr>
                 {isExpanded && (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={3}
                       className="px-6 py-3 text-xs bg-neutral-50 border-b border-neutral-200"
                     >
                       <SessionOverview sessionId={entry.session_id} />

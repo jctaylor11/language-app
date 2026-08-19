@@ -1,3 +1,15 @@
+### 2026-08-18 - session log: session overview is one endpoint unioning both results tables
+
+The expanded row shows what was done in a session, however a session is either vocab or sentences which sit in different tables. I decided on a single endpoint with one query that UNION ALLs which combines the vocab and sentences, which both have the `target` column, albeit of different type (words vs sentences). Since both branches have effectively the same column, nulls are not needed, and since sentences and vocab are mutually exclusive for one session, each session maps to only one.
+
+Rejected alternatives:
+
+- Two separate endpoints conditioned on type, with type passed in as a prop. However, this creates redundancy with two endpoints and adds more moving parts with the parameters. Not clean design.
+- A conditional inside the endpoint which triggers one of two queries. Makes the frontend cleaner, but requires a roundtrip server side to know which query to run.
+- Conditional inside JOINed table with CASE WHEN on the session type. However the multiple JOIN and CASE syntax is less readable than a UNION ALL with two easily readable branches, and returns null for session with no results rather than dropping them
+
+Outcome: Implemented.
+
 ### 2026-08-15 - sessions table: add a column specifically for session type
 
 Previously the type was inferred by the bounds (bound my time is a vocab session, bound by count was a sentence session). I decided to change it to an explicit column in the table for the type, which removes its dependency.
