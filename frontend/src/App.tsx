@@ -30,7 +30,10 @@ export default function App() {
                   <Route path="vocabulary" element={<VocabTable />} />
                   <Route path="sentences" element={<SentenceVault />} />
                   <Route path="session-log" element={<SessionLog />} />
-                  <Route path="session-log/:sessionId" element={<SessionLog />} />
+                  <Route
+                    path="session-log/:sessionNumber"
+                    element={<SessionLog />}
+                  />
                 </Route>
               </Route>
               <Route path="/" element={<Home />} />

@@ -5,9 +5,10 @@
 - SessionLog fetches session log data through getSessionLog on page mount with useQuery and returns the SessionLogTable component with the log data passed in as a prop
 - SessionLogTable returns a table with fields Date, Type, Total Reviewed, preceded by an unlabelled index column holding session_number, and loops through the session log data to render each session as a row with the respective fields
 - Each row can be clicked to expand a session summary, and which row is expanded is derived from URL rather than state to keep the session addressable
-- Clicking the row passes that row's sessionId to toggleSession which navigates to the corresponding session's URL
-- The expanded sessionId is pulled from the URL using useParams with the corresponding sessionId parameter defined in App.tsx route paths
-- When looping through the session logs in the table, if the entry.session_id matches the clicked sessionId (saved as expandedSessionId), the SessionOverview component renders
+- Clicking the row passes that row's session_number to toggleSession which navigates to the corresponding session's URL
+- The expanded session number is pulled from the URL using useParams with the corresponding sessionNumber parameter defined in App.tsx route paths
+- When looping through the session logs in the table, if the entry.session_number matches the number in the URL (saved as expandedSessionNumber), the SessionOverview component renders
+- SessionOverview is passed that row's session_id, not its number - each row holds both, so the URL can reference the number while the request still uses the ID
 - SessionOverview extracted as a component to enable useQuery, which pulls and returns the overview data on mount
 
 ## Backend (GET /sessions/log, GET /sessions/overview/{session_id})

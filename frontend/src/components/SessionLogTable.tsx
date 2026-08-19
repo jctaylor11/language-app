@@ -42,16 +42,16 @@ function SessionOverview({ sessionId }: SessionOverviewProps) {
 export default function SessionLogTable({
   sessionLogEntries,
 }: SessionLogTableProps) {
-  const { sessionId } = useParams(); // To pull the session ID return from the toggleSession navigation
-  const expandedSessionId = Number(sessionId); // NaN when no session is in the URL so none expanded
+  const { sessionNumber } = useParams(); // To pull the session number return from the toggleSession navigation
+  const expandedSessionNumber = Number(sessionNumber); // NaN when no session is in the URL so none expanded
   const navigate = useNavigate();
 
-  function toggleSession(clickedSessionId: number) {
-    if (clickedSessionId === expandedSessionId) {
+  function toggleSession(clickedSessionNumber: number) {
+    if (clickedSessionNumber === expandedSessionNumber) {
       navigate("/dashboard/session-log"); // To collapse the summary if the same one is clicked again
       return;
     }
-    navigate(`/dashboard/session-log/${clickedSessionId}`);
+    navigate(`/dashboard/session-log/${clickedSessionNumber}`);
   }
 
   if (!sessionLogEntries.length) {
@@ -62,7 +62,8 @@ export default function SessionLogTable({
       <table className="w-full text-sm">
         <thead className="border-b border-neutral-200">
           <tr>
-            <th className="w-12 pl-6 pr-2 py-3" /> {/* Index column, deliberately unlabelled */}
+            <th className="w-12 pl-6 pr-2 py-3" />{" "}
+            {/* Index column, deliberately unlabelled */}
             <th className="w-48 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
               Date
             </th>
@@ -76,7 +77,7 @@ export default function SessionLogTable({
         </thead>
         <tbody>
           {sessionLogEntries.map((entry) => {
-            const isExpanded = entry.session_id === expandedSessionId;
+            const isExpanded = entry.session_number === expandedSessionNumber;
 
             let rowClassName =
               "cursor-pointer transition-colors hover:bg-neutral-50";
@@ -94,7 +95,7 @@ export default function SessionLogTable({
               // Fragment as each row needs a prop, for key for identification for expansion
               <Fragment key={entry.session_id}>
                 <tr
-                  onClick={() => toggleSession(entry.session_id)}
+                  onClick={() => toggleSession(entry.session_number)}
                   className={rowClassName}
                 >
                   <td className={indexCellClassName}>{entry.session_number}</td>
