@@ -25,3 +25,7 @@
 1. user_id is injected from decode_access_token, session_id comes from the URL path to filter results
 2. get_session_overview_data UNION ALLs the target from vocab and sentences, excluding skipped items
 3. Returns the vocab and sentences targets under the same dict key as session_overview
+
+## Design Ideas
+
+- Add a link in the session overview that navigates the user to a page which displays more in depth data on each session. Note - as in [Decision Log](log.md#2026-08-19---session-log-expanded-session-query-string-should-be-session-number-not-session-id) this may require sequential queries to get the session ID from the session number, if not already in cache (e.g direct hit or refresh)

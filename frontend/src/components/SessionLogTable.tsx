@@ -18,6 +18,7 @@ function SessionOverview({ sessionId }: SessionOverviewProps) {
   const sessionOverview = useQuery({
     queryKey: ["sessionOverview", sessionId],
     queryFn: () => getSessionOverview(sessionId),
+    staleTime: Infinity,
   });
 
   if (sessionOverview.isPending) {
@@ -63,7 +64,7 @@ export default function SessionLogTable({
         <thead className="border-b border-neutral-200">
           <tr>
             <th className="w-12 pl-6 pr-2 py-3" />{" "}
-            {/* Index column, deliberately unlabelled */}
+            {/* Index column, intentionally unlabelled */}
             <th className="w-48 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
               Date
             </th>
