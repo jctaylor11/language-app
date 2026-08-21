@@ -3,7 +3,6 @@ from sqlalchemy import text, insert
 
 from backend.db.models import Sentence
 from backend.schemas import SentencePair
-from backend.tests.conftest import TEST_SESSION_ID, TEST_USER_ID
 
 
 def seed_sentence(conn, target: str, lemma_count: int, known_word_ids: list[int]) -> int:
@@ -55,14 +54,14 @@ def test_create_sentence_result(client, access_token, seed_session, conn):
     ))
     sentence_id = result.scalar()
 
-    response = client.post(f"/sentence-results", json={"sentence_id": sentence_id, "session_id": TEST_SESSION_ID, "status": "correct"})
+    response = client.post(f"/sentence-results", json={"sentence_id": sentence_id, "session_id": seed_session, "status": "correct"})
 
     assert response.status_code == 200
     data = response.json()
     assert data["saved_sentence_id"] == sentence_id
 
 
-def test_get_sentence_batch_excludes_completed_sentences(client, access_token, seed_user_words, conn):
+def test_get_sentence_batch_excludes_completed_sentences(client, access_token, seed_user, seed_user_words, conn):
     known_word_id = seed_user_words[0]  # One known word is all the coverage maths needs - each sentence has lemma_count 1 and that word as its only lemma
 
     result = conn.execute(insert(Sentence).returning(Sentence.id), [
@@ -83,7 +82,7 @@ def test_get_sentence_batch_excludes_completed_sentences(client, access_token, s
     conn.execute(text("""
         INSERT INTO sentence_results (user_id, sentence_id, status)
         VALUES (:user_id, :sentence_id, 'correct')
-    """), {"user_id": TEST_USER_ID, "sentence_id": completed_sentence_id})
+    """), {"user_id": seed_user, "sentence_id": completed_sentence_id})
 
     client.cookies.set("access_token", access_token)
 
@@ -104,10 +103,10 @@ def test_get_session_summary_excludes_skipped(client, access_token, seed_session
     answered_sentence_id = seed_sentence(conn, "물을 마십니다.", 2, seed_user_words[:2])
     skipped_sentence_id = seed_sentence(conn, "집에 갑니다.", 3, seed_user_words[2:5])
 
-    client.post("/sentence-results", json={"sentence_id": answered_sentence_id, "session_id": TEST_SESSION_ID, "status": "correct"})
-    client.post("/sentence-results", json={"sentence_id": skipped_sentence_id, "session_id": TEST_SESSION_ID, "status": "skipped"})
+    client.post("/sentence-results", json={"sentence_id": answered_sentence_id, "session_id": seed_session, "status": "correct"})
+    client.post("/sentence-results", json={"sentence_id": skipped_sentence_id, "session_id": seed_session, "status": "skipped"})
 
-    response = client.get(f"/sentence-sessions/{TEST_SESSION_ID}/summary")
+    response = client.get(f"/sentence-sessions/{seed_session}/summary")
     data = response.json()
 
     assert response.status_code == 200
@@ -121,34 +120,34 @@ def test_get_session_summary_counts_shared_word_once_per_sentence(client, access
     first_sentence_id = seed_sentence(conn, "물을 마십니다.", 1, [shared_word_id])
     second_sentence_id = seed_sentence(conn, "물을 마셔요.", 1, [shared_word_id])
 
-    client.post("/sentence-results", json={"sentence_id": first_sentence_id, "session_id": TEST_SESSION_ID, "status": "correct"})
-    client.post("/sentence-results", json={"sentence_id": second_sentence_id, "session_id": TEST_SESSION_ID, "status": "correct"})
+    client.post("/sentence-results", json={"sentence_id": first_sentence_id, "session_id": seed_session, "status": "correct"})
+    client.post("/sentence-results", json={"sentence_id": second_sentence_id, "session_id": seed_session, "status": "correct"})
 
-    response = client.get(f"/sentence-sessions/{TEST_SESSION_ID}/summary")
+    response = client.get(f"/sentence-sessions/{seed_session}/summary")
     data = response.json()
 
     assert response.status_code == 200
     assert data["summary"]["total_reviewed"] == 2  # The same word in two sentences is two reviews of it, matching how the vocab summary treats a repeated word
 
 
-def test_get_session_summary_excludes_sentences_reviewed_in_an_earlier_session(client, access_token, seed_session, seed_user_words, conn):
+def test_get_session_summary_excludes_sentences_reviewed_in_an_earlier_session(client, access_token, seed_user, seed_session, seed_user_words, conn):
     client.cookies.set("access_token", access_token)
 
     result = conn.execute(text(
         "INSERT INTO sessions (user_id, bound_type, bound_value, session_type) VALUES (:user_id, 'count', 5, 'sentence') RETURNING id"
-    ), {"user_id": TEST_USER_ID})
+    ), {"user_id": seed_user})
     earlier_session_id = result.scalar()
 
     earlier_sentence_id = seed_sentence(conn, "어제 물을 마셨습니다.", 3, seed_user_words[:3])
     conn.execute(text("""
         INSERT INTO sentence_results (user_id, session_id, sentence_id, status)
         VALUES (:user_id, :session_id, :sentence_id, 'correct')
-    """), {"user_id": TEST_USER_ID, "session_id": earlier_session_id, "sentence_id": earlier_sentence_id})
+    """), {"user_id": seed_user, "session_id": earlier_session_id, "sentence_id": earlier_sentence_id})
 
     current_sentence_id = seed_sentence(conn, "밥을 먹습니다.", 1, seed_user_words[3:4])
-    client.post("/sentence-results", json={"sentence_id": current_sentence_id, "session_id": TEST_SESSION_ID, "status": "correct"})
+    client.post("/sentence-results", json={"sentence_id": current_sentence_id, "session_id": seed_session, "status": "correct"})
 
-    response = client.get(f"/sentence-sessions/{TEST_SESSION_ID}/summary")
+    response = client.get(f"/sentence-sessions/{seed_session}/summary")
     data = response.json()
 
     assert response.status_code == 200

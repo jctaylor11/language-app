@@ -1,4 +1,5 @@
 import pytest 
+import subprocess
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 
@@ -10,9 +11,15 @@ from backend.auth.access_token import create_access_token
 
 test_engine = create_engine(TEST_DATABASE_URL)
 
-TEST_USER_ID = 1
-TEST_SESSION_ID = 1
 TEST_USER_WORD_COUNT = 6
+
+
+@pytest.fixture(scope="session", autouse=True)
+def apply_migration():      # So it's auomatically kept in sync with migrations
+    subprocess.run(
+        ["alembic", "-c", "backend/alembic.ini", "-x", "db=test", "upgrade", "head"],
+        check=True,
+    )
 
 
 @pytest.fixture
@@ -40,26 +47,26 @@ def client(conn):
 
 @pytest.fixture
 def seed_user(conn) -> int:
-    # Single-user test setup with rollback isolation, so user_id always 1
-    result = conn.execute(text("INSERT INTO users (id, google_sub, email) VALUES (:test_user_id, :test_sub, :test_email) RETURNING id"), {"test_user_id": TEST_USER_ID, "test_sub": "123", "test_email": "test@email.com"})
+    # Id comes from the sequence rather than being hardcoded, since an explicit id doesn't advance it and collides on a fresh database
+    result = conn.execute(text("INSERT INTO users (google_sub, email) VALUES (:test_sub, :test_email) RETURNING id"), {"test_sub": "123", "test_email": "test@email.com"})
     return result.scalar()
 
 
 @pytest.fixture
 def access_token(seed_user) -> str:
-    access_token = create_access_token(TEST_USER_ID)
+    access_token = create_access_token(seed_user)
     return access_token
 
 
 @pytest.fixture
 def seed_session(conn, seed_user):
-    result = conn.execute(text("INSERT INTO sessions (id, user_id, bound_type, bound_value, session_type) VALUES (:session_id, :user_id, :bound_type, :bound_value, :session_type) RETURNING id"), {"session_id": TEST_SESSION_ID, "user_id": TEST_USER_ID, "bound_type": "time", "bound_value": 120, "session_type": "vocab"})
+    result = conn.execute(text("INSERT INTO sessions (user_id, bound_type, bound_value, session_type) VALUES (:user_id, :bound_type, :bound_value, :session_type) RETURNING id"), {"user_id": seed_user, "bound_type": "time", "bound_value": 120, "session_type": "vocab"})
     return result.scalar()
 
 
 @pytest.fixture
 def refresh_token(conn, seed_user) -> str:
-    return create_refresh_token(conn, TEST_USER_ID)
+    return create_refresh_token(conn, seed_user)
 
 
 @pytest.fixture
@@ -111,7 +118,7 @@ def seed_user_words(conn, seed_user):
     conn.execute(text("""
         INSERT INTO user_words (user_id, word_id) 
         VALUES (:user_id, :word_id)  
-        """), [{"user_id": TEST_USER_ID, "word_id": word_id} for word_id in word_ids])
+        """), [{"user_id": seed_user, "word_id": word_id} for word_id in word_ids])
     
     return word_ids
 
