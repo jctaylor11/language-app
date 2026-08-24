@@ -14,24 +14,8 @@ router = APIRouter()
 
 NUM_WORDS_SAMPLED = 10
 NUM_SENTENCES_IN_BATCH = 3
-PROPORTION_BAND_PERCENT = 10    # Can't promise more precision than ±10%, requested percentage becomes a range
+MIN_KNOWN_PERCENT = 80    # Comprehensible input: research puts the optimal known proportion at 80%, the remaining 20% inferred from context
 
-def calculate_band_bounds(known_words_percent: int) -> tuple[int, int]:
-    """Calculates the lower and upper bounds of the band of known-word coverage that is acceptable for a sentence to be returned to the user.
-
-    Args:
-        known_words_percent: Midpoint (or endpoint at edges) of the accepted band of known-word coverage. 80 accepts sentences where 70-90% of the lemmas are words the user already knows. 100 accepts 80-100%.
-
-    Returns:
-        A tuple containing the lower and upper bounds of the acceptable band.
-    """
-    # Band slides inwards so that every request gets the same width
-    max_lower_bound = 100 - 2 * PROPORTION_BAND_PERCENT
-    min_upper_bound = 2 * PROPORTION_BAND_PERCENT
-    lb_known_percent = max(0, min(max_lower_bound, known_words_percent - PROPORTION_BAND_PERCENT))
-    ub_known_percent = max(min_upper_bound, min(100, known_words_percent + PROPORTION_BAND_PERCENT))
-
-    return lb_known_percent, ub_known_percent
 
 def sample_user_words_for_generation(conn: Connection, user_id: int, num_words_sampled: int) -> list[str]:
     # Words for LLM prompt - should only be a small sample, since excessive words wastes tokens without improving results
@@ -52,8 +36,8 @@ def sample_user_words_for_generation(conn: Connection, user_id: int, num_words_s
     return user_words
 
 
-def get_eligible_sentences(conn: Connection, user_id: int, lb_known_percent: int, ub_known_percent: int, sentences_already_queued: list[int] = []) -> list[SentencePair]:
-    """Fetch existing sentences from the cache that the user has not already done, whose proportion of known words from their vocab vault falls within the given band."""
+def get_eligible_sentences(conn: Connection, user_id: int, sentences_already_queued: list[int] = []) -> list[SentencePair]:
+    """Fetch existing sentences from the cache that the user has not already done, whose proportion of known words from their vocab vault meets the minimum."""
     eligible_sentences = conn.execute(text("""
         WITH users_words AS (
             SELECT * FROM user_words WHERE user_id = :user_id
@@ -70,10 +54,9 @@ def get_eligible_sentences(conn: Connection, user_id: int, lb_known_percent: int
             )
         AND NOT (s.id = ANY(:sentences_already_queued))     -- Exclude sentences already queued from the last fetch, so that the user doesn't see duplicates
         GROUP BY s.id, s.target, s.source, s.lemma_count
-        HAVING 100 * COUNT(s.id) >= :lower_percent * s.lemma_count      -- Scaled by 100 rather than dividing, so the band edges compare as exact integers
-            AND 100 * COUNT(s.id) <= :upper_percent * s.lemma_count
+        HAVING 100 * COUNT(s.id) >= :min_known_percent * s.lemma_count      -- Scaled by 100 rather than dividing, so the threshold compares as exact integers
         LIMIT 3
-        """), {"user_id": user_id, "lower_percent": lb_known_percent, "upper_percent": ub_known_percent, "sentences_already_queued": sentences_already_queued})
+        """), {"user_id": user_id, "min_known_percent": MIN_KNOWN_PERCENT, "sentences_already_queued": sentences_already_queued})
 
     sentences = [SentencePair(id=row.id, target=row.target, source=row.source) for row in eligible_sentences]
     
@@ -140,12 +123,10 @@ def get_sentence_batch(
 ):
     """Returns a batch of sentences for the user.
 
-    First serves sentences already in the cache that fall within the requested known-word band. If the cache holds fewer than a full batch, new sentences
+    First serves sentences already in the cache that meet the minimum known-word proportion. If the cache holds fewer than a full batch, new sentences
     are generated via LLM API, lemmatised, and inserted into the sentences cache.
     """
-    lb_known_percent, ub_known_percent = calculate_band_bounds(payload.known_percent)
-
-    eligible_sentences_in_cache = get_eligible_sentences(read_conn, user_id, lb_known_percent, ub_known_percent, payload.sentences_already_queued)  # Sentences already queued for the user are excluded from the eligible sentences returned, so that the user doesn't see duplicates in a single session
+    eligible_sentences_in_cache = get_eligible_sentences(read_conn, user_id, payload.sentences_already_queued)  # Sentences already queued for the user are excluded from the eligible sentences returned, so that the user doesn't see duplicates in a single session
 
     if len(eligible_sentences_in_cache) >= NUM_SENTENCES_IN_BATCH:    # Sufficient sentences already fetched, can return them rather than generate any
         eligible_sentences = {"sentences": [{"id": sentence.id, "target": sentence.target, "source": sentence.source} for sentence in eligible_sentences_in_cache]}    # Early return since no need to lemmatise etc - sentences from db are already lemmatised
@@ -153,7 +134,7 @@ def get_sentence_batch(
     
     user_words_sample = sample_user_words_for_generation(read_conn, user_id, NUM_WORDS_SAMPLED)   # User words needed to get sentences bespoke for the user
 
-    generated_sentences = generate_sentences(user_words_sample, NUM_SENTENCES_IN_BATCH, lb_known_percent, ub_known_percent)  # If no eligible sentences already exist in the sentences cache
+    generated_sentences = generate_sentences(user_words_sample, NUM_SENTENCES_IN_BATCH, MIN_KNOWN_PERCENT)  # If no eligible sentences already exist in the sentences cache
 
     generated_sentences = lemmatise_sentences(generated_sentences)  # Lemmatisation allows sentence words to be matched against the words table by standardised citation form. Needed for sentence_words inserts and lemma_count
 
@@ -161,7 +142,7 @@ def get_sentence_batch(
 
     insert_sentences_words(write_conn, generated_sentences)
 
-    eligible_sentences = get_eligible_sentences(write_conn, user_id, lb_known_percent, ub_known_percent, payload.sentences_already_queued)
+    eligible_sentences = get_eligible_sentences(write_conn, user_id, payload.sentences_already_queued)
 
     if len(eligible_sentences) < NUM_SENTENCES_IN_BATCH:  
         return {"sentences": [{"id": 0, "target": "Failed to get eligible sentences", "source": "Failed to get eligible sentences"}]}  

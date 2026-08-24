@@ -24,17 +24,17 @@ def seed_sentence(conn, target: str, lemma_count: int, known_word_ids: list[int]
 
 
 def test_get_sentence_batch(client, access_token, seed_user_words):
-    # Must be at least 3 sentence, since 3 in a batch, and they must be of applicable known_percent with the argument in http fetch
+    # Must be at least 3 sentence, since 3 in a batch, and they must clear the known-word floor to be returned
     mock_sentences = [
-        SentencePair(target="우리는 매일 물을 마십니다.", source="We drink water every day."),  # 1/4 lemmas known (물) = 25%
-        SentencePair(target="저 사람은 학교 도서관에서 책을 읽습니다.", source="That person reads a book at the school library."),  # 1/6 lemmas known (사람) = 16.7%
-        SentencePair(target="그는 새로운 자동차를 운전해서 회사에 갔습니다.", source="He drove his new car to the office."),  # 1/5 lemmas known (가다) = 20%
+        SentencePair(target="사람이 집에 갑니다.", source="The person goes home."),  # 3/3 lemmas known (사람, 집, 가다) = 100%
+        SentencePair(target="사람이 집에서 물을 먹습니다.", source="The person drinks water at home."),  # 4/4 lemmas known (사람, 집, 물, 먹다) = 100%
+        SentencePair(target="사람이 물을 먹고 집에 갔습니다.", source="The person drank water and went home."),  # 5/5 lemmas known (사람, 물, 먹다, 집, 가다) = 100%
     ]
     client.cookies.set("access_token", access_token)
 
     # Patched to avoid LLM API call
     with patch("backend.routers.sentence.generate_sentences", return_value=mock_sentences):
-        response = client.post(f"/sentences", json={"known_percent": 20})
+        response = client.post(f"/sentences", json={})
 
     assert response.status_code == 200
     data = response.json()
@@ -86,8 +86,8 @@ def test_get_sentence_batch_excludes_completed_sentences(client, access_token, s
 
     client.cookies.set("access_token", access_token)
 
-    # 3 sentences stay eligible >= NUM_SENTENCES_IN_BATCH so that cache path is taken instead of LLM path. 100 requested since the seeded sentences are fully known, which the 80 band (70-90%) would exclude
-    response = client.post("/sentences", json={"known_percent": 100})
+    # 3 sentences stay eligible >= NUM_SENTENCES_IN_BATCH so that cache path is taken instead of LLM path
+    response = client.post("/sentences", json={})
 
     assert response.status_code == 200
     data = response.json()

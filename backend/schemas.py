@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from backend.enums import SentenceResultStatus, VocabResultStatus, SessionBoundType, SessionType
 
@@ -19,7 +19,6 @@ class SentencePair(BaseModel):
 
 
 class SentenceRequest(BaseModel):
-    known_percent: int = Field(ge=0, le=100)
     sentences_already_queued: list[int] = []
 
 

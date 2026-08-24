@@ -85,7 +85,6 @@ export async function sendVocabResults(
 }
 
 export async function fetchSentencePairs(
-  knownPercent: number,
   sentencesAlreadyQueued: number[] = [],
 ): Promise<SentencePair[]> {
   try {
@@ -94,7 +93,6 @@ export async function fetchSentencePairs(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        known_percent: knownPercent,
         sentences_already_queued: sentencesAlreadyQueued,
       }),
     });

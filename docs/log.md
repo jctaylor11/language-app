@@ -1,3 +1,15 @@
+### 2026-08-24 - sentence: remove user's option to choose % of known words in the sentences. Keep it fixed at >= 80%.
+
+It was previously decided that a user could choose what percentage of the words in the sentences are 'known', using a slider with a ±10% tolerance. Instead, it was decided it should just be a button that generates sentences using at least 80% words that they know. This resolves issues associated with the feature:
+
+- Low reliability, leading to low integrity - for example, it may be difficult to guarantee '40-60%' of the sentence is known. This would also result in more LLM API calls.
+- The choice is arbitrary. Why would a user specifically want 40-60%? More likely to cognitive overload from choice. The core purpose of the program is comprehensible input, which the research supports is 80% known. One's brain can fill in the other 20% from context. Therefore, it should really be 80% minimum - and evaluation can just check that 80% are known. Keeps it simple and focused.
+- New words should be considered a 'reward' for doing well, rather than abundant - having the option to generate sentences with 0% known words defeats this and makes it complicated about what happens with those new words. This leaves words exploration to the vocab algorithm.
+- Without the user's input required, I can also prefetch the second the page mounts so the user doesn't need to wait for the sentences to load.
+- Resolves issue regarding overshooting the requested upper bound due to only a sample from the user's word vault being used (and therefore possibility of collisions with words in the user's word vault but outside of the sample). Originally logged at [log decisions](log.md#2026-07-31---sentences-generation-prompt-takes-on-a-sample-of-users-vocabulary). The previous (now-deleted) design idea was generating more sentences to filter them against the full user's word list - verifying in SQL, while using a sample of the words as LLM input.
+
+Outcome: Implemented.
+
 ### 2026-08-19 - session log: expanded session query string should be session number, not session ID
 
 Currently the URL references the session ID, rather than the session number. Session IDs map one to one across all users, whereas session numbers map one to many across all users - yet still works since it is filtered by user ID too (ultimately making the mapping one-to-one). It's therefore preferable to have the query parameter be the session number, rather than session ID - it conceals the total number of global sessions, and makes it more intuitive to the user (their first session is session 1, rather than session 326), hence making it more searchable. It was therefore decided that navigation should be on the session number, not the session ID. This is achieved by using the corresponding values in a given row, where each row contains both the session number and session ID: the session number is the reference in the navigation, and the session_id for the corresponding row is used internally for the endpoint request.
@@ -197,7 +209,7 @@ Rejected alternatives:
 
 Outcome: Implemented.
 
-### 2026-07-31 - sentences: generation prompt keeps a sampled vocabulary
+### 2026-07-31 - sentences: generation prompt takes on a sample of user's vocabulary
 
 The generation prompt only sees a sample of the user's words, while the eligibility check measures the known proportion against all of their user_words. The LLM fills the rest of each sentence from general Korean, and some of those words will happen to be ones the user already knows, so actual coverage lands at or above the requested percentage. As the user's vault grows,the number of chance of general collision colliding with user words outside of the sample increases, especailly at the low end of the slider (e.g 0-20% known requested). Generating words a user does not know requires knowing which words they do know, which the LLM does not have a complete picture of. The solution to this is an open question, with considerations in [design ideas](sentences.md#known-percent-band-accuracy-for-generated-sentences)
 
