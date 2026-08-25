@@ -6,8 +6,8 @@ export default function RootLayout() {
   const { isAuthenticated, logout } = useAuth();
 
   return (
-    <>
-      <nav className="flex justify-end p-5 gap-4 border-b border-gray-300">
+    <div className="h-screen flex flex-col">
+      <nav className="flex justify-end p-5 gap-4 border-b border-gray-300 shrink-0">
         {isAuthenticated === true ? (
           <>
             <Link to="/vocab">Vocab</Link>
@@ -24,9 +24,9 @@ export default function RootLayout() {
           </>
         )}
       </nav>
-      <main className="px-6 py-8">
+      <main className="flex-1 px-6 py-8">
         <Outlet />
       </main>
-    </>
+    </div>
   );
 }

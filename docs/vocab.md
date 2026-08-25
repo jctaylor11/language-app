@@ -2,7 +2,7 @@
 
 ## Frontend
 
-- VocabControl is rendered until a session exists. Its onStart calls sessionMutate directly
+- VocabStart is rendered until a session exists. Its onStart calls sessionMutate directly
 - The mutation calls fetchSession, which POSTs to /sessions with bound_type and bound_value (currently time and 120 for vocab sessions). sessionId is held in the mutation's data so that a refresh resets it
 - Session creation is a useMutation rather than a useQuery because it writes. A query would re-run on window focus, retry and StrictMode, creating a session row each time
 - onSuccess holds all of the session setup, so nothing is initialised for a session that failed to be created
@@ -12,7 +12,7 @@
 - inputText is state rather than a ref so the input stays controlled and each keypress re-renders the card
 - Each keypress runs handleInputChange, which compares the input against currentWord.source. If it matches, it builds the results, advances the word, then sends them over POST /vocab-results. Results are built before advanceWord since advanceWord resets the wordShownTime
 - handleKeyDown catches tab/esc with preventDefault and advances word with 'skipped' status
-- keystrokes and wordShownTime are refs to avoid a re-render per keypress. wordShownTime starts at 0 so time spent on the VocabControl isn't counted into the first word
+- keystrokes and wordShownTime are refs to avoid a re-render per keypress. wordShownTime starts at 0 so time spent on the VocabStart isn't counted into the first word
 - Timer derives timeRemaining from the sessionStartTime prop against Date.now() rather than decrementing a counter to avoid drift
 - SessionSummary fetches metrics from database with useQuery to ensure faithful representation by gating on the number of in-flight requests being 0 (from useIsMutating)
 - 'New Session' calls sessionMutate again. onSuccess resets sessionFinished

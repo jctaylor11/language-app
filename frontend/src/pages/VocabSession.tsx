@@ -17,19 +17,26 @@ import { calcIncorrectInput } from "../utils";
 
 const SESSION_DURATION_S = 120;
 
-function VocabControl({ onStart }: { onStart: () => void }) {
+function VocabStart({ onStart }: { onStart: () => void }) {
   return (
-    <div className="flex justify-center bg-[#dddddd] w-120 mx-auto px-10 py-5">
-      <div className="flex flex-col text-[14px] w-90">
-        <h1 className="text-[28px] font-bold">Vocab Session</h1>
-        <p className="mb-4">Optimal words to review.</p>
-        <button
-          onClick={() => onStart()}
-          className="border px-6 py-1 mt-4 rounded cursor-pointer bg-gray-100 hover:bg-[#dddddd] active:bg-gray-200"
-        >
-          Start Session
-        </button>
-      </div>
+    <div className="flex flex-col bg-[#dddddd] w-120 mx-auto px-15 py-5 text-[14px]">
+      <h1 className="text-[28px] font-bold">Vocabulary</h1>
+      <p className="mb-1">
+        The algorithm learns your level and matches you with your next best word
+        to review.
+      </p>
+      <p className="mb-2">
+        This may be a new word, or one you've already seen.
+      </p>
+      <p className="text-gray-500 pl-4">ESC to cheat (TODO)</p>
+      <p className="text-gray-500 pl-4">TAB to skip</p>
+      {/* Intentionally leaving 'session' in to signal how the app functions in terms of session - this is the root of the data, the session log, etc */}
+      <button
+        onClick={() => onStart()}
+        className="border px-6 py-1 mt-4 rounded cursor-pointer bg-gray-100 hover:bg-[#dddddd] active:bg-gray-200"
+      >
+        Start session
+      </button>
     </div>
   );
 }
@@ -80,10 +87,9 @@ function WordCard({
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-8 pb-48">
-      <div className="text-center">
-        <h1 className="text-4xl font-medium tracking-wide">{targetWord}</h1>
-        <p>{sourceWord}</p>
-      </div>
+      <h1 className="text-center text-4xl font-medium tracking-wide">
+        {targetWord}
+      </h1>
       {/* Full event object needed onKeyDown to disable default Tab behaviour*/}
       <input
         type="text"
@@ -92,6 +98,7 @@ function WordCard({
         onKeyDown={onKeyDown} // For non-value keys (esc, tab) and keystroke history recording
         className="bg-transparent border-t border-b text-center border-gray-500 outline-none w-64 text-xl"
       />
+      <p className="absolute bottom-5 left-5 text-gray-500">{sourceWord}</p>
     </div>
   );
 }
@@ -303,7 +310,7 @@ export default function VocabSession() {
 
   // There will only be a session ID after the user has clicked the start button. Having a separate state for the started would cause a race condition
   if (!sessionId) {
-    return <VocabControl onStart={() => sessionMutate()} />;
+    return <VocabStart onStart={() => sessionMutate()} />;
   }
 
   if (sessionFinished) {
@@ -317,7 +324,7 @@ export default function VocabSession() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-full flex flex-col">
       <div className="flex justify-between">
         <Timer
           timerDurationS={SESSION_DURATION_S}

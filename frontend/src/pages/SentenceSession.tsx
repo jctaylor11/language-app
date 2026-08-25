@@ -18,17 +18,24 @@ const SENTENCES_PER_SESSION = 5;
 
 function SentenceStart({ onStart }: { onStart: () => void }) {
   return (
-    <div className="flex justify-center bg-[#dddddd] w-120 mx-auto px-10 py-5">
-      <div className="flex flex-col text-[14px] w-90">
-        <h1 className="text-[28px] font-bold">Sentence Generation</h1>
-        <p className="mb-4">Based on the words you know.</p>
-        <button
-          onClick={() => onStart()}
-          className="border px-6 py-1 mt-4 rounded cursor-pointer bg-gray-100 hover:bg-[#dddddd] active:bg-gray-200"
-        >
-          Generate Sentences
-        </button>
-      </div>
+    <div className="flex flex-col bg-[#dddddd] w-120 mx-auto px-15 py-5 text-[14px]">
+      <h1 className="text-[28px] font-bold">Sentences</h1>
+      <p className="mb-1">
+        Sentences will be selected based on the words that you already know.
+      </p>
+      <p className="mb-2">
+        Min 80% known words, prioritising those due for review
+      </p>
+      <p className="text-gray-500 pl-4">ESC to cheat (TODO)</p>
+      <p className="text-gray-500 pl-4">TAB to skip</p>
+
+      {/* Intentionally leaving 'session' in to signal how the app functions in terms of session - this is the root of the data, the session log, etc */}
+      <button
+        onClick={() => onStart()}
+        className="border px-6 py-1 mt-4 rounded cursor-pointer bg-gray-100 hover:bg-[#dddddd] active:bg-gray-200"
+      >
+        Start session
+      </button>
     </div>
   );
 }
@@ -48,9 +55,10 @@ function SentenceCard({
   const sourceSentence = sentencePair.source;
 
   return (
-    <div className="flex flex-col items-center justify-center pt-60">
-      <h1 className="text-2xl font-medium tracking-wide">{targetSentence}</h1>
-      <p>{sourceSentence}</p>
+    <div className="flex-1 flex flex-col items-center justify-center gap-8 pb-48">
+      <h1 className="text-center text-3xl font-medium tracking-wide">
+        {targetSentence}
+      </h1>
       <input
         type="text"
         className="bg-transparent border-t border-b text-center border-gray-500 outline-none w-64 text-xl"
@@ -58,6 +66,7 @@ function SentenceCard({
         onChange={(e) => onInputChange(e.target.value)}
         onKeyDown={onKeyDown}
       />
+      <p className="absolute bottom-5 left-5 text-gray-500">{sourceSentence}</p>
     </div>
   );
 }
@@ -244,7 +253,7 @@ export default function SentenceSession() {
   }
 
   return (
-    <>
+    <div className="h-full flex flex-col">
       <div className="flex justify-end">{completedSentencesCount}</div>
       <SentenceCard
         sentencePair={sentencePairs[sentencePairIndex]}
@@ -252,6 +261,6 @@ export default function SentenceSession() {
         onInputChange={handleInputChange}
         onKeyDown={handleKeyDown}
       />
-    </>
+    </div>
   );
 }
