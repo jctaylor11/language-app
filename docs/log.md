@@ -1,3 +1,25 @@
+### 2026-08-27 - vocab: cheating does not count towards a user's visible review point, but the algorithm won't consider it a new word
+
+Cheating allows the user to progress, shows them the word, but does not award a point. To count as a review, the user must recall it themselves.
+
+However, the algorithm should acknowledge the user has seen the word, instead of considering the word as new.
+
+Rejected alternatives:
+
+- Cheating counts as a review, defensible since the user would have seen it. However it reduces integrity of this count where someone could inflate their statistics by cheating: reduces motivation and poisons the data.
+
+- Cheating treats the word the same as a skip (rejects the word as though not seen). However, this does not reflect that the user has consciously seen the word and answer.
+
+### 2026-08-27 - vocab: add cheat option, stored as an enum
+
+The user needs to be able to see the answer if they want to so they don't get stuck on a word. They should therefore have a control to see the answer. This event is also logged in the database, and serves as a useful signal to understand their confidence on a word. It is a distinct signal from skip. Cheating indicates attempt, interest, and confirms they have seen the answer, whereas skip has little signal though suggests likely disinterest.
+
+ESC chosen instead of TAB - ESC implies escaping, while TAB is better suited for skipping (moving forwards).
+
+For the database migration, it was decided this should be stored as an additional enum value in the 'status' column, as opposed to an additional boolean column. If it were its own column, the status column would not be independent - for example, "correct_first_try" doesn't mean anything if they saw the answer, and would therefore distort the data when looking at this metric. Whether it was correct first try, corrected, cheated, or skipped is a single dimension.
+
+Rejected alternative: Store the signal as a separate independent 'cheat' column - a boolean based on whether they cheated or not. Decided against since it is not independent to 'status'.
+
 ### 2026-08-24 - sentence: remove user's option to choose % of known words in the sentences. Keep it fixed at >= 80%.
 
 It was previously decided that a user could choose what percentage of the words in the sentences are 'known', using a slider with a ±10% tolerance. Instead, it was decided it should just be a button that generates sentences using at least 80% words that they know. This resolves issues associated with the feature:

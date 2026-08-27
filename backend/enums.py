@@ -3,6 +3,7 @@ import enum
 class VocabResultStatus(enum.Enum):
     correct_first_try = "correct_first_try"
     corrected = "corrected"
+    cheated = "cheated"
     skipped = "skipped"
 
 
