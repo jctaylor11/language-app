@@ -28,7 +28,7 @@ function VocabStart({ onStart }: { onStart: () => void }) {
       <p className="mb-2">
         This may be a new word, or one you've already seen.
       </p>
-      <p className="text-gray-500 pl-4">ESC to cheat (TODO)</p>
+      <p className="text-gray-500 pl-4">ESC to cheat</p>
       <p className="text-gray-500 pl-4">TAB to skip</p>
       {/* Intentionally leaving 'session' in to signal how the app functions in terms of session - this is the root of the data, the session log, etc */}
       <button
@@ -74,12 +74,18 @@ function Timer({
 function WordCard({
   wordPair,
   inputText,
+  answerRevealed,
   onKeyDown,
+  onKeyUp,
+  onBlur,
   onInputChange,
 }: {
   wordPair: WordPair;
   inputText: string;
+  answerRevealed: boolean;
   onKeyDown: (e: React.KeyboardEvent) => void;
+  onKeyUp: (e: React.KeyboardEvent) => void;
+  onBlur: () => void;
   onInputChange: (value: string) => void;
 }) {
   const targetWord = wordPair.target;
@@ -87,15 +93,22 @@ function WordCard({
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-8 pb-48">
+      <p
+        className={`text-center text-2xl font-medium tracking-wide first-letter:uppercase text-gray-500 ${answerRevealed ? "" : "invisible"}`}
+      >
+        {sourceWord}
+      </p>
       <h1 className="text-center text-4xl font-medium tracking-wide">
         {targetWord}
       </h1>
-      {/* Full event object needed onKeyDown to disable default Tab behaviour*/}
+      {/* Full event object needed onKeyDown and onKeyUp to disable default Tab/Esc behaviour - e.g changing selection*/}
       <input
         type="text"
         value={inputText}
         onChange={(e) => onInputChange(e.target.value)}
         onKeyDown={onKeyDown} // For non-value keys (esc, tab) and keystroke history recording
+        onKeyUp={onKeyUp}
+        onBlur={onBlur}
         className="bg-transparent border-t border-b text-center border-gray-500 outline-none w-64 text-xl"
       />
       <p className="absolute bottom-5 left-5 text-gray-500">{sourceWord}</p>
@@ -161,6 +174,7 @@ export default function VocabSession() {
   const [sessionStartTime, setSessionStartTime] = useState(0);
   const [sessionFinished, setSessionFinished] = useState(false);
   const [score, setScore] = useState(0);
+  const [answerRevealed, setAnswerRevealed] = useState(false);
 
   const sessionPosition = useRef<number>(1);
   const keystrokes = useRef<string>("");
@@ -218,6 +232,7 @@ export default function VocabSession() {
     setInputText("");
     keystrokes.current = "";
     sessionPosition.current++;
+    setAnswerRevealed(false);
 
     // New time needed to calculate how long they took to answer
     wordShownTime.current = Date.now();
@@ -285,8 +300,18 @@ export default function VocabSession() {
     if (!currentWord || !sessionId) return;
 
     const key = e.key;
-    if (key === "Escape" || key === "Tab") {
+
+    if (key === "Escape") {
       e.preventDefault();
+      if (e.repeat) return; // Only the first press down is relevant
+
+      setAnswerRevealed(true);
+    }
+
+    if (key === "Tab") {
+      e.preventDefault();
+
+      if (e.repeat) return; // Otherwise someone holding down the key will go through as pressing tab many times and burn through the queue
 
       // Build results before advancing to capture response time accurately since time updates on advanceWord
       const skipped = true;
@@ -301,6 +326,19 @@ export default function VocabSession() {
 
     // Update the ref
     keystrokes.current = keystrokes.current + recorded;
+  }
+
+  function handleKeyUp(e: React.KeyboardEvent) {
+    const key = e.key;
+
+    if (key === "Escape") {
+      setAnswerRevealed(false);
+    }
+  }
+
+  // Otherwise answer stays revealed if focus is lost mid reveal
+  function handleBlur() {
+    setAnswerRevealed(false);
   }
 
   // Start button will flash without this, which if clicked would create an orphan session
@@ -339,7 +377,10 @@ export default function VocabSession() {
       <WordCard
         wordPair={currentWord}
         inputText={inputText}
+        answerRevealed={answerRevealed}
         onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
+        onBlur={handleBlur}
         onInputChange={handleInputChange}
       />
     </div>

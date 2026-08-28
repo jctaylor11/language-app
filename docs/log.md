@@ -1,6 +1,6 @@
 ### 2026-08-27 - vocab: cheating does not count towards a user's visible review point, but the algorithm won't consider it a new word
 
-Cheating allows the user to progress, shows them the word, but does not award a point. To count as a review, the user must recall it themselves.
+Cheating allows the user to progress so they don't get stuck - it shows them the word, but does not award a point. They also still need to type the word. To count as a review, the user must recall it themselves.
 
 However, the algorithm should acknowledge the user has seen the word, instead of considering the word as new.
 

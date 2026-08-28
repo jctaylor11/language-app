@@ -11,7 +11,9 @@
 - Word pages are flattened into one array and wordIndex is an index into it
 - inputText is state rather than a ref so the input stays controlled and each keypress re-renders the card
 - Each keypress runs handleInputChange, which compares the input against currentWord.source. If it matches, it builds the results, advances the word, then sends them over POST /vocab-results. Results are built before advanceWord since advanceWord resets the wordShownTime
-- handleKeyDown catches tab/esc with preventDefault and advances word with 'skipped' status
+- handleKeyDown catches tab with preventDefault and advances word with 'skipped' status
+- handleKeyDown catches esc with preventDefault and reveals the source word for as long as it is held. answerRevealed is set false on keyup or on blur in case focus is lost mid session
+- Both guard on e.repeat for idempotency
 - keystrokes and wordShownTime are refs to avoid a re-render per keypress. wordShownTime starts at 0 so time spent on the VocabStart isn't counted into the first word
 - Timer derives timeRemaining from the sessionStartTime prop against Date.now() rather than decrementing a counter to avoid drift
 - SessionSummary fetches metrics from database with useQuery to ensure faithful representation by gating on the number of in-flight requests being 0 (from useIsMutating)
