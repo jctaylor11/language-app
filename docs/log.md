@@ -1,3 +1,17 @@
+### 2026-08-29 - vocab: cheated words are shown in the session log overview, but do not count as a review point or a new word
+
+Cheated words should show up in the session log overview, but they should not count as a point in either 'total reviewed' or 'new words'. Otherwise, this would be a very easy way to hyperinflate the word count and ruin data integrity. The user must submit the correct answer without cheating or without skipping for it to count as a point in either. However, cheating (and not skipping) implies they are interested in the word - and therefore should be easy for them to retrieve. It will therefore be found readily available in the session log's sessio overivew. Perhaps though it would be ideal for it to be slightly greyed out or italicised to separate it from the ones they got themselves: [Design Idea](vocab.md#cheated-words-are-displayed-in-session-logs-session-overview-but-are-greyed-out-to-separate-them)
+
+Outcome: Implemented
+
+### 2026-08-29 - vocab: skipped status takes priority over cheated status in vocab results
+
+If a user has both cheated and skipped, skipped takes priority as the status and the information that they have seen the word from cheating gets lost. Ie - cheating and skipping is the same as just skipping. This was decided because it's a conscious decision of the user having seen the answer, and therefore shows they are not interest - they actively do not want to do that word. The algorithm should therefore not give any priority under the consideration that they have seen the word.
+
+Rejected alternative: Cheated status takes priority over skipped if cheated and skipped.
+
+Outcome: Implemented
+
 ### 2026-08-27 - vocab: cheating does not count towards a user's visible review point, but the algorithm won't consider it a new word
 
 Cheating allows the user to progress so they don't get stuck - it shows them the word, but does not award a point. They also still need to type the word. To count as a review, the user must recall it themselves.
@@ -10,6 +24,8 @@ Rejected alternatives:
 
 - Cheating treats the word the same as a skip (rejects the word as though not seen). However, this does not reflect that the user has consciously seen the word and answer.
 
+Outcome: Implemented.
+
 ### 2026-08-27 - vocab: add cheat option, stored as an enum
 
 The user needs to be able to see the answer if they want to so they don't get stuck on a word. They should therefore have a control to see the answer. This event is also logged in the database, and serves as a useful signal to understand their confidence on a word. It is a distinct signal from skip. Cheating indicates attempt, interest, and confirms they have seen the answer, whereas skip has little signal though suggests likely disinterest.
@@ -19,6 +35,8 @@ ESC chosen instead of TAB - ESC implies escaping, while TAB is better suited for
 For the database migration, it was decided this should be stored as an additional enum value in the 'status' column, as opposed to an additional boolean column. If it were its own column, the status column would not be independent - for example, "correct_first_try" doesn't mean anything if they saw the answer, and would therefore distort the data when looking at this metric. Whether it was correct first try, corrected, cheated, or skipped is a single dimension.
 
 Rejected alternative: Store the signal as a separate independent 'cheat' column - a boolean based on whether they cheated or not. Decided against since it is not independent to 'status'.
+
+Outcome: Implemented.
 
 ### 2026-08-24 - sentence: remove user's option to choose % of known words in the sentences. Keep it fixed at >= 80%.
 

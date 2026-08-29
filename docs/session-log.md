@@ -16,7 +16,7 @@
 ### GET /sessions/log
 
 1. user_id is injected server side via decode_access_token
-2. get_session_log_data UNION ALLs vocab_results and sentence_results in the session_log CTE, excluding skipped and grouped by session, so one row is returned per session whichever table it came from
+2. get_session_log_data UNION ALLs vocab_results and sentence_results in the session_log CTE, excluding skipped and cheated and grouped by session, so one row is returned per session whichever table it came from
 3. Selects session_id, started_at, session_type, total_reviewed count, and session_number from ROW_NUMBER() window function ordered oldest first
 4. Ordered by session_number descending (newest first) and returned as session_log
 

@@ -19,7 +19,7 @@
 - SessionSummary fetches metrics from database with useQuery to ensure faithful representation by gating on the number of in-flight requests being 0 (from useIsMutating)
 - 'New Session' calls sessionMutate again. onSuccess resets sessionFinished
 - Timer onFinish increments wordIndex so the first word of the new session is fresh
-- A score is incremented and displayed top right for each non-skipped word submitted
+- A score is incremented and displayed top right for each non-skipped and non-cheated word submitted
 
 ## Backend (GET /words, POST /vocab-results, GET /vocab-sessions/{session_id}/summary)
 
@@ -38,7 +38,7 @@
 
 ### GET /vocab-sessions/{session_id}/summary
 
-1. session_results CTE narrows vocab_results to that session and user, excluding skipped
+1. session_results CTE narrows vocab_results to that session and user, excluding skipped and cheated
 2. total_reviewed counts every row, so the same word answered twice in one session counts twice
 3. new_words counts distinct words with no earlier non-skipped result from another session
 4. Returns both as summary metrics
@@ -49,6 +49,10 @@
 - Words can current repeat in the same session. This raises the consideration regarding 'words reviewed'. Currently, two of the same words coming in the same session count as two reviewed.
 
 ## Design ideas
+
+### Cheated words are displayed in session log's session overview, but are greyed out to separate them
+
+The cheated words should be included in the session overview as per [log decision](log.md#2026-08-29---vocab-cheated-words-are-shown-in-the-session-log-overview-but-do-not-count-as-a-review-point-or-a-new-word) - but they should not be indistinguishable. They should be greyed out, or italicised or something like this.
 
 ### Add vocab control
 

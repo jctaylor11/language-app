@@ -12,12 +12,18 @@ export type SessionResponse = {
   session_id: number;
 };
 
+export type VocabResultStatus =
+  | "correct_first_try"
+  | "corrected"
+  | "cheated"
+  | "skipped";
+
 export type WordResults = {
   word_id: number;
   response_time_ms: number | null;
   answered_at: string | null;
   raw_keystrokes: string | null;
-  status: string;
+  status: VocabResultStatus;
   session_position: number;
 };
 

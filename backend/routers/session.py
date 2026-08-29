@@ -26,7 +26,7 @@ def get_session_log_data(conn: Connection, user_id: int) -> list[dict]:
             FROM sessions
             JOIN vocab_results ON sessions.id = vocab_results.session_id
             WHERE sessions.user_id = :user_id
-            AND vocab_results.status != 'skipped'
+            AND vocab_results.status NOT IN ('skipped', 'cheated')       -- Neither counts as a review the user earned
             GROUP BY sessions.id, sessions.session_type, sessions.started_at
             UNION ALL (
                 SELECT sentence_results.session_id, sessions.started_at, sessions.session_type, COUNT(*)

@@ -6,7 +6,12 @@ import {
   useIsMutating,
 } from "@tanstack/react-query";
 
-import type { WordPair, WordResults, VocabResults } from "../types";
+import type {
+  WordPair,
+  WordResults,
+  VocabResults,
+  VocabResultStatus,
+} from "../types";
 import {
   fetchSession,
   fetchWords,
@@ -179,6 +184,7 @@ export default function VocabSession() {
   const sessionPosition = useRef<number>(1);
   const keystrokes = useRef<string>("");
   const wordShownTime = useRef<number>(0);
+  const cheated = useRef<boolean>(false);
 
   const {
     mutate: sessionMutate,
@@ -233,6 +239,7 @@ export default function VocabSession() {
     keystrokes.current = "";
     sessionPosition.current++;
     setAnswerRevealed(false);
+    cheated.current = false;
 
     // New time needed to calculate how long they took to answer
     wordShownTime.current = Date.now();
@@ -256,9 +263,12 @@ export default function VocabSession() {
     );
     const session_position = sessionPosition.current;
 
-    let status: string;
+    let status: VocabResultStatus;
+    // Skipping takes priority over cheating, as it's a conscious decision they don't want to do that word
     if (skipped) {
       status = "skipped";
+    } else if (cheated.current) {
+      status = "cheated";
     } else {
       status = raw_keystrokes === null ? "correct_first_try" : "corrected";
     }
@@ -289,7 +299,11 @@ export default function VocabSession() {
 
     // Check whether input matches the answer
     if (input === currentWord.source) {
-      setScore((prev) => prev + 1);
+      if (!cheated.current) {
+        // A correct input only counts if it wasn't cheated
+        setScore((prev) => prev + 1);
+      }
+
       const vocabResults = buildVocabResults(currentWord, sessionId);
       advanceWord(); // wordShownTime is reset in advanceWord - therefore placed after building the results
       resultsMutate(vocabResults);
@@ -306,6 +320,7 @@ export default function VocabSession() {
       if (e.repeat) return; // Only the first press down is relevant
 
       setAnswerRevealed(true);
+      cheated.current = true; // Only in keydown, not key up - otherwise holding the keydown while typing correct answer will result in a false positive on the next word
     }
 
     if (key === "Tab") {
