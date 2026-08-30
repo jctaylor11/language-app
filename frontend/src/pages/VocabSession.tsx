@@ -340,11 +340,16 @@ export default function VocabSession() {
       resultsMutate(vocabResults);
     }
 
-    // Filter out meaningless keys, replace Backspace with a clean and distinct symbol
+    // Filter out meaningless keys
     if (key.length !== 1 && key !== "Backspace") return;
-    const recorded = key === "Backspace" ? "⌫" : key;
 
-    // Update the ref
+    // Spaces at the beginning would be accidental space from end of last word, and double space would be accidental too
+    if (key === " " && (inputText === "" || inputText.slice(-1) === " ")) {
+      e.preventDefault();
+      return;
+    }
+
+    const recorded = key === "Backspace" ? "⌫" : key; // A clean and distinct symbol for keystroke record to be analysed as an additional confidence signal in backend
     keystrokes.current = keystrokes.current + recorded;
   }
 

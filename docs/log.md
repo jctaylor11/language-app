@@ -1,3 +1,9 @@
+### 2026-08-30 - vocab: ignore spaces at the start of a word, and double spaces
+
+When practicing on the vocab session loop, I had the occassional autopilot habit of pressing the space bar after typing a word. Since a complete word submits immediately, this would result in a leading space on the next word, which would result in a correct word not getting recognised (or, a backspace which poisons the status as 'corrected'). I therefore prevented the default for a space if it's the first character. Additionally, I prevented default for a double space, which could occur if trying to rush through the words.
+
+Outcome: Implemented.
+
 ### 2026-08-29 - vocab: cheated words are shown in the session log overview, but do not count as a review point or a new word
 
 Cheated words should show up in the session log overview, but they should not count as a point in either 'total reviewed' or 'new words'. Otherwise, this would be a very easy way to hyperinflate the word count and ruin data integrity. The user must submit the correct answer without cheating or without skipping for it to count as a point in either. However, cheating (and not skipping) implies they are interested in the word - and therefore should be easy for them to retrieve. It will therefore be found readily available in the session log's sessio overivew. Perhaps though it would be ideal for it to be slightly greyed out or italicised to separate it from the ones they got themselves: [Design Idea](vocab.md#cheated-words-are-displayed-in-session-logs-session-overview-but-are-greyed-out-to-separate-them)
