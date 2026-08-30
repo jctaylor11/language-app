@@ -80,6 +80,7 @@ function WordCard({
   wordPair,
   inputText,
   answerRevealed,
+  inputElementRef,
   onKeyDown,
   onKeyUp,
   onBlur,
@@ -88,6 +89,7 @@ function WordCard({
   wordPair: WordPair;
   inputText: string;
   answerRevealed: boolean;
+  inputElementRef: React.RefObject<HTMLInputElement | null>;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onKeyUp: (e: React.KeyboardEvent) => void;
   onBlur: () => void;
@@ -109,6 +111,8 @@ function WordCard({
       {/* Full event object needed onKeyDown and onKeyUp to disable default Tab/Esc behaviour - e.g changing selection*/}
       <input
         type="text"
+        ref={inputElementRef}
+        autoFocus
         value={inputText}
         onChange={(e) => onInputChange(e.target.value)}
         onKeyDown={onKeyDown} // For non-value keys (esc, tab) and keystroke history recording
@@ -185,6 +189,7 @@ export default function VocabSession() {
   const keystrokes = useRef<string>("");
   const wordShownTime = useRef<number>(0);
   const cheated = useRef<boolean>(false);
+  const inputElementRef = useRef<HTMLInputElement>(null);
 
   const {
     mutate: sessionMutate,
@@ -351,9 +356,9 @@ export default function VocabSession() {
     }
   }
 
-  // Otherwise answer stays revealed if focus is lost mid reveal
   function handleBlur() {
-    setAnswerRevealed(false);
+    setAnswerRevealed(false); // Otherwise answer stays revealed if focus is lost mid reveal
+    inputElementRef.current?.focus(); // Refocuses on inputbox since typing shouldn't be lost mid-session
   }
 
   // Start button will flash without this, which if clicked would create an orphan session
@@ -393,6 +398,7 @@ export default function VocabSession() {
         wordPair={currentWord}
         inputText={inputText}
         answerRevealed={answerRevealed}
+        inputElementRef={inputElementRef}
         onKeyDown={handleKeyDown}
         onKeyUp={handleKeyUp}
         onBlur={handleBlur}
