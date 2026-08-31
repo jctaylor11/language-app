@@ -4,6 +4,8 @@ The mechanics for sentences is slightly more nuanced than in vocab: for example,
 
 Rejected alternative: Saving a cheated sentence as 'correct', which would incorrectly lose the signal that they did not achieve it themselves. This would therefore inflate their total reviewed count - for example, they could just cheat and copy, repetitively, and get a huge 'total reviewed' count, and the existence of this possibility removes integrity and any sense of accomplishment/pride attached to a high number.
 
+Outcome: Implemented.
+
 ### 2026-08-30 - vocab: ignore spaces at the start of a word, and double spaces
 
 When practicing on the vocab session loop, I had the occassional autopilot habit of pressing the space bar after typing a word. Since a complete word submits immediately, this would result in a leading space on the next word, which would result in a correct word not getting recognised (or, a backspace which poisons the status as 'corrected'). I therefore prevented the default for a space if it's the first character. Additionally, I prevented default for a double space, which could occur if trying to rush through the words.

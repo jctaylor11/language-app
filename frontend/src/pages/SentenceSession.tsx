@@ -26,7 +26,7 @@ function SentenceStart({ onStart }: { onStart: () => void }) {
       <p className="mb-2">
         Min 80% known words, prioritising those due for review
       </p>
-      <p className="text-gray-500 pl-4">ESC to cheat (TODO)</p>
+      <p className="text-gray-500 pl-4">ESC to cheat</p>
       <p className="text-gray-500 pl-4">TAB to skip</p>
 
       {/* Intentionally leaving 'session' in to signal how the app functions in terms of session - this is the root of the data, the session log, etc */}
@@ -43,28 +43,42 @@ function SentenceStart({ onStart }: { onStart: () => void }) {
 function SentenceCard({
   sentencePair,
   inputText,
+  answerRevealed,
   onInputChange,
   onKeyDown,
+  onKeyUp,
+  onBlur,
 }: {
   sentencePair: SentencePair;
   inputText: string;
+  answerRevealed: boolean;
   onInputChange: (input: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
+  onKeyUp: (e: React.KeyboardEvent) => void;
+  onBlur: () => void;
 }) {
   const targetSentence = sentencePair.target;
   const sourceSentence = sentencePair.source;
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-8 pb-48">
+      <p
+        className={`text-center text-xl font-medium tracking-wide text-gray-500 ${answerRevealed ? "" : "invisible"}`}
+      >
+        {sourceSentence}
+      </p>
       <h1 className="text-center text-3xl font-medium tracking-wide">
         {targetSentence}
       </h1>
+      {/* Full event object needed onKeyDown and onKeyUp to disable default Tab/Esc behaviour - e.g changing selection*/}
       <input
         type="text"
         className="bg-transparent border-t border-b text-center border-gray-500 outline-none w-64 text-xl"
         value={inputText}
         onChange={(e) => onInputChange(e.target.value)}
         onKeyDown={onKeyDown}
+        onKeyUp={onKeyUp}
+        onBlur={onBlur}
       />
       <p className="absolute bottom-5 left-5 text-gray-500">{sourceSentence}</p>
     </div>
@@ -122,7 +136,9 @@ export default function SentenceSession() {
   const [inputText, setInputText] = useState("");
   const [sentencePairIndex, setSentencePairIndex] = useState(0);
   const [completedSentencesCount, setCompletedSentencesCount] = useState(0);
+  const [answerRevealed, setAnswerRevealed] = useState(false);
 
+  const cheated = useRef<boolean>(false);
   const queuedSentenceIdsRef = useRef<number[]>([]); // queryFn needs the latest sentencePairs, but referencing it directly creates a TS type cycle (its type depends on this hook's own return)
 
   const {
@@ -168,8 +184,11 @@ export default function SentenceSession() {
     const session_id = session;
 
     let status: string;
+    // Skipping takes priority over cheating, as it's a conscious decision they don't want to do that sentence
     if (skipped) {
       status = "skipped";
+    } else if (cheated.current) {
+      status = "cheated";
     } else {
       status = "correct";
     }
@@ -187,6 +206,8 @@ export default function SentenceSession() {
     const nextIndex = sentencePairIndex + 1;
 
     setInputText("");
+    setAnswerRevealed(false);
+    cheated.current = false;
     setSentencePairIndex(nextIndex);
 
     if (sentencePairs.length - nextIndex <= 3) {
@@ -219,7 +240,16 @@ export default function SentenceSession() {
     if (!sentencePairs[sentencePairIndex] || !sessionId) return; // Defensive
 
     const key = e.key;
-    if (key === "Escape" || key === "Tab") {
+
+    if (key === "Escape") {
+      e.preventDefault();
+      if (e.repeat) return; // Only the first press down is relevant
+
+      setAnswerRevealed(true);
+      cheated.current = true; // Only in keydown, not key up - otherwise holding the keydown while typing correct answer will result in a false positive on the next sentence
+    }
+
+    if (key === "Tab") {
       e.preventDefault();
 
       const sentenceResults = buildSentenceResults(
@@ -230,6 +260,18 @@ export default function SentenceSession() {
       advanceSentencePair();
       resultsMutate(sentenceResults);
     }
+  }
+
+  function handleKeyUp(e: React.KeyboardEvent) {
+    const key = e.key;
+
+    if (key === "Escape") {
+      setAnswerRevealed(false);
+    }
+  }
+
+  function handleBlur() {
+    setAnswerRevealed(false); // Otherwise answer stays revealed if focus is lost mid reveal
   }
 
   // Intentionally above check for existence of sessionId, since session pending implies no session ID exists yet
@@ -258,8 +300,11 @@ export default function SentenceSession() {
       <SentenceCard
         sentencePair={sentencePairs[sentencePairIndex]}
         inputText={inputText}
+        answerRevealed={answerRevealed}
         onInputChange={handleInputChange}
         onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
+        onBlur={handleBlur}
       />
     </div>
   );

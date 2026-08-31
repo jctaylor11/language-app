@@ -175,7 +175,7 @@ def get_session_summary(conn: Connection, user_id: int, session_id: int):
         ON sentence_results.sentence_id = sentence_words.sentence_id
         WHERE user_id = :user_id
         AND session_id = :session_id
-        AND status != 'skipped'
+        AND status NOT IN ('skipped', 'cheated')        -- Intentionally doesn't count as reviewed if skipped or cheated, mirroring the vocab summary
     """), {"user_id": user_id, "session_id": session_id})
 
     row = result.fetchone()
