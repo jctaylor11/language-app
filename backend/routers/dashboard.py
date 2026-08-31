@@ -55,7 +55,7 @@ def get_sentences_table_data(conn: Connection, user_id: int) -> list[dict]:
 def get_hero_metrics(conn: Connection, user_id: int) -> dict:
     query = conn.execute(text("""
         WITH total_reviewed AS (
-            SELECT 1 FROM vocab_results WHERE user_id = :user_id AND status != 'cheated'    -- A cheated word isn't a review the user earned
+            SELECT 1 FROM vocab_results WHERE user_id = :user_id AND status NOT IN ('skipped', 'cheated')    -- A skipped or cheated word isn't a review the user earned
         )
         SELECT
             (SELECT COUNT(*) FROM user_words WHERE user_id = :user_id) AS total_words,
@@ -64,6 +64,7 @@ def get_hero_metrics(conn: Connection, user_id: int) -> dict:
                 FROM sentence_results sr
                 JOIN sentence_words sw ON sr.sentence_id = sw.sentence_id
                 WHERE sr.user_id = :user_id
+                AND sr.status NOT IN ('skipped', 'cheated')     -- Words from a skipped or cheated sentence aren't reviews the user earned either
             ) AS total_reviewed
         """), {"user_id": user_id})
 
