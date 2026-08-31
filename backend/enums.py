@@ -9,6 +9,7 @@ class VocabResultStatus(enum.Enum):
 
 class SentenceResultStatus(enum.Enum):
     correct = "correct"
+    cheated = "cheated"
     skipped = "skipped"
 
 

@@ -28,6 +28,14 @@
 
 ## Design ideas
 
+### Hovering over an individual word shows the translation of that specific word
+
+Currently the cheat option has a wide impact radius - in that if a user is blocked by a single word and they cheat to resolve that word, the whole sentence gets 'cheated'. Instead it would be good to allow a user to see a specific word's translation. This could be done by returning each sentence as an array of work objects rather than a complete string, which each carring the displayed surface form, the lemma, and the lemmas translation. This can be resolved in one batched query, and since the frontend would render one element per word the hovering would be instant. A challenge is that the surface form has the partical etc, whereas the words database would just be the lemma - therefore, the tooltip can show for 공원에서, e.g 공원: Park. This also adds scope to add something additional for -에서 if I decide to implement this - but for now vocab lemma acts as a fair nudge.
+
+### Guard against inflating total reviewed count from cheating sentences - for example, minimum individual words hovered over and attempt before cheating enables
+
+I think it's very important that the 'total reviewed' count isn't super easy to increase. E.g, someone should not be able to cheat on a sentence immediately, type it, and have the total reviewed count increase by 10 words or something. They need to work for it, otherwise there is not pride in a high number. On top of individual word hovering, there could additionally be some sort of guard to prevent 'cheating' on the whole sentence too soon - hence encourages people to actually try, rather than to flick through them. For example, they need to have typed at least something AND have viewed a certain proportion of individual lemmas - only then they can ESC to see the answer, and in that case the whole sentences is 'cheated'. Would be reasonable therefore to discount all words as 'reviewed' (or something similar) to maintain 'total reviewed' integrity. If not 'cheated' on the whole sentence (ESC), on the specific words they hovered over could get a 'cheated' status. This would require a migration to save which words in a sentence have been cheated, such as another table where the grain is each sentence's word and the individual status.
+
 ### Word tagging for user-steered content
 
 - Tags table (many per word). The user states preference in plain English and an LLM maps that to EXISTING tags only (backend injects tag list — never free-form from user input for safety). Words can then be filtered by matched tags. Requires focus on how the words get tagged and how granular - perhaps a batch job by LLM and whenever a new words gets added.
