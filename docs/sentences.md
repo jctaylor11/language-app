@@ -7,6 +7,9 @@
 - fetchNextPage is only fired when the (total - current index) <= 3
 - fetchNextPage hits fetchSentencePairs, which hits POST /sentences
 - The known-word proportion is fixed at >= 80%. Since this is fixed, the sentences can be prefetched on mount (before the user starts the session) so the user (hopefully) doesn't have to wait.
+- handleKeyDown adds 'skipped' status if tab is pressed. Adds 'cheated' status if esc is pressed, and reveals the answer for as long it is held
+- answerRevealed is set false on keyup or on blur in case focus is lost mid session
+- completedSentencesCount still increments on a cheated sentence, since it is progress towards the five rather than a score
 
 ## Backend (POST /sentences)
 
@@ -25,6 +28,7 @@
 - lemma_count could be inflated since one surface word can be split into multiple lemmas (e.g 공부해 -> 공부 + 하다), and therefore a user who knows 공부 only gets half credit. TODO: verify the extract_lemmas output and test proportions are as expected.
 - The threshold is a floor with no upper bound, so fully known sentences with no new words stay eligible
 - If the generated sentences are not eligible, the get_eligible_sentences refetch will return a placeholder. How this is handled needs to be solved - [Design ideas](sentences.md#handling-ineligible-generated-sentences)
+- A cheated sentence excludes all of its words from total_reviewed, not just the word that blocked the user - [Design idea](sentences.md#hovering-over-an-individual-word-shows-the-translation-of-that-specific-word)
 
 ## Design ideas
 

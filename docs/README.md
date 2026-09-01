@@ -2,6 +2,7 @@
 
 Reference files: Abstracted overview of the feature's state, flow, edge cases, and design ideas.
 The log: A timestamped record of the reasoning and decisions
+Principles: The cross-cutting rules that every decision adheres to
 
 ## Reference files (`{feature}.md`, e.g. `sentences.md`)
 
@@ -21,6 +22,10 @@ The log: A timestamped record of the reasoning and decisions
 - Once implemented, an `Outcome:` is added at the end of the record
 - Amendments are added to keep the original reasoning intact with subsequent changes
 
+## Principles (`principles.md`)
+
+- A numbered list of important and timeless principles that future decisions should not conflict
+
 ## Workflow
 
-Rough notes made in Notion, distilled in the log, then implemented, then append outcome, finally update the reference to reflect the changes
+Rough notes made in Notion, distilled in the log, then implemented, then append outcome, finally update the reference to reflect the changes. Principles are added when a core consideration arises that seems important.
