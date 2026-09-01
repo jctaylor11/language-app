@@ -44,6 +44,7 @@ function SentenceCard({
   sentencePair,
   inputText,
   answerRevealed,
+  inputElementRef,
   onInputChange,
   onKeyDown,
   onKeyUp,
@@ -52,6 +53,7 @@ function SentenceCard({
   sentencePair: SentencePair;
   inputText: string;
   answerRevealed: boolean;
+  inputElementRef: React.RefObject<HTMLInputElement | null>;
   onInputChange: (input: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onKeyUp: (e: React.KeyboardEvent) => void;
@@ -73,6 +75,8 @@ function SentenceCard({
       {/* Full event object needed onKeyDown and onKeyUp to disable default Tab/Esc behaviour - e.g changing selection*/}
       <input
         type="text"
+        ref={inputElementRef}
+        autoFocus
         className="bg-transparent border-t border-b text-center border-gray-500 outline-none w-64 text-xl"
         value={inputText}
         onChange={(e) => onInputChange(e.target.value)}
@@ -139,6 +143,7 @@ export default function SentenceSession() {
   const [answerRevealed, setAnswerRevealed] = useState(false);
 
   const cheated = useRef<boolean>(false);
+  const inputElementRef = useRef<HTMLInputElement>(null);
   const queuedSentenceIdsRef = useRef<number[]>([]); // queryFn needs the latest sentencePairs, but referencing it directly creates a TS type cycle (its type depends on this hook's own return)
 
   const {
@@ -252,6 +257,8 @@ export default function SentenceSession() {
     if (key === "Tab") {
       e.preventDefault();
 
+      if (e.repeat) return; // Guards against someone holding down the skip key - burns through queue and costs on LLM tokens
+
       const sentenceResults = buildSentenceResults(
         sentencePairs[sentencePairIndex],
         sessionId,
@@ -272,6 +279,7 @@ export default function SentenceSession() {
 
   function handleBlur() {
     setAnswerRevealed(false); // Otherwise answer stays revealed if focus is lost mid reveal
+    inputElementRef.current?.focus(); // Refocuses on inputbox since typing shouldn't be lost mid-session
   }
 
   // Intentionally above check for existence of sessionId, since session pending implies no session ID exists yet
@@ -301,6 +309,7 @@ export default function SentenceSession() {
         sentencePair={sentencePairs[sentencePairIndex]}
         inputText={inputText}
         answerRevealed={answerRevealed}
+        inputElementRef={inputElementRef}
         onInputChange={handleInputChange}
         onKeyDown={handleKeyDown}
         onKeyUp={handleKeyUp}

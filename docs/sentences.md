@@ -9,6 +9,8 @@
 - The known-word proportion is fixed at >= 80%. Since this is fixed, the sentences can be prefetched on mount (before the user starts the session) so the user (hopefully) doesn't have to wait.
 - handleKeyDown adds 'skipped' status if tab is pressed. Adds 'cheated' status if esc is pressed, and reveals the answer for as long it is held
 - answerRevealed is set false on keyup or on blur in case focus is lost mid session
+- Esc and tab both guard on e.repeat, so a held key counts once
+- The input autofocuses, and blur refocuses it so typing isn't lost mid-session
 - completedSentencesCount still increments on a cheated sentence, since it is progress towards the five rather than a score
 
 ## Backend (POST /sentences)
