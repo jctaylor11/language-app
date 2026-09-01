@@ -50,6 +50,10 @@
 
 ## Design ideas
 
+### Include skipped words in the session overview, but have another visual state
+
+Currently skipped words are not included since skipped signals complete distinterest. However, it may actually be useful to see that record. For example, they could have another visual state which references the word but makes it clear it was skipped (e.g even more greyed out than a cheated word).
+
 ### Cheated words are displayed in session log's session overview, but are greyed out to separate them
 
 The cheated words should be included in the session overview as per [log decision](log.md#2026-08-29---vocab-cheated-words-are-shown-in-the-session-log-overview-but-do-not-count-as-a-review-point-or-a-new-word) - but they should not be indistinguishable. They should be greyed out, or italicised or something like this.

@@ -3,24 +3,7 @@ from sqlalchemy import text, insert
 
 from backend.db.models import Sentence
 from backend.schemas import SentencePair
-
-
-def seed_sentence(conn, target: str, lemma_count: int, known_word_ids: list[int]) -> int:
-    # Mirrors what the generation pipeline stores: the sentence carries its full lemma count, but only lemmas matching the words table get a sentence_words row
-    result = conn.execute(text("""
-        INSERT INTO sentences (target, source, lemma_count)
-        VALUES (:target, 'test sentence', :lemma_count)
-        RETURNING id
-    """), {"target": target, "lemma_count": lemma_count})   # sentences.target is unique, so each seeded sentence needs its own
-    sentence_id = result.scalar()
-
-    if known_word_ids:
-        conn.execute(text("""
-            INSERT INTO sentence_words (sentence_id, word_id)
-            VALUES (:sentence_id, :word_id)
-        """), [{"sentence_id": sentence_id, "word_id": word_id} for word_id in known_word_ids])
-
-    return sentence_id
+from backend.tests.conftest import seed_sentence
 
 
 def test_get_sentence_batch(client, access_token, seed_user_words):
@@ -111,6 +94,23 @@ def test_get_session_summary_excludes_skipped(client, access_token, seed_session
 
     assert response.status_code == 200
     assert data["summary"]["total_reviewed"] == 2  # Would be 5 if the skipped sentence's words were counted
+
+
+def test_get_session_summary_excludes_cheated(client, access_token, seed_session, seed_user_words, conn):
+    client.cookies.set("access_token", access_token)
+
+    # The words known word IDs don't match the actual words as the only thing that's relevant for this test is numbers. I just needed the number of valid seeded word IDs (and of different quantities to distinguish in assertions: in this case 2 correct, 3 for cheated)
+    answered_sentence_id = seed_sentence(conn, "물을 마십니다.", 2, seed_user_words[:2])    # lemma count as literals as it doesn't need to be accurate for test - not what's tested. Could be anything - but written to match the number of word IDs inserts    
+    cheated_sentence_id = seed_sentence(conn, "집에 갑니다.", 3, seed_user_words[:3])
+
+    client.post("/sentence-results", json={"sentence_id": answered_sentence_id, "session_id": seed_session, "status": "correct"})
+    client.post("/sentence-results", json={"sentence_id": cheated_sentence_id, "session_id": seed_session, "status": "cheated"})
+
+    response = client.get(f"/sentence-sessions/{seed_session}/summary")
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["summary"]["total_reviewed"] == 2  # Would be 5 if the cheated sentence's words were counted
 
 
 def test_get_session_summary_counts_shared_word_once_per_sentence(client, access_token, seed_session, seed_user_words, conn):

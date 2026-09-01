@@ -116,9 +116,29 @@ def seed_user_words(conn, seed_user):
     word_ids = [row.id for row in result.fetchall()][:TEST_USER_WORD_COUNT] # So that user_words < words, to differentiate between returning words vs user_words
 
     conn.execute(text("""
-        INSERT INTO user_words (user_id, word_id) 
-        VALUES (:user_id, :word_id)  
+        INSERT INTO user_words (user_id, word_id)
+        VALUES (:user_id, :word_id)
         """), [{"user_id": seed_user, "word_id": word_id} for word_id in word_ids])
-    
+
     return word_ids
+
+ 
+# Not a fixture since each seeded sentence takes different arguments
+def seed_sentence(conn, target: str, lemma_count: int, known_word_ids: list[int]) -> int:
+    # Caller picks the values to suit their assertion - only requirement is that the word IDs exist actually exist
+    # The word IDs don't need to match the actual words, nor the actual number of words in the sentence (can be less due to what's actually in database). What's important is shape/quantity for assertions
+    result = conn.execute(text("""
+        INSERT INTO sentences (target, source, lemma_count)
+        VALUES (:target, 'test sentence', :lemma_count)
+        RETURNING id
+    """), {"target": target, "lemma_count": lemma_count})   # sentences.target is unique, so each seeded sentence needs its own
+    sentence_id = result.scalar()
+
+    if known_word_ids:
+        conn.execute(text("""
+            INSERT INTO sentence_words (sentence_id, word_id)
+            VALUES (:sentence_id, :word_id)
+        """), [{"sentence_id": sentence_id, "word_id": word_id} for word_id in known_word_ids])
+
+    return sentence_id
 

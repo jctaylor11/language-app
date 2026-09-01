@@ -14,9 +14,9 @@ def get_word_table_data(conn: Connection, user_id: int) -> list[dict]:
             w.id,
             w.target,
             UPPER(LEFT(w.source, 1)) || LOWER(SUBSTRING(w.source FROM 2)) AS source,
-            COUNT(vr.id) AS times_reviewed,
+            COUNT(*) FILTER (WHERE vr.status NOT IN ('skipped', 'cheated')) AS times_reviewed,     -- A skipped or cheated word isn't a review the user earned
             AVG(vr.response_time_ms) / 1000.0 / LENGTH(w.target) as av_s_per_syllable,
-            COUNT(*) FILTER (WHERE vr.status = 'correct_first_try')::numeric / NULLIF(COUNT(vr.id), 0) AS accuracy
+            COUNT(*) FILTER (WHERE vr.status = 'correct_first_try')::numeric / NULLIF(COUNT(vr.id), 0) AS accuracy      -- Denominator intentionally stays every result, so skipping and cheating count against accuracy rather than raising it
         FROM words w
         JOIN user_words uw ON w.id = uw.word_id
         LEFT JOIN vocab_results vr ON w.id = vr.word_id

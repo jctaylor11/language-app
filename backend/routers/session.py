@@ -34,7 +34,7 @@ def get_session_log_data(conn: Connection, user_id: int) -> list[dict]:
                 JOIN sentence_words ON sentence_words.sentence_id = sentence_results.sentence_id
                 JOIN sessions ON sessions.id = sentence_results.session_id
                 WHERE sessions.user_id = :user_id
-                AND sentence_results.status != 'skipped'
+                AND sentence_results.status NOT IN ('skipped', 'cheated')       -- Neither counts as a review the user earned, matching the vocab branch above
                 GROUP BY sentence_results.session_id, sessions.session_type, sessions.started_at
             ))
         SELECT session_id, started_at, session_type, total_reviewed, ROW_NUMBER() OVER (ORDER BY started_at, session_id) AS session_number
