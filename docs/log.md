@@ -1,3 +1,13 @@
+### 2026-09-02 - dashboard: daily review count as barchart, total words as cumulative line chart
+
+Total reviewed was decided to be a bar chart since it makes obvious the relative engagement between days. A cumulative line chart would also be misleading since it would just show constant progress since it never goes down - taking a week off would not seem like a week gap, but more something sustained high.
+
+Total words however is a cumulative line, since it shows cumulative progress over time.
+
+The reviews bar chart is above the line chart to make it more visible - since it aligns with principles "Immediate feedback" and "Immediate visible progress". Changes in the bar charts from a session are very visible, whereas changes in the cumulative line chart a lot slower and more stable.
+
+Outcome: Implemented.
+
 ### 2026-08-31 - sentences: cheated added to sentences to match vocab
 
 The mechanics for sentences is slightly more nuanced than in vocab: for example, if a user gets stuck on a single word, then cheating doesn't discern between that single word or the whole sentence. It could then poison the data, for example if all the sentence_words are associated with a cheated sentence. [Individual words hover idea](sentences.md#hovering-over-an-individual-word-shows-the-translation-of-that-specific-word) and [Sentence word result tracking](sentences.md#guard-against-inflating-total-reviewed-count-from-cheating-sentences---for-example-minimum-individual-words-hovered-over-and-attempt-before-cheating-enables) are steps towards resolving this, where cheating results can be more granular through hovering to see a tooltip and saving in the database which words were hovered over. Until then, it's been decided to mirror the vocab mechanism - the user can press ESC to see the full sentence, and this is stored as a 'cheated' status. All the words associated with the cheated sentence do not count towards the 'total reviewed'. This is not very granular, but it was decided that discounting valid words is better than including invalid words towards the 'total reviewed'. This adheres to the core principle that the metrics should not be easy to inflate, else integrity is lost and the system becomes boring.

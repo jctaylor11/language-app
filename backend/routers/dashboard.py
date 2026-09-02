@@ -106,6 +106,43 @@ def get_cumulative_word_chart_data(conn: Connection, user_id: int) -> list[dict]
     return [{"series_date": row.series_date, "cum_words": int(row.words_added)} for row in rows]
 
 
+def get_daily_reviews_bar_chart_data(conn: Connection, user_id: int) -> list[dict]:
+    query = conn.execute(text("""
+        WITH date_series AS (
+            SELECT date_trunc('day', generate_series(
+                NOW() - INTERVAL '29 days', NOW(), '1 day'::interval
+            )) AS series_date
+        ),
+        earned_reviews AS (
+            SELECT s.started_at     -- session start rather than client side's answered_at - which would split the same session across midnight
+            FROM vocab_results vr
+            JOIN sessions s ON s.id = vr.session_id
+            WHERE vr.user_id = :user_id
+            AND vr.status NOT IN ('skipped', 'cheated')
+            UNION ALL
+            SELECT s.started_at                      -- one row per word in the sentence
+            FROM sentence_results sr
+            JOIN sentence_words sw ON sw.sentence_id = sr.sentence_id
+            JOIN sessions s ON s.id = sr.session_id
+            WHERE sr.user_id = :user_id
+            AND sr.status NOT IN ('skipped', 'cheated')
+        ),
+        day_counts AS (
+            SELECT date_trunc('day', started_at) AS review_date, COUNT(*) AS reviews
+            FROM earned_reviews
+            GROUP BY 1
+        )
+        SELECT series_date, COALESCE(reviews, 0) AS reviews
+        FROM date_series
+        LEFT JOIN day_counts ON day_counts.review_date = date_series.series_date
+        ORDER BY series_date
+    """), {"user_id": user_id})
+
+    rows = query.fetchall()
+
+    return [{"series_date": row.series_date, "reviews": int(row.reviews)} for row in rows]
+
+
 @router.get("/dashboard/words")
 def get_dashboard_words(conn: Annotated[Connection, Depends(get_read_connection)], user_id: Annotated[int, Depends(decode_access_token)]) -> dict:
     words_table_data = get_word_table_data(conn, user_id)
@@ -125,6 +162,13 @@ def get_word_chart_data(conn: Annotated[Connection, Depends(get_read_connection)
     cumulative_words = get_cumulative_word_chart_data(conn, user_id)
 
     return {"cumulative_words": cumulative_words}
+
+
+@router.get("/dashboard/review-chart-data")
+def get_daily_reviews_chart_data(conn: Annotated[Connection, Depends(get_read_connection)], user_id: Annotated[int, Depends(decode_access_token)]) -> dict:
+    daily_reviews_data = get_daily_reviews_bar_chart_data(conn, user_id)
+
+    return {"daily_reviews": daily_reviews_data}
 
 
 @router.get("/dashboard/sentences")

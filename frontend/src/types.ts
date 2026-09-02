@@ -59,8 +59,13 @@ export type DashboardHeroMetrics = {
 };
 
 export type WordChartDataPoint = {
-  series_date: number;
+  series_date: string;
   cum_words: number;
+};
+
+export type ReviewChartDataPoint = {
+  series_date: string;
+  reviews: number;
 };
 
 export type SentenceEntry = {

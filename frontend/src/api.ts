@@ -7,6 +7,7 @@ import type {
   WordEntry,
   DashboardHeroMetrics,
   WordChartDataPoint,
+  ReviewChartDataPoint,
   SentenceEntry,
   SessionRequest,
   VocabSessionSummary,
@@ -164,6 +165,21 @@ export async function getWordChartData(): Promise<WordChartDataPoint[]> {
   const wordChartData = await response.json();
 
   return wordChartData.cumulative_words;
+}
+
+export async function getReviewChartData(): Promise<ReviewChartDataPoint[]> {
+  const reviewChartDataUrl = `${BASE_URL}/dashboard/review-chart-data`;
+  const response = await fetchWithAuth(reviewChartDataUrl, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get review chart data: ${response.status}`);
+  }
+
+  const reviewChartData = await response.json();
+
+  return reviewChartData.daily_reviews;
 }
 
 export async function authenticateWithGoogleToken(

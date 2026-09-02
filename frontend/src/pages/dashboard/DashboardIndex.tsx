@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { DashboardHeroMetrics } from "../../types";
 import { getHeroMetrics } from "../../api";
 import WordsChart from "../../components/WordChart";
+import ReviewsChart from "../../components/ReviewsChart";
 
 const KPI_CONFIG = {
   total_words: { label: "Total Words", format: (v: number) => v },
@@ -42,6 +43,7 @@ export default function DashboardIndex() {
         ))}
       </div>
       <div>
+        <ReviewsChart />
         <WordsChart />
       </div>
     </>

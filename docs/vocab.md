@@ -50,6 +50,10 @@
 
 ## Design ideas
 
+### Quitting a session early drops the data from that session
+
+Originally I've been thinking to make it save the data continuously - if they do 10 words in 20 seconds and quit before the 2 minute timer is over, it would still increase 'total reviewed' by 10. However, I realise this reduces the integrity of a session being 2 minutes, and changes it to a session being 'maximum 2 minutes'. This could result to a decrease in motivation also, where there is no drive to complete a session. The 'reward' for completing a session is having that data saved. Else, it becomes optional.
+
 ### Include skipped words in the session overview, but have another visual state
 
 Currently skipped words are not included since skipped signals complete distinterest. However, it may actually be useful to see that record. For example, they could have another visual state which references the word but makes it clear it was skipped (e.g even more greyed out than a cheated word).
