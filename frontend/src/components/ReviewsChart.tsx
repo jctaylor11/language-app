@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { Bar, BarChart, XAxis } from "recharts";
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { getReviewChartData } from "../api";
+import { formatSessionDate } from "../utils";
 
 export default function ReviewsChart() {
   const reviewChartData = useQuery({
@@ -17,12 +18,15 @@ export default function ReviewsChart() {
   }
 
   return (
-    <BarChart
-      style={{ width: "100%", aspectRatio: 3, maxWidth: 1000 }}
-      data={reviewChartData.data}
-    >
-      <Bar dataKey="reviews" />
-      <XAxis dataKey="series_date" />
-    </BarChart>
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={reviewChartData.data}>
+        <Bar dataKey="reviews" name="Reviews" />
+        <XAxis dataKey="series_date" tickFormatter={formatSessionDate} />
+        <Tooltip
+          cursor={{ fill: "#00000010" }}
+          labelFormatter={(label) => formatSessionDate(String(label))}
+        />
+      </BarChart>
+    </ResponsiveContainer>
   );
 }

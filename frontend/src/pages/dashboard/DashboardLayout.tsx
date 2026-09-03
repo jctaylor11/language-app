@@ -9,7 +9,7 @@ const links = [
 
 export default function DashboardLayout() {
   return (
-    <div className="flex gap-10">
+    <div className="h-full flex gap-10">
       <aside className="w-35 shrink-0">
         <nav className="flex flex-col gap-2">
           {links.map(({ to, label }) => (
@@ -19,7 +19,7 @@ export default function DashboardLayout() {
           ))}
         </nav>
       </aside>
-      <main className="flex-1 min-w-0">
+      <main className="flex-1 min-w-0 h-full">
         <Outlet />
       </main>
     </div>

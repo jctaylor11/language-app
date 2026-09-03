@@ -1,3 +1,9 @@
+### 2026-09-03 - dashboard: index page should not be scrollable
+
+Everything should be seen from the single page, without being scrollable. All components should fit on the single page. It looks particularly messy for example if a chart is cut in half by going off the screen, and scrolling then cuts off e.g the hero metrics.
+
+Outcome: Implemented.
+
 ### 2026-09-02 - dashboard: daily review count as barchart, total words as cumulative line chart
 
 Total reviewed was decided to be a bar chart since it makes obvious the relative engagement between days. A cumulative line chart would also be misleading since it would just show constant progress since it never goes down - taking a week off would not seem like a week gap, but more something sustained high.

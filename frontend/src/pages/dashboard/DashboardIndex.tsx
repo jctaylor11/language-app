@@ -24,8 +24,8 @@ export default function DashboardIndex() {
   }
 
   return (
-    <>
-      <div className="grid grid-cols-2 gap-2">
+    <div className="h-full flex flex-col gap-4 overflow-hidden">
+      <div className="grid grid-cols-2 gap-2 shrink-0">
         {Object.entries(KPI_CONFIG).map(([key, config]) => (
           <div
             key={config.label}
@@ -42,10 +42,14 @@ export default function DashboardIndex() {
           </div>
         ))}
       </div>
-      <div>
-        <ReviewsChart />
-        <WordsChart />
+      <div className="flex-1 min-h-0 flex flex-col gap-4">
+        <div className="flex-1 min-h-0">
+          <ReviewsChart />
+        </div>
+        <div className="flex-1 min-h-0">
+          <WordsChart />
+        </div>
       </div>
-    </>
+    </div>
   );
 }

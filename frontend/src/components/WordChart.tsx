@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { Line, LineChart, XAxis } from "recharts";
+import { Line, LineChart, ResponsiveContainer, XAxis, Tooltip } from "recharts";
 import { getWordChartData } from "../api";
+import { formatSessionDate } from "../utils";
 
 export default function WordsChart() {
   const wordChartData = useQuery({
@@ -17,12 +18,19 @@ export default function WordsChart() {
   }
 
   return (
-    <LineChart
-      style={{ width: "100%", aspectRatio: 3, maxWidth: 1000 }}
-      data={wordChartData.data}
-    >
-      <Line dataKey="cum_words" />
-      <XAxis dataKey="series_date" />
-    </LineChart>
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={wordChartData.data}>
+        <Line
+          dataKey="cum_words"
+          name="Total words"
+          dot={false}
+          activeDot={{ r: 4 }}
+        />
+        <XAxis dataKey="series_date" tickFormatter={formatSessionDate} />
+        <Tooltip
+          labelFormatter={(label) => formatSessionDate(String(label))}
+        />
+      </LineChart>
+    </ResponsiveContainer>
   );
 }
