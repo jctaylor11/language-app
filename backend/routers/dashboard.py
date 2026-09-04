@@ -74,36 +74,37 @@ def get_hero_metrics(conn: Connection, user_id: int) -> dict:
 
 
 def get_cumulative_word_chart_data(conn: Connection, user_id: int) -> list[dict]:
-    query = conn.execute(text("""
-        WITH date_series AS (
-            SELECT (
-                date_trunc('day', generate_series (
-                    NOW() - INTERVAL '29 days',
-                    NOW(),
-                    '1 day'::interval
-                ))
-            ) AS series_date
+    result = conn.execute(text("""
+        WITH date_range AS (
+            SELECT 
+                date_trunc('day', MIN(added_at)) - INTERVAL '1 day' AS start_date,     -- So the line starts at zero index
+                date_trunc('day', NOW()) AS end_date
+            FROM user_words
+            WHERE user_id = :user_id
+        ),
+        date_series AS (
+            SELECT generate_series(start_date, end_date, '1 day'::interval) AS series_date
+            FROM date_range
         ),
         day_counts AS (
             SELECT
-                COUNT(*) AS cum_words,
+                COUNT(*) AS words_added,
                 date_trunc('day', added_at) AS date_added
             FROM user_words
             WHERE user_id = :user_id
             GROUP BY date_trunc('day', added_at)
         )
         SELECT
-            series_date,
-            SUM(COALESCE(cum_words, 0)) OVER (ORDER BY series_date) AS words_added
-        FROM date_series
-        LEFT JOIN day_counts
-        ON date_series.series_date = day_counts.date_added
-        ORDER BY series_date
+            ds.series_date,
+            SUM(COALESCE(dc.words_added, 0)) OVER (ORDER BY ds.series_date) AS cumulative_words
+        FROM date_series ds
+        LEFT JOIN day_counts dc ON dc.date_added = ds.series_date
+        ORDER BY ds.series_date
     """), {"user_id": user_id})
 
-    rows = query.fetchall()
+    rows = result.fetchall()
 
-    return [{"series_date": row.series_date, "cum_words": int(row.words_added)} for row in rows]
+    return [{"series_date": row.series_date, "cum_words": int(row.cumulative_words)} for row in rows]
 
 
 def get_daily_reviews_bar_chart_data(conn: Connection, user_id: int) -> list[dict]:
