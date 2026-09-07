@@ -120,7 +120,8 @@ def test_get_word_chart_data(client, access_token, seed_user_words):
     data = response.json()
     cumulative_words = data["cumulative_words"]
 
-    assert len(cumulative_words) == 30
+    assert len(cumulative_words) == 2   # Range starts the day before the earliest added_at, so today's words show a zero-indexed jump
+    assert cumulative_words[0]["cum_words"] == 0
     assert cumulative_words[-1]["cum_words"] == TEST_USER_WORD_COUNT
 
 
@@ -131,5 +132,4 @@ def test_get_word_chart_data_for_empty_user(client, access_token):
     data = response.json()
     cumulative_words = data["cumulative_words"]
 
-    assert len(cumulative_words) == 30
-    assert all(day["cum_words"] == 0 for day in cumulative_words)
+    assert cumulative_words == []   # No user_words rows means no MIN(added_at) to anchor the range
