@@ -2,13 +2,8 @@ import { Fragment } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 
-import type { SessionLogEntry } from "../types";
 import { formatSessionDate } from "../utils";
-import { getSessionOverview } from "../api";
-
-type SessionLogTableProps = {
-  sessionLogEntries: SessionLogEntry[];
-};
+import { getSessionLog, getSessionOverview } from "../api";
 
 type SessionOverviewProps = {
   sessionId: number;
@@ -40,12 +35,15 @@ function SessionOverview({ sessionId }: SessionOverviewProps) {
   );
 }
 
-export default function SessionLogTable({
-  sessionLogEntries,
-}: SessionLogTableProps) {
+export default function SessionLogTable() {
   const { sessionNumber } = useParams(); // To pull the session number return from the toggleSession navigation
   const expandedSessionNumber = Number(sessionNumber); // NaN when no session is in the URL so none expanded
   const navigate = useNavigate();
+
+  const sessionLogQuery = useQuery({
+    queryKey: ["sessionLog"],
+    queryFn: () => getSessionLog(),
+  });
 
   function toggleSession(clickedSessionNumber: number) {
     if (clickedSessionNumber === expandedSessionNumber) {
@@ -54,6 +52,16 @@ export default function SessionLogTable({
     }
     navigate(`/dashboard/session-log/${clickedSessionNumber}`);
   }
+
+  if (sessionLogQuery.isPending) {
+    return <p>Loading...</p>;
+  }
+
+  if (sessionLogQuery.isError) {
+    return <p>Error: {sessionLogQuery.error.message}</p>;
+  }
+
+  const sessionLogEntries = sessionLogQuery.data;
 
   if (!sessionLogEntries.length) {
     return <p className="text-sm text-neutral-400">No sessions yet</p>;

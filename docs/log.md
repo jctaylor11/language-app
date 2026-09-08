@@ -1,3 +1,11 @@
+### 2026-09-08 - convention: presentational components that require server data are self contained
+
+Pages purely for display (e.g dashboard pages) never fetch the data themselves, and instead just compose components. This does not apply to pages with an interactive user flow (e.g vocab session) since it makes it messy regarding state.
+
+This was decided for consistency in a way that that was clean, and aligning with the definition of a component being self contained. These display pages were not using the data, only passing it directly, and therefore colocates the data with where it is used.
+
+Outcome: Implemented.
+
 ### 2026-09-03 - dashboard: index page should not be scrollable
 
 Everything should be seen from the single page, without being scrollable. All components should fit on the single page. It looks particularly messy for example if a chart is cut in half by going off the screen, and scrolling then cuts off e.g the hero metrics.

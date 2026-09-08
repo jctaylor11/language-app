@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { DashboardHeroMetrics } from "../../types";
 import { getHeroMetrics } from "../../api";
-import WordsChart from "../../components/WordChart";
+import WordsChart from "../../components/WordsChart";
 import ReviewsChart from "../../components/ReviewsChart";
 
 const KPI_CONFIG = {

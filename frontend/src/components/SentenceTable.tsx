@@ -1,10 +1,23 @@
-import type { SentenceEntry } from "../types";
+import { useQuery } from "@tanstack/react-query";
 
-type Props = {
-  sentenceEntries: SentenceEntry[];
-};
+import { getSentenceEntries } from "../api";
 
-export default function SentenceTable({ sentenceEntries }: Props) {
+export default function SentenceTable() {
+  const sentenceEntriesQuery = useQuery({
+    queryKey: ["sentenceEntries"],
+    queryFn: () => getSentenceEntries(),
+  });
+
+  if (sentenceEntriesQuery.isPending) {
+    return <p>Loading...</p>;
+  }
+
+  if (sentenceEntriesQuery.isError) {
+    return <p>Error: {sentenceEntriesQuery.error.message}</p>;
+  }
+
+  const sentenceEntries = sentenceEntriesQuery.data;
+
   if (!sentenceEntries.length) {
     return <p className="text-sm text-neutral-400">No sentences yet</p>;
   }

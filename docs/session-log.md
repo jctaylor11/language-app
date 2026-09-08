@@ -2,7 +2,7 @@
 
 ## Frontend
 
-- SessionLog fetches session log data through getSessionLog on page mount with useQuery and returns the SessionLogTable component with the log data passed in as a prop
+- SessionLog composes the SessionLogTable component, which fetches its own session log data through getSessionLog on mount with useQuery
 - SessionLogTable returns a table with fields Date, Type, Total Reviewed, preceded by an unlabelled index column holding session_number, and loops through the session log data to render each session as a row with the respective fields
 - Each row can be clicked to expand a session summary, and which row is expanded is derived from URL rather than state to keep the session addressable
 - Clicking the row passes that row's session_number to toggleSession which navigates to the corresponding session's URL

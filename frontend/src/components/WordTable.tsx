@@ -1,10 +1,23 @@
-import type { WordEntry } from "../types";
+import { useQuery } from "@tanstack/react-query";
 
-type Props = {
-  wordEntries: WordEntry[];
-};
+import { getWordEntries } from "../api";
 
-export default function WordTable({ wordEntries }: Props) {
+export default function WordTable() {
+  const wordEntriesQuery = useQuery({
+    queryKey: ["words_table"],
+    queryFn: () => getWordEntries(),
+  });
+
+  if (wordEntriesQuery.isPending) {
+    return <p>Loading...</p>;
+  }
+
+  if (wordEntriesQuery.isError) {
+    return <p>Error: {wordEntriesQuery.error.message}</p>;
+  }
+
+  const wordEntries = wordEntriesQuery.data;
+
   if (!wordEntries.length) {
     return <p className="text-sm text-neutral-400">No words yet</p>;
   }
