@@ -4,9 +4,13 @@ Parent component housing the data layer has no suffix nor prefix, whereas the pu
 
 Rejected alternative: Function containing the data layer has a 'Container' suffix. It's unnecessary since the definition already implies the plain-name component holds the data layer, and would look messy when the pages repeatedly call "[...]Container" components.
 
+Outcome: Implemented.
+
 ### 2026-09-09 - convention: presentational components split UI from data layer
 
 Components that need server data (e.g charts) contain their own fetch, as per the log entry below. For presentational components, the component itself acts as a container for the data layer, and returns a UI component with the data passed as specifically scoped props. This way, the presentational layer clearly defines what is being presented in the props, and it's independently replaceable without touching the data layer. Therefore, design requirements can be defined and safely delegated.
+
+Outcome: Implemented.
 
 ### 2026-09-08 - convention: presentational components that require server data are self contained
 
