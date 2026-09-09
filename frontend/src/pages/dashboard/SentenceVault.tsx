@@ -1,4 +1,4 @@
-import SentenceTable from "../../components/SentenceTable";
+import SentenceTable from "./components/SentenceTable";
 
 export default function SentenceVault() {
   return <SentenceTable />;

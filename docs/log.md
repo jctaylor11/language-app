@@ -1,3 +1,21 @@
+### 2026-09-09 - convention: page components colocated with the page route
+
+Components are housed inline with their page when they can't exist without it, and are extracted to a separate file when they can. If extracted, they live as close to the page as possible, in a components folder colocated with the page route. Shared components (e.g ProtectedRoute and RootLayout) are housed in src/components.
+
+For example, dashboard components are not coupled to the page's state, whereas session components are - extracting them would require threading state through boundaries, which gets messy.
+
+Presentational pages (e.g dashboard pages) that consequently render a single component still stay as rendering a single component. This was based on judgement prioritising consistency and there being no real cost. It's explicitly clear what the page is, and facilitates more control than routing to the component directly.
+
+Rejected alternatives:
+
+- A folder per page, each holding the page and its own components folder, consistently. Pages like VocabVault would therefore get two directories for only one component.
+
+- All components in a 'components' folder in src/, however this disperses the components away from where they are used, and becomes unscalable where mixing components doesn't indicate where they are specifically used, in instances where it is only used in one page. This is unnecessary inertia.
+
+- Routing directly to components, where pages are just a single component. This would break consistency and reduce control.
+
+Outcome: Implemented.
+
 ### 2026-09-09 - convention: UI components are suffixed with 'UI'
 
 Parent component housing the data layer has no suffix nor prefix, whereas the purely display component it returns and passes the data as props to has a 'UI' suffix. This was decided considering the definition that a component is "self-contained", therefore the container should keep the plain name.

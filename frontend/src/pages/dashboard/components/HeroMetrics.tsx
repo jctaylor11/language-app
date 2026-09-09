@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getHeroMetrics } from "../api";
+import { getHeroMetrics } from "../../../api";
 
 type HeroMetricsUIProps = {
   totalWords: number;

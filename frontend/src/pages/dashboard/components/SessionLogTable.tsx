@@ -2,9 +2,9 @@ import { Fragment } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 
-import type { SessionLogEntry } from "../types";
-import { formatSessionDate } from "../utils";
-import { getSessionLog, getSessionOverview } from "../api";
+import type { SessionLogEntry } from "../../../types";
+import { formatSessionDate } from "../../../utils";
+import { getSessionLog, getSessionOverview } from "../../../api";
 
 type SessionOverviewProps = {
   sessionId: number;

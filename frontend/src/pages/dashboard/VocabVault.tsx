@@ -1,4 +1,4 @@
-import WordTable from "../../components/WordTable";
+import WordTable from "./components/WordTable";
 
 export default function VocabVault() {
   return <WordTable />;

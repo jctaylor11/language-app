@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 
-import type { ReviewChartDataPoint } from "../types";
-import { getReviewChartData } from "../api";
-import { formatSessionDate } from "../utils";
+import type { ReviewChartDataPoint } from "../../../types";
+import { getReviewChartData } from "../../../api";
+import { formatSessionDate } from "../../../utils";
 
 type ReviewsChartUIProps = {
   dataPoints: ReviewChartDataPoint[];

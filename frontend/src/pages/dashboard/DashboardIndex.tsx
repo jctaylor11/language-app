@@ -1,6 +1,6 @@
-import HeroMetrics from "../../components/HeroMetrics";
-import WordsChart from "../../components/WordsChart";
-import ReviewsChart from "../../components/ReviewsChart";
+import HeroMetrics from "./components/HeroMetrics";
+import WordsChart from "./components/WordsChart";
+import ReviewsChart from "./components/ReviewsChart";
 
 export default function DashboardIndex() {
   return (

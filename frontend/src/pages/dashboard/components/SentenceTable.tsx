@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { SentenceEntry } from "../types";
-import { getSentenceEntries } from "../api";
+import type { SentenceEntry } from "../../../types";
+import { getSentenceEntries } from "../../../api";
 
 type SentenceTableUIProps = {
   sentenceEntries: SentenceEntry[];

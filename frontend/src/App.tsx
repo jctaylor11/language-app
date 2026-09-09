@@ -4,13 +4,13 @@ import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import VocabVault from "./pages/dashboard/VocabVault";
 import SentenceSession from "./pages/SentenceSession";
 import SessionLog from "./pages/dashboard/SessionLog";
-import RootLayout from "./RootLayout";
+import RootLayout from "./components/RootLayout";
 import DashboardIndex from "./pages/dashboard/DashboardIndex";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "./AuthContext";
-import ProtectedRoute from "./ProtectedRoute";
+import ProtectedRoute from "./components/ProtectedRoute";
 import SentenceVault from "./pages/dashboard/SentenceVault";
 
 export default function App() {

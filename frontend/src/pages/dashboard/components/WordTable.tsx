@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { WordEntry } from "../types";
-import { getWordEntries } from "../api";
+import type { WordEntry } from "../../../types";
+import { getWordEntries } from "../../../api";
 
 type WordTableUIProps = {
   wordEntries: WordEntry[];

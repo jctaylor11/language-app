@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Line, LineChart, ResponsiveContainer, XAxis, Tooltip } from "recharts";
 
-import type { WordChartDataPoint } from "../types";
-import { getWordChartData } from "../api";
-import { formatSessionDate } from "../utils";
+import type { WordChartDataPoint } from "../../../types";
+import { getWordChartData } from "../../../api";
+import { formatSessionDate } from "../../../utils";
 
 type WordsChartUIProps = {
   dataPoints: WordChartDataPoint[];

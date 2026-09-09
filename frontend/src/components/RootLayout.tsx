@@ -1,6 +1,6 @@
 import { Outlet, Link } from "react-router";
 
-import { useAuth } from "./AuthContext";
+import { useAuth } from "../AuthContext";
 
 export default function RootLayout() {
   const { isAuthenticated, logout } = useAuth();
