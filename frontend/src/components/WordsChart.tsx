@@ -1,7 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { Line, LineChart, ResponsiveContainer, XAxis, Tooltip } from "recharts";
+
+import type { WordChartDataPoint } from "../types";
 import { getWordChartData } from "../api";
 import { formatSessionDate } from "../utils";
+
+type WordsChartUIProps = {
+  dataPoints: WordChartDataPoint[];
+};
 
 export default function WordsChart() {
   const wordChartData = useQuery({
@@ -17,9 +23,13 @@ export default function WordsChart() {
     return <p>Error: {wordChartData.error.message}</p>;
   }
 
+  return <WordsChartUI dataPoints={wordChartData.data} />;
+}
+
+function WordsChartUI({ dataPoints }: WordsChartUIProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={wordChartData.data}>
+      <LineChart data={dataPoints}>
         <Line
           dataKey="cum_words"
           name="Total words"

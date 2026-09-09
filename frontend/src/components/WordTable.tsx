@@ -1,6 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 
+import type { WordEntry } from "../types";
 import { getWordEntries } from "../api";
+
+type WordTableUIProps = {
+  wordEntries: WordEntry[];
+};
 
 export default function WordTable() {
   const wordEntriesQuery = useQuery({
@@ -16,8 +21,10 @@ export default function WordTable() {
     return <p>Error: {wordEntriesQuery.error.message}</p>;
   }
 
-  const wordEntries = wordEntriesQuery.data;
+  return <WordTableUI wordEntries={wordEntriesQuery.data} />;
+}
 
+function WordTableUI({ wordEntries }: WordTableUIProps) {
   if (!wordEntries.length) {
     return <p className="text-sm text-neutral-400">No words yet</p>;
   }

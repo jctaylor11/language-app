@@ -1,6 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 
+import type { SentenceEntry } from "../types";
 import { getSentenceEntries } from "../api";
+
+type SentenceTableUIProps = {
+  sentenceEntries: SentenceEntry[];
+};
 
 export default function SentenceTable() {
   const sentenceEntriesQuery = useQuery({
@@ -16,8 +21,10 @@ export default function SentenceTable() {
     return <p>Error: {sentenceEntriesQuery.error.message}</p>;
   }
 
-  const sentenceEntries = sentenceEntriesQuery.data;
+  return <SentenceTableUI sentenceEntries={sentenceEntriesQuery.data} />;
+}
 
+function SentenceTableUI({ sentenceEntries }: SentenceTableUIProps) {
   if (!sentenceEntries.length) {
     return <p className="text-sm text-neutral-400">No sentences yet</p>;
   }

@@ -1,3 +1,13 @@
+### 2026-09-09 - convention: UI components are suffixed with 'UI'
+
+Parent component housing the data layer has no suffix nor prefix, whereas the purely display component it returns and passes the data as props to has a 'UI' suffix. This was decided considering the definition that a component is "self-contained", therefore the container should keep the plain name.
+
+Rejected alternative: Function containing the data layer has a 'Container' suffix. It's unnecessary since the definition already implies the plain-name component holds the data layer, and would look messy when the pages repeatedly call "[...]Container" components.
+
+### 2026-09-09 - convention: presentational components split UI from data layer
+
+Components that need server data (e.g charts) contain their own fetch, as per the log entry below. For presentational components, the component itself acts as a container for the data layer, and returns a UI component with the data passed as specifically scoped props. This way, the presentational layer clearly defines what is being presented in the props, and it's independently replaceable without touching the data layer. Therefore, design requirements can be defined and safely delegated.
+
 ### 2026-09-08 - convention: presentational components that require server data are self contained
 
 Pages purely for display (e.g dashboard pages) never fetch the data themselves, and instead just compose components. This does not apply to pages with an interactive user flow (e.g vocab session) since it makes it messy regarding state.

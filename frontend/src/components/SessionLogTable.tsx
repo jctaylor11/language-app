@@ -2,11 +2,22 @@ import { Fragment } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 
+import type { SessionLogEntry } from "../types";
 import { formatSessionDate } from "../utils";
 import { getSessionLog, getSessionOverview } from "../api";
 
 type SessionOverviewProps = {
   sessionId: number;
+};
+
+type SessionOverviewUIProps = {
+  targets: string[];
+};
+
+type SessionLogTableUIProps = {
+  sessionLogEntries: SessionLogEntry[];
+  expandedSessionNumber: number;
+  onToggleSession: (clickedSessionNumber: number) => void;
 };
 
 function SessionOverview({ sessionId }: SessionOverviewProps) {
@@ -24,9 +35,13 @@ function SessionOverview({ sessionId }: SessionOverviewProps) {
     return <p>Error: {sessionOverview.error.message}</p>;
   }
 
+  return <SessionOverviewUI targets={sessionOverview.data} />;
+}
+
+function SessionOverviewUI({ targets }: SessionOverviewUIProps) {
   return (
     <ul className="grid grid-cols-4 gap-x-8">
-      {sessionOverview.data.map((target, index) => (
+      {targets.map((target, index) => (
         <li key={index} className="py-0.5">
           {target}
         </li>
@@ -61,8 +76,20 @@ export default function SessionLogTable() {
     return <p>Error: {sessionLogQuery.error.message}</p>;
   }
 
-  const sessionLogEntries = sessionLogQuery.data;
+  return (
+    <SessionLogTableUI
+      sessionLogEntries={sessionLogQuery.data}
+      expandedSessionNumber={expandedSessionNumber}
+      onToggleSession={toggleSession}
+    />
+  );
+}
 
+function SessionLogTableUI({
+  sessionLogEntries,
+  expandedSessionNumber,
+  onToggleSession,
+}: SessionLogTableUIProps) {
   if (!sessionLogEntries.length) {
     return <p className="text-sm text-neutral-400">No sessions yet</p>;
   }
@@ -104,7 +131,7 @@ export default function SessionLogTable() {
               // Fragment as each row needs a prop, for key for identification for expansion
               <Fragment key={entry.session_id}>
                 <tr
-                  onClick={() => toggleSession(entry.session_number)}
+                  onClick={() => onToggleSession(entry.session_number)}
                   className={rowClassName}
                 >
                   <td className={indexCellClassName}>{entry.session_number}</td>
