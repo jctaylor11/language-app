@@ -36,7 +36,8 @@ class Session(Base):
     bound_type: Mapped[SessionBoundType] = mapped_column(Enum(SessionBoundType, name="session_bound_type"))
     bound_value: Mapped[int]    # Unit depends on bound_type: seconds for time, number of sentences for count
     started_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
-    completed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
+    last_result_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))    # NULL unless the session's bound was reached
     session_type: Mapped[SessionType] = mapped_column(Enum(SessionType, name="session_type"))
 
 

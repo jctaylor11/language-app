@@ -1,3 +1,11 @@
+### 2026-09-14 - record session completed_at time as well as last_result_at time
+
+Currently only the time of the last activity of a session is recorded - however, there is no definitive way to see that a session was completed aside from making an assumption based on the start time and last activity. It was decided to add an explicit column in the session database to confirm whether or not the session was completed, and the current 'completed_at' column (which actually is more of a 'last activity' column from which the completed at time ultimately falls out of) was renamed to a more faithful 'last_result_at'. This is relevant for example for only counting data from completed sessions for certain metrics, which could be used as a motivation mechanism for the user to actually see a full session through, rather than to leave early.
+
+Though it is a binary question, the column is a nullable datetime instead of a bool since it holds more information such as idle time at the end. A NULL completed_at time means the session wasn't completed (e.g it was abandoned). Idle time can be calculated from the difference between their last activity and the completed at time.
+
+Rejected alternative: Assuming the session was completed based on timestamp comparisons. This doesn't seem reliable since it's dependent on a tolerance - for example, it's unclear whether they quit the page early or whether they were just taking a long time, if the expected end time and actual end time are outside of a given tolerance. Confirmation from the front end that the timer expires is reliable.
+
 ### 2026-09-09 - convention: page components colocated with the page route
 
 Components are housed inline with their page when they can't exist without it, and are extracted to a separate file when they can. If extracted, they live as close to the page as possible, in a components folder colocated with the page route. Shared components (e.g ProtectedRoute and RootLayout) are housed in src/components.

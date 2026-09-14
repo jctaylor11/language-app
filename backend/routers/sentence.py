@@ -156,10 +156,10 @@ def insert_sentence_result(conn: Connection, user_id: int, sentence_result: Sent
         VALUES (:user_id, :session_id, :sentence_id, :status)
     """), {"user_id": user_id, "session_id": sentence_result.session_id, "sentence_id": sentence_result.sentence_id, "status": sentence_result.status.value})
 
-    # Session's completed_at value is updated each flush - final update accurate logs completion
+    # Session's last_result_at value is updated each flush - final update logs the last activity
     conn.execute(text("""
         UPDATE sessions
-        SET completed_at = NOW()
+        SET last_result_at = NOW()
         WHERE id = :session_id
     """), {"session_id": sentence_result.session_id})
 

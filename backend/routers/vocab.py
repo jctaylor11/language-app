@@ -33,10 +33,10 @@ def insert_vocab_results(conn: Connection, user_id: int, vocab_results: VocabRes
         VALUES (:user_id, :session_id, :word_id, :response_time_ms, :answered_at, :raw_keystrokes, :status, :session_position)
     """), params)
 
-    # Session's completed_at value is updated each flush - final update accurate logs completion
+    # Session's last_result_at value is updated each flush - final update logs the last activity
     conn.execute(text("""
         UPDATE sessions
-        SET completed_at = NOW()
+        SET last_result_at = NOW()
         WHERE id = :session_id
     """), {"session_id": vocab_results.session_id})
 
