@@ -68,6 +68,17 @@ export async function fetchSession(
   return sessionData.session_id;
 }
 
+export async function completeSession(sessionId: number): Promise<void> {
+  const completeSessionUrl = `${BASE_URL}/sessions/${sessionId}/complete`;
+  const response = await fetchWithAuth(completeSessionUrl, {
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to complete session: ${response.status}`);
+  }
+}
+
 export async function sendVocabResults(
   vocabResults: VocabResults,
 ): Promise<void> {

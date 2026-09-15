@@ -14,6 +14,7 @@ import type {
 } from "../types";
 import {
   fetchSession,
+  completeSession,
   fetchWords,
   sendVocabResults,
   getVocabSummary,
@@ -220,6 +221,10 @@ export default function VocabSession() {
     mutationFn: sendVocabResults,
   });
 
+  const { mutate: completeSessionMutate } = useMutation({
+    mutationFn: completeSession,
+  });
+
   const { data: wordsData, fetchNextPage } = useInfiniteQuery({
     queryKey: ["words"],
     queryFn: () => fetchWords(),
@@ -393,6 +398,7 @@ export default function VocabSession() {
           timerDurationS={SESSION_DURATION_S}
           sessionStartTime={sessionStartTime}
           onFinish={() => {
+            completeSessionMutate(sessionId); // Only reached when the timer runs out, so a session left early stays uncompleted
             setSessionFinished(true);
             setWordIndex((index) => index + 1); // Skips the last (not done) word seen as the timer expired
           }}

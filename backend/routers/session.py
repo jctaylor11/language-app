@@ -69,6 +69,15 @@ def get_session_overview_data(conn: Connection, user_id: int, session_id: int) -
 
     return [row.target for row in rows]
 
+def complete_session(conn: Connection, user_id: int, session_id: int) -> None:
+    conn.execute(text("""
+        UPDATE sessions
+        SET completed_at = NOW()
+        WHERE id = :session_id
+            AND user_id = :user_id          
+            AND completed_at IS NULL        -- For idempotency - a repeat call won't change the completed time
+    """), {"user_id": user_id, "session_id": session_id})
+
 @router.post("/sessions")
 def create_session(conn: Annotated[Connection, Depends(get_write_connection)], user_id: Annotated[int, Depends(decode_access_token)], session_request: SessionRequest) -> dict:
     session_id = insert_session(conn, user_id, session_request)
@@ -86,3 +95,9 @@ def get_session_overview(conn: Annotated[Connection, Depends(get_read_connection
     session_overview = get_session_overview_data(conn, user_id, session_id)
 
     return {"session_overview": session_overview}
+
+@router.post("/sessions/{session_id}/complete")
+def mark_session_complete(conn: Annotated[Connection, Depends(get_write_connection)], user_id: Annotated[int, Depends(decode_access_token)], session_id: int) -> dict:
+    complete_session(conn, user_id, session_id)
+
+    return {"completed_session_id": session_id}
