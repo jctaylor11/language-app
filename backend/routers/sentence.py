@@ -161,7 +161,8 @@ def insert_sentence_result(conn: Connection, user_id: int, sentence_result: Sent
         UPDATE sessions
         SET last_result_at = NOW()
         WHERE id = :session_id
-    """), {"session_id": sentence_result.session_id})
+            AND user_id = :user_id      -- Session id comes from the client, so scoped to the requester
+    """), {"user_id": user_id, "session_id": sentence_result.session_id})
 
     # Different return than the vocab equivalent since shape is different (vocab's payload is a list of results, sentences is just one)
     return sentence_result.sentence_id

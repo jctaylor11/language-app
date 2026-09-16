@@ -38,7 +38,8 @@ def insert_vocab_results(conn: Connection, user_id: int, vocab_results: VocabRes
         UPDATE sessions
         SET last_result_at = NOW()
         WHERE id = :session_id
-    """), {"session_id": vocab_results.session_id})
+            AND user_id = :user_id      -- Session id comes from the client, so scoped to the requester
+    """), {"user_id": user_id, "session_id": vocab_results.session_id})
 
     return len(vocab_results.word_results)
 
