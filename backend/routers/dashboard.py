@@ -45,6 +45,7 @@ def get_sentences_table_data(conn: Connection, user_id: int) -> list[dict]:
         FROM sentences s
         JOIN sentence_results sr ON s.id = sr.sentence_id
         WHERE sr.user_id = :user_id
+        AND sr.status NOT IN ('skipped', 'cheated')     -- A skipped or cheated sentence isn't one the user earned
         """), {"user_id": user_id})
 
     rows = query.fetchall()
