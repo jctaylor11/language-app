@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import text, Connection
 from typing import Annotated
 
 from backend.auth.access_token import decode_access_token
 from backend.db.connection import get_read_connection, get_write_connection
+from backend.routers.session import session_belongs_to_user
 from backend.schemas import VocabResults
 
 router = APIRouter()
@@ -25,6 +26,10 @@ def sample_word_batch(conn: Connection, user_id: int) -> list[dict]:
 
 
 def insert_vocab_results(conn: Connection, user_id: int, vocab_results: VocabResults) -> int:
+    # Session is provided by the client, and therefore cannot be trusted
+    if session_belongs_to_user(conn, user_id, vocab_results.session_id) is False:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+
     params = [{"user_id": user_id, "session_id": vocab_results.session_id, **word_result.model_dump(mode="json")} for word_result in vocab_results.word_results]
 
     # All response data for each word in the session batch saved

@@ -19,6 +19,18 @@ def insert_session(conn: Connection, user_id: int, session_request: SessionReque
 
     return result.scalar()
 
+def session_belongs_to_user(conn: Connection, user_id: int, session_id: int) -> bool:
+    result = conn.execute(text("""
+        SELECT 1
+        FROM sessions
+        WHERE id = :session_id
+            AND user_id = :user_id
+    """), {"user_id": user_id, "session_id": session_id})
+
+    session = result.fetchone()
+
+    return session is not None
+
 def get_session_log_data(conn: Connection, user_id: int) -> list[dict]:
     result = conn.execute(text("""
         WITH session_log AS (
@@ -26,6 +38,7 @@ def get_session_log_data(conn: Connection, user_id: int) -> list[dict]:
             FROM sessions
             JOIN vocab_results ON sessions.id = vocab_results.session_id
             WHERE sessions.user_id = :user_id
+            AND vocab_results.user_id = :user_id
             AND vocab_results.status NOT IN ('skipped', 'cheated')       -- Neither counts as a review the user earned
             GROUP BY sessions.id, sessions.session_type, sessions.started_at
             UNION ALL (
@@ -34,6 +47,7 @@ def get_session_log_data(conn: Connection, user_id: int) -> list[dict]:
                 JOIN sentence_words ON sentence_words.sentence_id = sentence_results.sentence_id
                 JOIN sessions ON sessions.id = sentence_results.session_id
                 WHERE sessions.user_id = :user_id
+                AND sentence_results.user_id = :user_id
                 AND sentence_results.status NOT IN ('skipped', 'cheated')       -- Neither counts as a review the user earned, matching the vocab branch above
                 GROUP BY sentence_results.session_id, sessions.session_type, sessions.started_at
             ))

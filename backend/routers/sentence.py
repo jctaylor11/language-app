@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import text, insert, Connection
 from typing import Annotated
 
@@ -8,6 +8,7 @@ from backend.llm import generate_sentences
 from backend.lemmatiser import extract_lemmas
 from backend.db.models import Sentence
 from backend.enums import SentenceResultStatus
+from backend.routers.session import session_belongs_to_user
 from backend.schemas import SentenceResult, SentencePair, SentenceRequest
 
 router = APIRouter()
@@ -151,6 +152,10 @@ def get_sentence_batch(
 
 
 def insert_sentence_result(conn: Connection, user_id: int, sentence_result: SentenceResult) -> int:
+    # Session ID is provided by client, therefore cannot be trusted
+    if session_belongs_to_user(conn, user_id, sentence_result.session_id) is False:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+
     conn.execute(text("""
         INSERT INTO sentence_results (user_id, session_id, sentence_id, status)
         VALUES (:user_id, :session_id, :sentence_id, :status)

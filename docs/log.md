@@ -1,4 +1,10 @@
-### 2026-09-14 - record session completed_at time as well as last_result_at time
+### 2026-09-19 - sessions: session ownership is validated when written
+
+Currently the session ID in a results payload is sent from the client, yet isn't verified that it actually belongs to the user ID associated with it before inserting. It's therefore possible for a user's ID to point at another user's session. It was therefore decided to validate that the session ID actually belongs to the user before inserting the result, implemented as a function that checks the sessions table with the user's ID.
+
+Outcome: Implemented.
+
+### 2026-09-14 - sessions: record session completed_at time as well as last_result_at time
 
 Currently only the time of the last activity of a session is recorded - however, there is no definitive way to see that a session was completed aside from making an assumption based on the start time and last activity. It was decided to add an explicit column in the session database to confirm whether or not the session was completed, and the current 'completed_at' column (which actually is more of a 'last activity' column from which the completed at time ultimately falls out of) was renamed to a more faithful 'last_result_at'. This is relevant for example for only counting data from completed sessions for certain metrics, which could be used as a motivation mechanism for the user to actually see a full session through, rather than to leave early.
 
