@@ -34,6 +34,38 @@ def test_create_vocab_results(client, access_token, seed_session, seed_user_word
     assert data["results_saved"] == 1
 
 
+def test_create_vocab_results_rejects_another_users_session(client, access_token, seed_user_words, conn):
+    client.cookies.set("access_token", access_token)
+
+    other_user_id = conn.execute(text(
+        "INSERT INTO users (google_sub, email) VALUES ('other-sub', 'other@email.com') RETURNING id"
+    )).scalar()
+
+    other_session_id = conn.execute(text(
+        "INSERT INTO sessions (user_id, bound_type, bound_value, session_type) VALUES (:user_id, 'time', 120, 'vocab') RETURNING id"
+    ), {"user_id": other_user_id}).scalar()
+
+    body = {
+        "session_id": other_session_id,     # Session id is client supplied, so the requester could in theory name one that isn't theirs
+        "word_results": [
+            {
+                "word_id": seed_user_words[0],
+                "response_time_ms": 1500,
+                "answered_at": "2026-06-27T10:00:00",
+                "raw_keystrokes": "hello",
+                "status": "correct_first_try",
+                "session_position": 1
+            }
+        ]
+    }
+
+    response = client.post(f"/vocab-results", json=body)
+
+    assert response.status_code == 404      # 404 rather than 403 so a foreign session can't be told apart from a non-existent one
+    rows_written = conn.execute(text("SELECT COUNT(*) FROM vocab_results WHERE session_id = :session_id"), {"session_id": other_session_id}).scalar()
+    assert rows_written == 0        # Asserted separately to the status code, which alone wouldn't prove the insert was rejected
+
+
 def test_get_session_summary_excludes_skipped(client, access_token, seed_session, seed_user_words):
     client.cookies.set("access_token", access_token)
     body = {

@@ -44,6 +44,28 @@ def test_create_sentence_result(client, access_token, seed_session, conn):
     assert data["saved_sentence_id"] == sentence_id
 
 
+def test_create_sentence_result_rejects_another_users_session(client, access_token, conn):
+    client.cookies.set("access_token", access_token)
+
+    other_user_id = conn.execute(text(
+        "INSERT INTO users (google_sub, email) VALUES ('other-sub', 'other@email.com') RETURNING id"
+    )).scalar()
+
+    other_session_id = conn.execute(text(
+        "INSERT INTO sessions (user_id, bound_type, bound_value, session_type) VALUES (:user_id, 'count', 5, 'sentence') RETURNING id"
+    ), {"user_id": other_user_id}).scalar()
+
+    sentence_id = conn.execute(text(
+        "INSERT INTO sentences (target, source, lemma_count) VALUES ('테스트', 'test', 1) RETURNING id"
+    )).scalar()
+
+    response = client.post(f"/sentence-results", json={"sentence_id": sentence_id, "session_id": other_session_id, "status": "correct"})     # Session id is client supplied, so the requester can name one that isn't theirs
+
+    assert response.status_code == 404      # To match the vocab results rejection
+    rows_written = conn.execute(text("SELECT COUNT(*) FROM sentence_results WHERE session_id = :session_id"), {"session_id": other_session_id}).scalar()
+    assert rows_written == 0        # Checks what actually happened on the server side
+
+
 def test_get_sentence_batch_excludes_completed_sentences(client, access_token, seed_user, seed_user_words, conn):
     known_word_id = seed_user_words[0]  # One known word is all the coverage maths needs - each sentence has lemma_count 1 and that word as its only lemma
 

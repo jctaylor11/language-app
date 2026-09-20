@@ -51,6 +51,27 @@ def test_get_session_log_excludes_cheated_from_total_reviewed(client, access_tok
     assert session_row["total_reviewed"] == 1  # The cheated word is excluded, only the recalled one counts
 
 
+def test_get_session_log_excludes_another_users_results_in_own_session(client, access_token, seed_user, seed_session, seed_user_words, conn):
+    client.cookies.set("access_token", access_token)
+
+    other_user_id = conn.execute(text(
+        "INSERT INTO users (google_sub, email) VALUES ('other-sub', 'other@email.com') RETURNING id"
+    )).scalar()
+
+    conn.execute(text("""
+        INSERT INTO vocab_results (user_id, session_id, word_id, response_time_ms, answered_at, status, session_position)
+        VALUES (:other_user_id, :session_id, :foreign_word_id, 1500, '2026-08-30T10:00:00', 'correct_first_try', 1),
+               (:user_id, :session_id, :own_word_id, 900, '2026-08-30T10:00:05', 'correct_first_try', 2)
+    """), {"user_id": seed_user, "other_user_id": other_user_id, "session_id": seed_session, "foreign_word_id": seed_user_words[0], "own_word_id": seed_user_words[1]})
+
+    response = client.get("/sessions/log")
+    data = response.json()
+
+    assert response.status_code == 200
+    session_row = next(row for row in data["session_log"] if row["session_id"] == seed_session)
+    assert session_row["total_reviewed"] == 1  # Joining on the session alone would count the other user's result too
+
+
 def test_get_session_log_excludes_cheated_sentences_from_total_reviewed(client, access_token, seed_user, seed_user_words, conn):
     client.cookies.set("access_token", access_token)
 
