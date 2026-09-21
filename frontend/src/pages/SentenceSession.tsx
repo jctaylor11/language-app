@@ -11,6 +11,7 @@ import {
   fetchSentencePairs,
   sendSentenceResult,
   getSentencesSummary,
+  completeSession,
 } from "../api";
 import type { SentencePair, SentenceResults } from "../types";
 
@@ -167,6 +168,10 @@ export default function SentenceSession() {
     mutationFn: sendSentenceResult,
   });
 
+  const { mutate: completeSessionMutate } = useMutation({
+    mutationFn: completeSession,
+  });
+
   const { data: sentencePairsData, fetchNextPage } = useInfiniteQuery({
     // useInfiniteQuery appends batches instead of replace on refetch
     queryKey: ["sentencePairs"],
@@ -235,7 +240,13 @@ export default function SentenceSession() {
         sentencePairs[sentencePairIndex],
         sessionId,
       );
-      setCompletedSentencesCount((prev) => prev + 1);
+      const nextCompletedCount = completedSentencesCount + 1;
+
+      if (nextCompletedCount >= SENTENCES_PER_SESSION) {
+        completeSessionMutate(sessionId); // The count bound is the session's end, so a session left early stays uncompleted
+      }
+
+      setCompletedSentencesCount(nextCompletedCount);
       advanceSentencePair();
       resultsMutate(sentenceResults);
     }
