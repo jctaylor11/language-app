@@ -1,3 +1,15 @@
+### 2026-09-22 - models: delete user_words table and replace with view derived from results
+
+Currently, prior to the word selection algorithm being properly implemented, the user’s words are stored in a user_words table, with a vision for them to be inserted into this table to be added to their known vocab list. However, I’ve realised this is redundant and acts as a second source of truth as the results table. There should only be one source of truth. Therefore, it was decided that the user_words table should be removed, and instead all data relating to the user’s words list is derived from their results. The ‘added_at’ equivalent timestamp is the first successful result (not cheated, not skipped). Only words from a vocab session counts - ie newly seen words in generated sentences do not count as a word added to the user's word list - since sentences are just for review, not exposure, and it keeps the principle of the algorithm and steady word release focused.
+
+Since this data is derived from the results table, and used repetitively, it should be saved as a view. This view will take the current role that the user_words table has, in terms of being a table that is queried for metrics etc. A less ambiguous name, ‘known_words’, will be used.
+
+As a result of this change, the sample_word_batch function will sample from the words table based on the user’s data (when implemented), instead of from their known_words. This especially extends the scope to account for the cold start problem - where a new user will not have any words in their known_words.
+
+This is a significant change which touches multiple different areas of the backend - for example, the dashboard metrics, charts, vocab session sampling, and sentence generation sampling. This redundancy was an oversight when originally creating the models, and is fortunate to catch at a still early stage.
+
+Rejected alternative: Keeping a user_words table which is inserted to when a new word is done. This creates a second source of truth, and unnecessarily writes to another table when everything is already just derived.
+
 ### 2026-09-19 - sessions: session ownership is validated when written
 
 Currently the session ID in a results payload is sent from the client, yet isn't verified that it actually belongs to the user ID associated with it before inserting. It's therefore possible for a user's ID to point at another user's session. It was therefore decided to validate that the session ID actually belongs to the user before inserting the result, implemented as a function that checks the sessions table with the user's ID.
