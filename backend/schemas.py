@@ -25,7 +25,7 @@ class SentenceRequest(BaseModel):
 class WordResult(BaseModel):
     word_id: int
     response_time_ms: int | None = None
-    answered_at: datetime | None = None
+    answered_at: datetime
     raw_keystrokes: str | None = None
     status: VocabResultStatus
     session_position: int

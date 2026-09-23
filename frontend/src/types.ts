@@ -21,7 +21,7 @@ export type VocabResultStatus =
 export type WordResults = {
   word_id: number;
   response_time_ms: number | null;
-  answered_at: string | null;
+  answered_at: string;
   raw_keystrokes: string | null;
   status: VocabResultStatus;
   session_position: number;

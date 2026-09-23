@@ -49,7 +49,7 @@ class VocabResult(Base):
     session_id: Mapped[int] = mapped_column(ForeignKey("sessions.id", ondelete="CASCADE"))
     word_id: Mapped[int] = mapped_column(ForeignKey("words.id"))
     response_time_ms: Mapped[int | None]
-    answered_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
+    answered_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True))
     raw_keystrokes: Mapped[str | None]
     status: Mapped[VocabResultStatus] = mapped_column(Enum(VocabResultStatus, name="result_status"))
     session_position: Mapped[int]
