@@ -12,6 +12,7 @@ from backend.auth.access_token import create_access_token
 test_engine = create_engine(TEST_DATABASE_URL)
 
 TEST_USER_WORD_COUNT = 6
+TEST_INTRODUCED_WORDS_COUNT = 6
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -132,7 +133,7 @@ def seed_user_words(conn, seed_user, seed_words):
 
 @pytest.fixture
 def seed_introduced_words(conn, seed_user, seed_session, seed_words):
-    word_ids = seed_words[:TEST_USER_WORD_COUNT]    # introduced_words < words to differentiate between returning words vs introduced_words
+    word_ids = seed_words[:TEST_INTRODUCED_WORDS_COUNT]    # A subset of seeded words to differentiate between returning words vs introduced_words
 
     conn.execute(text("""
         INSERT INTO vocab_results (user_id, session_id, word_id, response_time_ms, answered_at, status, session_position)

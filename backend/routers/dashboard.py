@@ -60,7 +60,7 @@ def get_hero_metrics(conn: Connection, user_id: int) -> dict:
             SELECT 1 FROM vocab_results WHERE user_id = :user_id AND status NOT IN ('skipped', 'cheated')    -- A skipped or cheated word isn't a review the user earned
         )
         SELECT
-            (SELECT COUNT(*) FROM user_words WHERE user_id = :user_id) AS total_words,
+            (SELECT COUNT(*) FROM introduced_words WHERE user_id = :user_id) AS total_words,
             (SELECT COUNT(*) FROM total_reviewed) + (
                 SELECT COUNT(*)
                 FROM sentence_results sr

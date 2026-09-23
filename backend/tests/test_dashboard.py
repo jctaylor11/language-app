@@ -1,6 +1,6 @@
 from sqlalchemy import text
 
-from backend.tests.conftest import TEST_USER_WORD_COUNT, seed_sentence
+from backend.tests.conftest import TEST_USER_WORD_COUNT, TEST_INTRODUCED_WORDS_COUNT, seed_sentence
 
 def test_get_dashboard_words(client, access_token, seed_introduced_words):
     expected_keys = ["id", "target", "source", "times_reviewed", "av_s_per_syllable", "accuracy"]
@@ -29,15 +29,15 @@ def test_get_dashboard_words_for_empty_user(client, access_token):
     assert len(words) == 0
 
 
-def test_get_dashboard_hero_metrics(client, access_token, seed_user_words):
+def test_get_dashboard_hero_metrics(client, access_token, seed_introduced_words):
     client.cookies.set("access_token", access_token)
     response = client.get(f"/dashboard/hero-metrics")
     assert response.status_code == 200
     data = response.json()
     metrics = data["metrics"]
 
-    assert metrics["total_words"] == TEST_USER_WORD_COUNT
-    assert metrics["words_reviewed"] == 0
+    assert metrics["total_words"] == TEST_INTRODUCED_WORDS_COUNT
+    assert metrics["words_reviewed"] == TEST_INTRODUCED_WORDS_COUNT
 
 
 def test_get_dashboard_hero_metrics_for_empty_user(client, access_token):
@@ -51,22 +51,25 @@ def test_get_dashboard_hero_metrics_for_empty_user(client, access_token):
     assert metrics["words_reviewed"] == 0
 
 
-def test_get_dashboard_hero_metrics_excludes_skipped_and_cheated_words(client, access_token, seed_user, seed_session, seed_user_words, conn):
+def test_get_dashboard_hero_metrics_excludes_skipped_and_cheated_words(client, access_token, seed_user, seed_session, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
     conn.execute(text("""
         INSERT INTO vocab_results (user_id, session_id, word_id, response_time_ms, answered_at, status, session_position)
         VALUES (:user_id, :session_id, :cheated_word_id, 1500, '2026-08-30T10:00:00', 'cheated', 1),
                (:user_id, :session_id, :skipped_word_id, 400, '2026-08-30T10:00:03', 'skipped', 2),
-               (:user_id, :session_id, :recalled_word_id, 900, '2026-08-30T10:00:05', 'correct_first_try', 3)
-    """), {"user_id": seed_user, "session_id": seed_session, "cheated_word_id": seed_user_words[0], "skipped_word_id": seed_user_words[1], "recalled_word_id": seed_user_words[2]})
+               (:user_id, :session_id, :correct_word_id, 900, '2026-08-30T10:00:05', 'correct_first_try', 3),
+               (:user_id, :session_id, :skipped_then_corrected_word_id, 300, '2026-08-30T10:00:08', 'skipped', 4),
+               (:user_id, :session_id, :skipped_then_corrected_word_id, 1100, '2026-08-30T10:00:12', 'corrected', 5)
+    """), {"user_id": seed_user, "session_id": seed_session, "cheated_word_id": seed_words[0], "skipped_word_id": seed_words[1], "correct_word_id": seed_words[2], "skipped_then_corrected_word_id": seed_words[3]})
 
     response = client.get(f"/dashboard/hero-metrics")
     assert response.status_code == 200
     data = response.json()
     metrics = data["metrics"]
 
-    assert metrics["words_reviewed"] == 1  # Would be 3 if the cheated and skipped words counted, only the recalled one is earned
+    assert metrics["total_words"] == 2     # Would be 4 if only-skipped or only-cheated words counted, or would be 1 if words that were first skipped stopped being counted if later earned
+    assert metrics["words_reviewed"] == 2  # Would be 5 if the cheated and skipped results counted, only the correct and corrected ones are earned
 
 
 def test_get_dashboard_hero_metrics_excludes_skipped_and_cheated_sentences(client, access_token, seed_user, seed_session, seed_user_words, conn):
