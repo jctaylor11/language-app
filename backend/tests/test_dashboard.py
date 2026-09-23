@@ -116,16 +116,16 @@ def test_get_dashboard_words_times_reviewed_excludes_skipped_and_cheated(client,
     assert word["accuracy"] == 1 / 3    # Denominator intentionally stays every result, so skipping and cheating count against accuracy rather than raising it
 
 
-def test_get_word_chart_data(client, access_token, seed_user_words):
+def test_get_word_chart_data(client, access_token, seed_introduced_words):
     client.cookies.set("access_token", access_token)
     response = client.get(f"/dashboard/word-chart-data")
     assert response.status_code == 200
     data = response.json()
     cumulative_words = data["cumulative_words"]
 
-    assert len(cumulative_words) == 2   # Range starts the day before the earliest added_at, so today's words show a zero-indexed jump
+    assert len(cumulative_words) == 2   # Range starts the day before the earliest introduced_at, so today's words show a zero-indexed jump
     assert cumulative_words[0]["cum_words"] == 0
-    assert cumulative_words[-1]["cum_words"] == TEST_USER_WORD_COUNT
+    assert cumulative_words[-1]["cum_words"] == TEST_INTRODUCED_WORDS_COUNT
 
 
 def test_get_word_chart_data_for_empty_user(client, access_token):
@@ -135,4 +135,4 @@ def test_get_word_chart_data_for_empty_user(client, access_token):
     data = response.json()
     cumulative_words = data["cumulative_words"]
 
-    assert cumulative_words == []   # No user_words rows means no MIN(added_at) to anchor the range
+    assert cumulative_words == []   # No introduced_words rows means no MIN(introduced_at) to anchor the range

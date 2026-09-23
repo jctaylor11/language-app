@@ -79,9 +79,9 @@ def get_cumulative_word_chart_data(conn: Connection, user_id: int) -> list[dict]
     result = conn.execute(text("""
         WITH date_range AS (
             SELECT 
-                date_trunc('day', MIN(added_at)) - INTERVAL '1 day' AS start_date,     -- So the line starts at zero index
+                date_trunc('day', MIN(introduced_at)) - INTERVAL '1 day' AS start_date,     -- So the line starts at zero index
                 date_trunc('day', NOW()) AS end_date
-            FROM user_words
+            FROM introduced_words
             WHERE user_id = :user_id
         ),
         date_series AS (
@@ -91,10 +91,10 @@ def get_cumulative_word_chart_data(conn: Connection, user_id: int) -> list[dict]
         day_counts AS (
             SELECT
                 COUNT(*) AS words_added,
-                date_trunc('day', added_at) AS date_added
-            FROM user_words
+                date_trunc('day', introduced_at) AS date_added
+            FROM introduced_words
             WHERE user_id = :user_id
-            GROUP BY date_trunc('day', added_at)
+            GROUP BY date_trunc('day', introduced_at)
         )
         SELECT
             ds.series_date,
