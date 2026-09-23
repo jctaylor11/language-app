@@ -2,7 +2,7 @@ from sqlalchemy import text
 
 from backend.tests.conftest import TEST_USER_WORD_COUNT, seed_sentence
 
-def test_get_dashboard_words(client, access_token, seed_user_words):
+def test_get_dashboard_words(client, access_token, seed_introduced_words):
     expected_keys = ["id", "target", "source", "times_reviewed", "av_s_per_syllable", "accuracy"]
 
     client.cookies.set("access_token", access_token)
@@ -15,8 +15,8 @@ def test_get_dashboard_words(client, access_token, seed_user_words):
     for key in expected_keys:
         assert key in word
     assert len(words) == TEST_USER_WORD_COUNT
-    assert word["times_reviewed"] == 0
-    assert word["accuracy"] is None
+    assert word["times_reviewed"] == 1     # Each introduced word has the one earned result that put it in the view
+    assert word["accuracy"] == 1
 
 
 def test_get_dashboard_words_for_empty_user(client, access_token):

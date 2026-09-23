@@ -18,9 +18,10 @@ def get_word_table_data(conn: Connection, user_id: int) -> list[dict]:
             AVG(vr.response_time_ms) / 1000.0 / LENGTH(w.target) as av_s_per_syllable,
             COUNT(*) FILTER (WHERE vr.status = 'correct_first_try')::numeric / NULLIF(COUNT(vr.id), 0) AS accuracy      -- Denominator intentionally stays every result, so skipping and cheating count against accuracy rather than raising it
         FROM words w
-        JOIN user_words uw ON w.id = uw.word_id
+        JOIN introduced_words iw ON w.id = iw.word_id
         LEFT JOIN vocab_results vr ON w.id = vr.word_id
-        WHERE uw.user_id = :user_id
+            AND vr.user_id = :user_id       -- In the ON rather than WHERE, otherwise the stats pool every user's results for the word
+        WHERE iw.user_id = :user_id
         GROUP BY
             w.id,
             w.target,

@@ -100,7 +100,7 @@ def concurrent_refresh_token():
 
 
 @pytest.fixture
-def seed_user_words(conn, seed_user):
+def seed_words(conn):
     result = conn.execute(text("""
         INSERT INTO words (target, source, part_of_speech) VALUES
             ('물', 'water', 'noun'),
@@ -113,7 +113,14 @@ def seed_user_words(conn, seed_user):
         RETURNING id
     """))
 
-    word_ids = [row.id for row in result.fetchall()][:TEST_USER_WORD_COUNT] # So that user_words < words, to differentiate between returning words vs user_words
+    word_ids = [row.id for row in result.fetchall()]
+
+    return word_ids
+
+
+@pytest.fixture
+def seed_user_words(conn, seed_user, seed_words):
+    word_ids = seed_words[:TEST_USER_WORD_COUNT] # user_words < words to differentiate between returning words vs user_words
 
     conn.execute(text("""
         INSERT INTO user_words (user_id, word_id)
@@ -122,7 +129,19 @@ def seed_user_words(conn, seed_user):
 
     return word_ids
 
- 
+
+@pytest.fixture
+def seed_introduced_words(conn, seed_user, seed_session, seed_words):
+    word_ids = seed_words[:TEST_USER_WORD_COUNT]    # introduced_words < words to differentiate between returning words vs introduced_words
+
+    conn.execute(text("""
+        INSERT INTO vocab_results (user_id, session_id, word_id, response_time_ms, answered_at, status, session_position)
+        VALUES (:user_id, :session_id, :word_id, 1000, NOW(), 'correct_first_try', :session_position)
+    """), [{"user_id": seed_user, "session_id": seed_session, "word_id": word_id, "session_position": position} for position, word_id in enumerate(word_ids, start=1)])
+
+    return word_ids
+
+
 # Not a fixture since each seeded sentence takes different arguments
 def seed_sentence(conn, target: str, lemma_count: int, known_word_ids: list[int]) -> int:
     # Caller picks the values to suit their assertion - only requirement is that the word IDs exist actually exist
