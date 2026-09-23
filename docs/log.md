@@ -1,3 +1,22 @@
+### 2026-09-23 - models: explicitly decided scope for introduced_words view is just for the metrics and sentence generation/verification
+
+The introduced_words view defines what it means for a user to have a word (has at least one result the user has answered themselves - correct_first_try or corrected), and is scoped to what depends on that: metrics, and sentence verification and generation. It is a concrete list of words they have been 'awarded', however it is not used for other layers (e.g confidence scoring or word selection). It is intended for display and verification. It is not strictly necessary to have this view - however it is useful since multiple places read this data and it keeps the rules for what counts as one of their words in one place. As per [principle 1 - progress metrics must be earned](principles.md) - only cheated and only skipped words do not count, otherwise the user could inflate their list by cheating/skipping, and the list would become useless and there would be no pride.
+
+This view will (currently) be used in five places:
+
+1. Vocab vault page (get_words_table_data): which words are listed.
+2. Dashboard total words (get_hero_metrics): the total_words count.
+3. Dashboard chart (get_cumulative_word_chart_data): when each word joined.
+4. Cached sentence check (get_eligible_sentences): which words count as known for the 80% threshold
+5. Sentence generation (sample_user_words_for_generation): which words are sent to the LLM, and this will later be JOINed with meta data such as confidence score for more granular control regarding which words are most suitable to be reviewed
+
+Consequences:
+
+- Metadata such as confidence scoring will be its own separate view.
+- The word selection algorithm takes data only from results - ie the source of everything, rather than the view
+
+Rejected alternative: I also considered changing the view to include cheated words - under the rationale that perhaps this view would feed into the selection algorithm, which considers cheated words too - however this was decided against. The word selection algorithm will take solely from the results, which is the source anyway. This provides more data for the decision, as well as cheated words.
+
 ### 2026-09-22 - models: delete user_words table and replace with view derived from results
 
 Currently, prior to the word selection algorithm being properly implemented, the user’s words are stored in a user_words table, with a vision for them to be inserted into this table to be added to their known vocab list. However, I’ve realised this is redundant and acts as a second source of truth as the results table. There should only be one source of truth. Therefore, it was decided that the user_words table should be removed, and instead all data relating to the user’s words list is derived from their results. The ‘added_at’ equivalent timestamp is the first successful result (not cheated, not skipped). Only words from a vocab session counts - ie newly seen words in generated sentences do not count as a word added to the user's word list - since sentences are just for review, not exposure, and it keeps the principle of the algorithm and steady word release focused.
@@ -9,6 +28,8 @@ As a result of this change, the sample_word_batch function will sample from the 
 This is a significant change which touches multiple different areas of the backend - for example, the dashboard metrics, charts, vocab session sampling, and sentence generation sampling. This redundancy was an oversight when originally creating the models, and is fortunate to catch at a still early stage.
 
 Rejected alternative: Keeping a user_words table which is inserted to when a new word is done. This creates a second source of truth, and unnecessarily writes to another table when everything is already just derived.
+
+Amendment 2026-09-23: view name was decided to be 'introduced_words' - since it could also be interpreted as words the user has high confidence on (ie known words), rather than just words that have not only been cheated/skipped.
 
 ### 2026-09-19 - sessions: session ownership is validated when written
 
