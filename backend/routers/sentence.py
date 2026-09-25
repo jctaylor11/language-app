@@ -24,8 +24,8 @@ def sample_user_words_for_generation(conn: Connection, user_id: int, num_words_s
     result = conn.execute(text("""
         SELECT target
         FROM words
-        JOIN user_words ON user_words.word_id = words.id
-        WHERE user_id = :user_id
+        JOIN introduced_words ON introduced_words.word_id = words.id
+        WHERE introduced_words.user_id = :user_id
         ORDER BY RANDOM()
         LIMIT :num_words
     """), {"user_id": user_id, "num_words": num_words_sampled})
