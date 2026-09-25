@@ -6,7 +6,7 @@ from backend.schemas import SentencePair
 from backend.tests.conftest import seed_sentence
 
 
-def test_get_sentence_batch(client, access_token, seed_user_words):
+def test_get_sentence_batch(client, access_token, seed_introduced_words):
     # Must be at least 3 sentence, since 3 in a batch, and they must clear the known-word floor to be returned
     mock_sentences = [
         SentencePair(target="사람이 집에 갑니다.", source="The person goes home."),  # 3/3 lemmas known (사람, 집, 가다) = 100%
@@ -66,8 +66,8 @@ def test_create_sentence_result_rejects_another_users_session(client, access_tok
     assert rows_written == 0        # Checks what actually happened on the server side
 
 
-def test_get_sentence_batch_excludes_completed_sentences(client, access_token, seed_user, seed_user_words, conn):
-    known_word_id = seed_user_words[0]  # One known word is all the coverage maths needs - each sentence has lemma_count 1 and that word as its only lemma
+def test_get_sentence_batch_excludes_completed_sentences(client, access_token, seed_user, seed_introduced_words, conn):
+    known_word_id = seed_introduced_words[0]  # One known word is all the coverage maths needs - each sentence has lemma_count 1 and that word as its only lemma
 
     result = conn.execute(insert(Sentence).returning(Sentence.id), [
         {"target": "물을 마십니다.", "source": "I drink water.", "lemma_count": 1},

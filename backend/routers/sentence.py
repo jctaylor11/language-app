@@ -41,7 +41,7 @@ def get_eligible_sentences(conn: Connection, user_id: int, sentences_already_que
     """Fetch existing sentences from the cache that the user has not already done, whose proportion of known words from their vocab vault meets the minimum."""
     eligible_sentences = conn.execute(text("""
         WITH users_words AS (
-            SELECT * FROM user_words WHERE user_id = :user_id
+            SELECT * FROM introduced_words WHERE user_id = :user_id
             )
         SELECT s.id, s.target, s.source
         FROM sentences s
