@@ -11,14 +11,13 @@ router = APIRouter()
 
 
 def sample_word_batch(conn: Connection, user_id: int) -> list[dict]:
+    # TODO: placeholder - replace with selection algorithm driven by the user's results
     result = conn.execute(text("""
         SELECT id, target, source
         FROM words
-        JOIN user_words ON user_words.word_id = words.id
-        WHERE user_id = :user_id
         ORDER BY RANDOM()
         LIMIT 5
-    """), {"user_id": user_id})
+    """))
 
     rows = result.fetchall()
 

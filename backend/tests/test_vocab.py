@@ -1,7 +1,8 @@
 from sqlalchemy import text
 
 
-def test_get_word_batch(client, access_token, seed_user_words):
+def test_get_word_batch(client, access_token, seed_words):
+    # No results seeded - a new user must still get words (cold start)
     client.cookies.set("access_token", access_token)  # access token is sent over httpOnly cookie
     response = client.get(f"/words")
     data = response.json()
