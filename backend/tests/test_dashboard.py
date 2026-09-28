@@ -1,6 +1,6 @@
 from sqlalchemy import text
 
-from backend.tests.conftest import TEST_USER_WORD_COUNT, TEST_INTRODUCED_WORDS_COUNT, seed_sentence
+from backend.tests.conftest import TEST_INTRODUCED_WORDS_COUNT, seed_sentence
 
 def test_get_dashboard_words(client, access_token, seed_introduced_words):
     expected_keys = ["id", "target", "source", "times_reviewed", "av_s_per_syllable", "accuracy"]
@@ -14,7 +14,7 @@ def test_get_dashboard_words(client, access_token, seed_introduced_words):
 
     for key in expected_keys:
         assert key in word
-    assert len(words) == TEST_USER_WORD_COUNT
+    assert len(words) == TEST_INTRODUCED_WORDS_COUNT
     assert word["times_reviewed"] == 1     # Each introduced word has the one earned result that put it in the view
     assert word["accuracy"] == 1
 
@@ -72,12 +72,12 @@ def test_get_dashboard_hero_metrics_excludes_skipped_and_cheated_words(client, a
     assert metrics["words_reviewed"] == 2  # Would be 5 if the cheated and skipped results counted, only the correct and corrected ones are earned
 
 
-def test_get_dashboard_hero_metrics_excludes_skipped_and_cheated_sentences(client, access_token, seed_user, seed_session, seed_user_words, conn):
+def test_get_dashboard_hero_metrics_excludes_skipped_and_cheated_sentences(client, access_token, seed_user, seed_session, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
-    answered_sentence_id = seed_sentence(conn, "물을 마십니다.", 2, seed_user_words[:2])
-    skipped_sentence_id = seed_sentence(conn, "집에 갑니다.", 3, seed_user_words[2:5])
-    cheated_sentence_id = seed_sentence(conn, "오늘 밥을 먹습니다.", 3, seed_user_words[3:6])
+    answered_sentence_id = seed_sentence(conn, "물을 마십니다.", 2, seed_words[:2])
+    skipped_sentence_id = seed_sentence(conn, "집에 갑니다.", 3, seed_words[2:5])
+    cheated_sentence_id = seed_sentence(conn, "오늘 밥을 먹습니다.", 3, seed_words[3:6])
 
     conn.execute(text("""
         INSERT INTO sentence_results (user_id, session_id, sentence_id, status)
@@ -96,10 +96,10 @@ def test_get_dashboard_hero_metrics_excludes_skipped_and_cheated_sentences(clien
     assert metrics["words_reviewed"] == 2  # Would be 8 if the skipped and cheated sentences' words counted
 
 
-def test_get_dashboard_words_times_reviewed_excludes_skipped_and_cheated(client, access_token, seed_user, seed_session, seed_user_words, conn):
+def test_get_dashboard_words_times_reviewed_excludes_skipped_and_cheated(client, access_token, seed_user, seed_session, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
-    reviewed_word_id = seed_user_words[0]   # Same word three times, so the count isolates the status filter rather than the word
+    reviewed_word_id = seed_words[0]   # Same word three times, so the count isolates the status filter rather than the word
     conn.execute(text("""
         INSERT INTO vocab_results (user_id, session_id, word_id, response_time_ms, answered_at, status, session_position)
         VALUES (:user_id, :session_id, :word_id, 900, '2026-08-30T10:00:00', 'correct_first_try', 1),

@@ -55,14 +55,6 @@ class VocabResult(Base):
     session_position: Mapped[int]
 
 
-class UserWord(Base):
-    __tablename__ = "user_words"
-
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
-    word_id: Mapped[int] = mapped_column(ForeignKey("words.id"), primary_key=True)
-    added_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
-
-
 class Sentence(Base):
     __tablename__ = "sentences"
 

@@ -102,11 +102,11 @@ def test_get_sentence_batch_excludes_completed_sentences(client, access_token, s
         assert sentence_id in returned_ids
 
 
-def test_get_session_summary_excludes_skipped(client, access_token, seed_session, seed_user_words, conn):
+def test_get_session_summary_excludes_skipped(client, access_token, seed_session, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
-    answered_sentence_id = seed_sentence(conn, "물을 마십니다.", 2, seed_user_words[:2])
-    skipped_sentence_id = seed_sentence(conn, "집에 갑니다.", 3, seed_user_words[2:5])
+    answered_sentence_id = seed_sentence(conn, "물을 마십니다.", 2, seed_words[:2])
+    skipped_sentence_id = seed_sentence(conn, "집에 갑니다.", 3, seed_words[2:5])
 
     client.post("/sentence-results", json={"sentence_id": answered_sentence_id, "session_id": seed_session, "status": "correct"})
     client.post("/sentence-results", json={"sentence_id": skipped_sentence_id, "session_id": seed_session, "status": "skipped"})
@@ -118,12 +118,12 @@ def test_get_session_summary_excludes_skipped(client, access_token, seed_session
     assert data["summary"]["total_reviewed"] == 2  # Would be 5 if the skipped sentence's words were counted
 
 
-def test_get_session_summary_excludes_cheated(client, access_token, seed_session, seed_user_words, conn):
+def test_get_session_summary_excludes_cheated(client, access_token, seed_session, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
     # The words known word IDs don't match the actual words as the only thing that's relevant for this test is numbers. I just needed the number of valid seeded word IDs (and of different quantities to distinguish in assertions: in this case 2 correct, 3 for cheated)
-    answered_sentence_id = seed_sentence(conn, "물을 마십니다.", 2, seed_user_words[:2])    # lemma count as literals as it doesn't need to be accurate for test - not what's tested. Could be anything - but written to match the number of word IDs inserts    
-    cheated_sentence_id = seed_sentence(conn, "집에 갑니다.", 3, seed_user_words[:3])
+    answered_sentence_id = seed_sentence(conn, "물을 마십니다.", 2, seed_words[:2])    # lemma count as literals as it doesn't need to be accurate for test - not what's tested. Could be anything - but written to match the number of word IDs inserts    
+    cheated_sentence_id = seed_sentence(conn, "집에 갑니다.", 3, seed_words[:3])
 
     client.post("/sentence-results", json={"sentence_id": answered_sentence_id, "session_id": seed_session, "status": "correct"})
     client.post("/sentence-results", json={"sentence_id": cheated_sentence_id, "session_id": seed_session, "status": "cheated"})
@@ -135,10 +135,10 @@ def test_get_session_summary_excludes_cheated(client, access_token, seed_session
     assert data["summary"]["total_reviewed"] == 2  # Would be 5 if the cheated sentence's words were counted
 
 
-def test_get_session_summary_counts_shared_word_once_per_sentence(client, access_token, seed_session, seed_user_words, conn):
+def test_get_session_summary_counts_shared_word_once_per_sentence(client, access_token, seed_session, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
-    shared_word_id = seed_user_words[0]
+    shared_word_id = seed_words[0]
     first_sentence_id = seed_sentence(conn, "물을 마십니다.", 1, [shared_word_id])
     second_sentence_id = seed_sentence(conn, "물을 마셔요.", 1, [shared_word_id])
 
@@ -152,7 +152,7 @@ def test_get_session_summary_counts_shared_word_once_per_sentence(client, access
     assert data["summary"]["total_reviewed"] == 2  # The same word in two sentences is two reviews of it, matching how the vocab summary treats a repeated word
 
 
-def test_get_session_summary_excludes_sentences_reviewed_in_an_earlier_session(client, access_token, seed_user, seed_session, seed_user_words, conn):
+def test_get_session_summary_excludes_sentences_reviewed_in_an_earlier_session(client, access_token, seed_user, seed_session, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
     result = conn.execute(text(
@@ -160,13 +160,13 @@ def test_get_session_summary_excludes_sentences_reviewed_in_an_earlier_session(c
     ), {"user_id": seed_user})
     earlier_session_id = result.scalar()
 
-    earlier_sentence_id = seed_sentence(conn, "어제 물을 마셨습니다.", 3, seed_user_words[:3])
+    earlier_sentence_id = seed_sentence(conn, "어제 물을 마셨습니다.", 3, seed_words[:3])
     conn.execute(text("""
         INSERT INTO sentence_results (user_id, session_id, sentence_id, status)
         VALUES (:user_id, :session_id, :sentence_id, 'correct')
     """), {"user_id": seed_user, "session_id": earlier_session_id, "sentence_id": earlier_sentence_id})
 
-    current_sentence_id = seed_sentence(conn, "밥을 먹습니다.", 1, seed_user_words[3:4])
+    current_sentence_id = seed_sentence(conn, "밥을 먹습니다.", 1, seed_words[3:4])
     client.post("/sentence-results", json={"sentence_id": current_sentence_id, "session_id": seed_session, "status": "correct"})
 
     response = client.get(f"/sentence-sessions/{seed_session}/summary")
@@ -176,7 +176,7 @@ def test_get_session_summary_excludes_sentences_reviewed_in_an_earlier_session(c
     assert data["summary"]["total_reviewed"] == 1  # Would be 4 if the earlier session's sentence leaked into this session's count
 
 
-def test_get_session_summary_excludes_other_users_data(client, access_token, seed_user_words, conn):
+def test_get_session_summary_excludes_other_users_data(client, access_token, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
     result = conn.execute(text(
@@ -189,7 +189,7 @@ def test_get_session_summary_excludes_other_users_data(client, access_token, see
     ), {"user_id": other_user_id})
     other_session_id = result.scalar()
 
-    other_sentence_id = seed_sentence(conn, "물을 마십니다.", 2, seed_user_words[:2])
+    other_sentence_id = seed_sentence(conn, "물을 마십니다.", 2, seed_words[:2])
     conn.execute(text("""
         INSERT INTO sentence_results (user_id, session_id, sentence_id, status)
         VALUES (:user_id, :session_id, :sentence_id, 'correct')

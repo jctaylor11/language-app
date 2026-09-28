@@ -18,7 +18,7 @@ NUM_SENTENCES_IN_BATCH = 3
 MIN_KNOWN_PERCENT = 80    # Comprehensible input: research puts the optimal known proportion at 80%, the remaining 20% inferred from context
 
 
-def sample_user_words_for_generation(conn: Connection, user_id: int, num_words_sampled: int) -> list[str]:
+def sample_introduced_words_for_generation(conn: Connection, user_id: int, num_words_sampled: int) -> list[str]:
     # Words for LLM prompt - should only be a small sample, since excessive words wastes tokens without improving results
     # TODO: constrain the sample: docs/sentences.md#constraint-aware-eligibility-query
     result = conn.execute(text("""
@@ -32,21 +32,21 @@ def sample_user_words_for_generation(conn: Connection, user_id: int, num_words_s
 
     rows = result.fetchall()
 
-    user_words = [row.target for row in rows]
+    sampled_words = [row.target for row in rows]
 
-    return user_words
+    return sampled_words
 
 
 def get_eligible_sentences(conn: Connection, user_id: int, sentences_already_queued: list[int] = []) -> list[SentencePair]:
     """Fetch existing sentences from the cache that the user has not already done, whose proportion of known words from their vocab vault meets the minimum."""
     eligible_sentences = conn.execute(text("""
-        WITH users_words AS (
-            SELECT * FROM introduced_words WHERE user_id = :user_id
+        WITH user_introduced_words AS (
+            SELECT word_id FROM introduced_words WHERE user_id = :user_id
             )
         SELECT s.id, s.target, s.source
         FROM sentences s
         JOIN sentence_words sw ON s.id = sw.sentence_id
-        JOIN users_words uw ON sw.word_id = uw.word_id
+        JOIN user_introduced_words uiw ON sw.word_id = uiw.word_id
         WHERE NOT EXISTS (
             SELECT 1
             FROM sentence_results sr
@@ -133,9 +133,9 @@ def get_sentence_batch(
         eligible_sentences = {"sentences": [{"id": sentence.id, "target": sentence.target, "source": sentence.source} for sentence in eligible_sentences_in_cache]}    # Early return since no need to lemmatise etc - sentences from db are already lemmatised
         return eligible_sentences
     
-    user_words_sample = sample_user_words_for_generation(read_conn, user_id, NUM_WORDS_SAMPLED)   # User words needed to get sentences bespoke for the user
+    introduced_words_sample = sample_introduced_words_for_generation(read_conn, user_id, NUM_WORDS_SAMPLED)   # Introduced words needed to get sentences bespoke for the user
 
-    generated_sentences = generate_sentences(user_words_sample, NUM_SENTENCES_IN_BATCH, MIN_KNOWN_PERCENT)  # If no eligible sentences already exist in the sentences cache
+    generated_sentences = generate_sentences(introduced_words_sample, NUM_SENTENCES_IN_BATCH, MIN_KNOWN_PERCENT)  # If no eligible sentences already exist in the sentences cache
 
     generated_sentences = lemmatise_sentences(generated_sentences)  # Lemmatisation allows sentence words to be matched against the words table by standardised citation form. Needed for sentence_words inserts and lemma_count
 

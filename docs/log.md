@@ -17,6 +17,8 @@ Consequences:
 
 Rejected alternative: I also considered changing the view to include cheated words - under the rationale that perhaps this view would feed into the selection algorithm, which considers cheated words too - however this was decided against. The word selection algorithm will take solely from the results, which is the source anyway. This provides more data for the decision, as well as cheated words.
 
+Outcome: Implemented.
+
 ### 2026-09-22 - models: delete user_words table and replace with view derived from results
 
 Currently, prior to the word selection algorithm being properly implemented, the user’s words are stored in a user_words table, with a vision for them to be inserted into this table to be added to their known vocab list. However, I’ve realised this is redundant and acts as a second source of truth as the results table. There should only be one source of truth. Therefore, it was decided that the user_words table should be removed, and instead all data relating to the user’s words list is derived from their results. The ‘added_at’ equivalent timestamp is the first successful result (not cheated, not skipped). Only words from a vocab session counts - ie newly seen words in generated sentences do not count as a word added to the user's word list - since sentences are just for review, not exposure, and it keeps the principle of the algorithm and steady word release focused.
@@ -30,6 +32,8 @@ This is a significant change which touches multiple different areas of the backe
 Rejected alternative: Keeping a user_words table which is inserted to when a new word is done. This creates a second source of truth, and unnecessarily writes to another table when everything is already just derived.
 
 Amendment 2026-09-23: view name was decided to be 'introduced_words' - since it could also be interpreted as words the user has high confidence on (ie known words), rather than just words that have not only been cheated/skipped.
+
+Outcome: Implemented. sample_word_batch samples from all words as a placeholder until the selection algorithm is built.
 
 ### 2026-09-19 - sessions: session ownership is validated when written
 

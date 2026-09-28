@@ -12,13 +12,13 @@ def test_get_word_batch(client, access_token, seed_words):
     assert len(data["word_batch"]) == 5 # Limited to 5 by endpoint query's LIMIT
     
 
-def test_create_vocab_results(client, access_token, seed_session, seed_user_words):
+def test_create_vocab_results(client, access_token, seed_session, seed_words):
     client.cookies.set("access_token", access_token)
     body = {
         "session_id": seed_session,
         "word_results": [
             {
-                "word_id": seed_user_words[0],
+                "word_id": seed_words[0],
                 "response_time_ms": 1500,
                 "answered_at": "2026-06-27T10:00:00",
                 "raw_keystrokes": "hello",
@@ -35,7 +35,7 @@ def test_create_vocab_results(client, access_token, seed_session, seed_user_word
     assert data["results_saved"] == 1
 
 
-def test_create_vocab_results_rejects_another_users_session(client, access_token, seed_user_words, conn):
+def test_create_vocab_results_rejects_another_users_session(client, access_token, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
     other_user_id = conn.execute(text(
@@ -50,7 +50,7 @@ def test_create_vocab_results_rejects_another_users_session(client, access_token
         "session_id": other_session_id,     # Session id is client supplied, so the requester could in theory name one that isn't theirs
         "word_results": [
             {
-                "word_id": seed_user_words[0],
+                "word_id": seed_words[0],
                 "response_time_ms": 1500,
                 "answered_at": "2026-06-27T10:00:00",
                 "raw_keystrokes": "hello",
@@ -67,13 +67,13 @@ def test_create_vocab_results_rejects_another_users_session(client, access_token
     assert rows_written == 0        # Asserted separately to the status code, which alone wouldn't prove the insert was rejected
 
 
-def test_get_session_summary_excludes_skipped(client, access_token, seed_session, seed_user_words):
+def test_get_session_summary_excludes_skipped(client, access_token, seed_session, seed_words):
     client.cookies.set("access_token", access_token)
     body = {
         "session_id": seed_session,
         "word_results": [
             {
-                "word_id": seed_user_words[0],
+                "word_id": seed_words[0],
                 "response_time_ms": 1500,
                 "answered_at": "2026-06-27T10:00:00",
                 "raw_keystrokes": None,
@@ -81,7 +81,7 @@ def test_get_session_summary_excludes_skipped(client, access_token, seed_session
                 "session_position": 1
             },
             {
-                "word_id": seed_user_words[1],
+                "word_id": seed_words[1],
                 "response_time_ms": 2000,
                 "answered_at": "2026-06-27T10:00:05",
                 "raw_keystrokes": None,
@@ -100,13 +100,13 @@ def test_get_session_summary_excludes_skipped(client, access_token, seed_session
     assert data["summary"]["new_words"] == 1  # Would be 2 if the skipped word were counted
 
 
-def test_get_session_summary_counts_repeat_word_as_two_reviews(client, access_token, seed_session, seed_user_words):
+def test_get_session_summary_counts_repeat_word_as_two_reviews(client, access_token, seed_session, seed_words):
     client.cookies.set("access_token", access_token)
     body = {
         "session_id": seed_session,
         "word_results": [
             {
-                "word_id": seed_user_words[0],
+                "word_id": seed_words[0],
                 "response_time_ms": 1500,
                 "answered_at": "2026-06-27T10:00:00",
                 "raw_keystrokes": None,
@@ -114,7 +114,7 @@ def test_get_session_summary_counts_repeat_word_as_two_reviews(client, access_to
                 "session_position": 1
             },
             {
-                "word_id": seed_user_words[0],
+                "word_id": seed_words[0],
                 "response_time_ms": 1800,
                 "answered_at": "2026-06-27T10:00:05",
                 "raw_keystrokes": None,
@@ -133,7 +133,7 @@ def test_get_session_summary_counts_repeat_word_as_two_reviews(client, access_to
     assert data["summary"]["new_words"] == 1  # But only one distinct word, so only one new word
 
 
-def test_get_session_summary_excludes_words_answered_in_an_earlier_session(client, access_token, seed_user, seed_session, seed_user_words, conn):
+def test_get_session_summary_excludes_words_answered_in_an_earlier_session(client, access_token, seed_user, seed_session, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
     earlier_session_id = conn.execute(text(
@@ -144,14 +144,14 @@ def test_get_session_summary_excludes_words_answered_in_an_earlier_session(clien
     conn.execute(text("""
         INSERT INTO vocab_results (user_id, session_id, word_id, response_time_ms, answered_at, status, session_position)
         VALUES (:user_id, :session_id, :word_id, 1500, '2020-01-01T00:00:00', 'correct_first_try', 1)
-    """), {"user_id": seed_user, "session_id": earlier_session_id, "word_id": seed_user_words[0]})
+    """), {"user_id": seed_user, "session_id": earlier_session_id, "word_id": seed_words[0]})
 
     # Same word answered again in the current session
     body = {
         "session_id": seed_session,
         "word_results": [
             {
-                "word_id": seed_user_words[0],
+                "word_id": seed_words[0],
                 "response_time_ms": 1200,
                 "answered_at": "2026-06-27T10:00:00",
                 "raw_keystrokes": None,
@@ -170,7 +170,7 @@ def test_get_session_summary_excludes_words_answered_in_an_earlier_session(clien
     assert data["summary"]["new_words"] == 0  # Already answered correctly in an earlier session, so not new this time
 
 
-def test_get_session_summary_excludes_other_users_data(client, access_token, seed_user_words, conn):
+def test_get_session_summary_excludes_other_users_data(client, access_token, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
     other_user_id = conn.execute(text(
@@ -184,9 +184,9 @@ def test_get_session_summary_excludes_other_users_data(client, access_token, see
     conn.execute(text("""
         INSERT INTO vocab_results (user_id, session_id, word_id, response_time_ms, answered_at, status, session_position)
         VALUES (:user_id, :session_id, :word_id, 1500, '2026-06-27T10:00:00', 'correct_first_try', 1)
-    """), {"user_id": other_user_id, "session_id": other_session_id, "word_id": seed_user_words[0]})
+    """), {"user_id": other_user_id, "session_id": other_session_id, "word_id": seed_words[0]})
 
-    response = client.get(f"/vocab-sessions/{other_session_id}/summary")
+    response = client.get(f"/vocab-sessions/{other_session_id}/summary")    # access_token fixture identifies the user via seed_user fixture
     data = response.json()
 
     assert response.status_code == 200
@@ -194,7 +194,7 @@ def test_get_session_summary_excludes_other_users_data(client, access_token, see
     assert data["summary"]["new_words"] == 0
 
 
-def test_get_session_summary_counts_previously_skipped_word_as_new(client, access_token, seed_user, seed_session, seed_user_words, conn):
+def test_get_session_summary_counts_previously_skipped_word_as_new(client, access_token, seed_user, seed_session, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
     earlier_session_id = conn.execute(text(
@@ -205,14 +205,14 @@ def test_get_session_summary_counts_previously_skipped_word_as_new(client, acces
     conn.execute(text("""
         INSERT INTO vocab_results (user_id, session_id, word_id, response_time_ms, answered_at, status, session_position)
         VALUES (:user_id, :session_id, :word_id, 1500, '2020-01-01T00:00:00', 'skipped', 1)
-    """), {"user_id": seed_user, "session_id": earlier_session_id, "word_id": seed_user_words[0]})
+    """), {"user_id": seed_user, "session_id": earlier_session_id, "word_id": seed_words[0]})
 
     # Same word answered correctly for the first time in the current session
     body = {
         "session_id": seed_session,
         "word_results": [
             {
-                "word_id": seed_user_words[0],
+                "word_id": seed_words[0],
                 "response_time_ms": 1200,
                 "answered_at": "2026-06-27T10:00:00",
                 "raw_keystrokes": None,
@@ -231,14 +231,14 @@ def test_get_session_summary_counts_previously_skipped_word_as_new(client, acces
     assert data["summary"]["new_words"] == 1  # A prior skip doesn't count as already known, so it's still new
     
 
-def test_get_session_summary_excludes_cheated_words(client, access_token, seed_session, seed_user_words):
+def test_get_session_summary_excludes_cheated_words(client, access_token, seed_session, seed_words):
     client.cookies.set("access_token", access_token)
 
     body = {
         "session_id": seed_session,
         "word_results": [
             {
-                "word_id": seed_user_words[0],
+                "word_id": seed_words[0],
                 "response_time_ms": 1200,
                 "answered_at": "2026-08-30T10:00:00",
                 "raw_keystrokes": None,
@@ -246,7 +246,7 @@ def test_get_session_summary_excludes_cheated_words(client, access_token, seed_s
                 "session_position": 1
             },
             {
-                "word_id": seed_user_words[1],
+                "word_id": seed_words[1],
                 "response_time_ms": 900,
                 "answered_at": "2026-08-30T10:00:05",
                 "raw_keystrokes": None,
@@ -265,7 +265,7 @@ def test_get_session_summary_excludes_cheated_words(client, access_token, seed_s
     assert data["summary"]["new_words"] == 1  # Cheated word doesn't count as newly learned either
 
 
-def test_get_session_summary_counts_previously_cheated_word_as_not_new(client, access_token, seed_user, seed_session, seed_user_words, conn):
+def test_get_session_summary_counts_previously_cheated_word_as_not_new(client, access_token, seed_user, seed_session, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
     earlier_session_id = conn.execute(text(
@@ -276,13 +276,13 @@ def test_get_session_summary_counts_previously_cheated_word_as_not_new(client, a
     conn.execute(text("""
         INSERT INTO vocab_results (user_id, session_id, word_id, response_time_ms, answered_at, status, session_position)
         VALUES (:user_id, :session_id, :word_id, 1500, '2020-01-01T00:00:00', 'cheated', 1)
-    """), {"user_id": seed_user, "session_id": earlier_session_id, "word_id": seed_user_words[0]})
+    """), {"user_id": seed_user, "session_id": earlier_session_id, "word_id": seed_words[0]})
 
     body = {
         "session_id": seed_session,
         "word_results": [
             {
-                "word_id": seed_user_words[0],
+                "word_id": seed_words[0],
                 "response_time_ms": 1200,
                 "answered_at": "2026-08-30T10:00:00",
                 "raw_keystrokes": None,

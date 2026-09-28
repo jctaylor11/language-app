@@ -16,7 +16,7 @@ For all endpoints, user_id is injected server side via decode_access_token and t
 
 ### GET /dashboard/hero-metrics
 
-get_hero_metrics returns the user's lifetime totals under metrics as total_words (their words) and words_reviewed (their **earned** reviews).
+get_hero_metrics returns the user's lifetime totals under metrics as total_words (their introduced_words) and words_reviewed (their **earned** reviews).
 
 - words_reviewed includes one count for each word in the sentence, rather than one review per sentence
 - Every earned review is counted rather than every distinct word, so the same word reviewed twice counts twice

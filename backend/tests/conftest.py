@@ -11,7 +11,6 @@ from backend.auth.access_token import create_access_token
 
 test_engine = create_engine(TEST_DATABASE_URL)
 
-TEST_USER_WORD_COUNT = 6
 TEST_INTRODUCED_WORDS_COUNT = 6
 
 
@@ -115,18 +114,6 @@ def seed_words(conn):
     """))
 
     word_ids = [row.id for row in result.fetchall()]
-
-    return word_ids
-
-
-@pytest.fixture
-def seed_user_words(conn, seed_user, seed_words):
-    word_ids = seed_words[:TEST_USER_WORD_COUNT] # user_words < words to differentiate between returning words vs user_words
-
-    conn.execute(text("""
-        INSERT INTO user_words (user_id, word_id)
-        VALUES (:user_id, :word_id)
-        """), [{"user_id": seed_user, "word_id": word_id} for word_id in word_ids])
 
     return word_ids
 

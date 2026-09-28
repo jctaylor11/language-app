@@ -26,7 +26,7 @@
 ### GET /words
 
 1. user_id is injected from decode_access_token
-2. sample_word_batch samples 5 words from the user_words (currently at random - selection algorithm to be added)
+2. sample_word_batch samples 5 words from all words (placeholder at random - selection algorithm to be added, which will choose whether to review or introduce a word)
 3. Rows are returned as word_batch with id, target and source. The id is used for sending the results back in payload
 
 ### POST /vocab-results

@@ -15,7 +15,7 @@
 
 ## Backend (POST /sentences)
 
-1. sample_user_words_for_generation - random 10 (TODO: make it constraint aware [Design idea](sentences.md#constraint-aware-eligibility-query))
+1. sample_introduced_words_for_generation - random 10 from introduced_words (TODO: make it constraint aware [Design idea](sentences.md#constraint-aware-eligibility-query))
 2. get_eligible_sentences - check cache for sentences that meet requirements
 3. if >= 3 eligible sentences, return them with id (early exit, no LLM generation)
 4. else generate_sentences (LLM)
@@ -51,7 +51,7 @@ I think it's very important that the 'total reviewed' count isn't super easy to 
 - Currently the user words samples are random. However they should be constrained. This should be modular to make it easy to add more constraints in the future (such as sentence tags). Currently:
   - Proportion of user’s words to new words
   - Approx length of sentence
-- Refinement: Instead of simply pulling a proportion of their user_words, there should be a per-word threshold. ie, the proportion of known words above a threshold confidence score that match the total number of lemmas in the sentence. This is unblocked after word confidence scoring is implemented.
+- Refinement: Instead of simply pulling a proportion of their introduced_words, there should be a per-word threshold (applied in get_eligible_sentences' user_introduced_words CTE). ie, the proportion of known words above a threshold confidence score that match the total number of lemmas in the sentence. This is unblocked after word confidence scoring is implemented.
 - Refinement: Sample the words weighted by most due for review rather than at random, so the small generation sample is at least a purposeful one. Also depends on word confidence scoring.
 
 ### Handling ineligible generated sentences
