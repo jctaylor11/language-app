@@ -34,6 +34,10 @@
 
 ## Design ideas
 
+### The number of words due for review should be made clear, and made obvious that sentences is an efficient way to review them
+
+This is particularly in consideration of [Log entry](log.md#2026-09-29---sentences-top-priority-is-words-that-are-due-for-review-by-selection-algorithm), where it's evident that the core value of the sentences features is to efficiently get through words that are due for review and avoid falling behind. This should be made very obvious, for example with a count of words due for review (similar to how in Anki it says the number you need to work through), and make it obvious this is being rapidly deducted from with each sentence - since the sentences should be composed of words due for review as much as possible.
+
 ### Hovering over an individual word shows the translation of that specific word
 
 Currently the cheat option has a wide impact radius - in that if a user is blocked by a single word and they cheat to resolve that word, the whole sentence gets 'cheated'. Instead it would be good to allow a user to see a specific word's translation. This could be done by returning each sentence as an array of work objects rather than a complete string, which each carring the displayed surface form, the lemma, and the lemmas translation. This can be resolved in one batched query, and since the frontend would render one element per word the hovering would be instant. A challenge is that the surface form has the partical etc, whereas the words database would just be the lemma - therefore, the tooltip can show for 공원에서, e.g 공원: Park. This also adds scope to add something additional for -에서 if I decide to implement this - but for now vocab lemma acts as a fair nudge.
