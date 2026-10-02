@@ -3,8 +3,8 @@
 Important and general considerations that decisions should adhere to.
 
 1. Progress metrics must be earned
-   - 'Total reviewed', 'new words', and session score must exist as a reward. The value must have integrity. If it is possible to 'game' a metric (e.g through the cheat feature), even inadvertently, the achievement felt from a high number is undermined and the system becomes boring. It must therefore bias towards undercounting rather than overcounting (e.g excluding a valid count over including an invalid count).
-   - Particularly considered around the cheating mechanics - cheated (or skipped) words, and words from cheated sentences do not count towards the total reviewed or new word count.
+   - 'Total reviewed', 'new words', and session score must exist as a reward. The value must have integrity. If it is possible to 'game' a metric (e.g through the peek feature), even inadvertently, the achievement felt from a high number is undermined and the system becomes boring. It must therefore bias towards undercounting rather than overcounting (e.g excluding a valid count over including an invalid count).
+   - Particularly considered around the peeking mechanics - peeked (or skipped) words, and words from peeked sentences do not count towards the total reviewed or new word count.
 
 2. Remove all frictions to start
    - No bloat, no decision paralysis, no distracting gamifications - the system is specifically targeted towards people who just want to buckle down and bash out a solid Korean vocab session without inertias.

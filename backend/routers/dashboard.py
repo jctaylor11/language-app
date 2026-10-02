@@ -14,9 +14,9 @@ def get_word_table_data(conn: Connection, user_id: int) -> list[dict]:
             w.id,
             w.target,
             UPPER(LEFT(w.source, 1)) || LOWER(SUBSTRING(w.source FROM 2)) AS source,
-            COUNT(*) FILTER (WHERE vr.status NOT IN ('skipped', 'cheated')) AS times_reviewed,     -- A skipped or cheated word isn't a review the user earned
+            COUNT(*) FILTER (WHERE vr.status NOT IN ('skipped', 'peeked')) AS times_reviewed,     -- A skipped or peeked word isn't a review the user earned
             AVG(vr.response_time_ms) / 1000.0 / LENGTH(w.target) as av_s_per_syllable,
-            COUNT(*) FILTER (WHERE vr.status = 'correct_first_try')::numeric / NULLIF(COUNT(vr.id), 0) AS accuracy      -- Denominator intentionally stays every result, so skipping and cheating count against accuracy rather than raising it
+            COUNT(*) FILTER (WHERE vr.status = 'correct_first_try')::numeric / NULLIF(COUNT(vr.id), 0) AS accuracy      -- Denominator intentionally stays every result, so skipping and peeking count against accuracy rather than raising it
         FROM words w
         JOIN introduced_words iw ON w.id = iw.word_id
         LEFT JOIN vocab_results vr ON w.id = vr.word_id
@@ -46,7 +46,7 @@ def get_sentences_table_data(conn: Connection, user_id: int) -> list[dict]:
         FROM sentences s
         JOIN sentence_results sr ON s.id = sr.sentence_id
         WHERE sr.user_id = :user_id
-        AND sr.status NOT IN ('skipped', 'cheated')     -- A skipped or cheated sentence isn't one the user earned
+        AND sr.status NOT IN ('skipped', 'peeked')     -- A skipped or peeked sentence isn't one the user earned
         """), {"user_id": user_id})
 
     rows = query.fetchall()
@@ -57,7 +57,7 @@ def get_sentences_table_data(conn: Connection, user_id: int) -> list[dict]:
 def get_hero_metrics(conn: Connection, user_id: int) -> dict:
     query = conn.execute(text("""
         WITH total_reviewed AS (
-            SELECT 1 FROM vocab_results WHERE user_id = :user_id AND status NOT IN ('skipped', 'cheated')    -- A skipped or cheated word isn't a review the user earned
+            SELECT 1 FROM vocab_results WHERE user_id = :user_id AND status NOT IN ('skipped', 'peeked')    -- A skipped or peeked word isn't a review the user earned
         )
         SELECT
             (SELECT COUNT(*) FROM introduced_words WHERE user_id = :user_id) AS total_words,
@@ -66,7 +66,7 @@ def get_hero_metrics(conn: Connection, user_id: int) -> dict:
                 FROM sentence_results sr
                 JOIN sentence_words sw ON sr.sentence_id = sw.sentence_id
                 WHERE sr.user_id = :user_id
-                AND sr.status NOT IN ('skipped', 'cheated')     -- Words from a skipped or cheated sentence aren't reviews the user earned either
+                AND sr.status NOT IN ('skipped', 'peeked')     -- Words from a skipped or peeked sentence aren't reviews the user earned either
             ) AS total_reviewed
         """), {"user_id": user_id})
 
@@ -121,14 +121,14 @@ def get_daily_reviews_bar_chart_data(conn: Connection, user_id: int) -> list[dic
             FROM vocab_results vr
             JOIN sessions s ON s.id = vr.session_id
             WHERE vr.user_id = :user_id
-            AND vr.status NOT IN ('skipped', 'cheated')
+            AND vr.status NOT IN ('skipped', 'peeked')
             UNION ALL
             SELECT s.started_at                      -- one row per word in the sentence
             FROM sentence_results sr
             JOIN sentence_words sw ON sw.sentence_id = sr.sentence_id
             JOIN sessions s ON s.id = sr.session_id
             WHERE sr.user_id = :user_id
-            AND sr.status NOT IN ('skipped', 'cheated')
+            AND sr.status NOT IN ('skipped', 'peeked')
         ),
         day_counts AS (
             SELECT date_trunc('day', started_at) AS review_date, COUNT(*) AS reviews

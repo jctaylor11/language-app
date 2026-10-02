@@ -1,3 +1,9 @@
+### 2026-10-02 - results: rename the 'cheated' status to 'peeked'
+
+Currently a user can see the answer by pressing ESC, and that result entry will be labelled as 'cheated'. However, I've realised this holds unnecessary bad connotation, where seeing the word is necessary for learning. It should therefore not be associated with cheating. It was therefore decided to rename the status to 'peeked' which is more descriptive of what is actually happening. The behaviour remains unchanged - only the semantics.
+
+Rejected alternatives: 'revealed' was rejected as it seems ambiguous compared with 'peeked'. Revealed could be like revealing something at the end, whereas 'peeked' is more clearly briefly checking something - which matches the actual beahviour of only seeing while ESC is held. Other alternatives like hinted or assisted seem ambiguous.
+
 ### 2026-09-29 - sentences: top priority is words that are due for review by selection algorithm
 
 At a high level, the selection algorithm's primary goal should be to identify when a word is due for review - and it is these words that should be the top priority for sentence generations. This provides a lot of value by allowing users to quickly catch up with words they need to review by translating bespoke sentences.

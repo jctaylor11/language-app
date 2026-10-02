@@ -3,13 +3,13 @@ import enum
 class VocabResultStatus(enum.Enum):
     correct_first_try = "correct_first_try"
     corrected = "corrected"
-    cheated = "cheated"
+    peeked = "peeked"
     skipped = "skipped"
 
 
 class SentenceResultStatus(enum.Enum):
     correct = "correct"
-    cheated = "cheated"
+    peeked = "peeked"
     skipped = "skipped"
 
 

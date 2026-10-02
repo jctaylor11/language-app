@@ -39,7 +39,7 @@ def get_session_log_data(conn: Connection, user_id: int) -> list[dict]:
             JOIN vocab_results ON sessions.id = vocab_results.session_id
             WHERE sessions.user_id = :user_id
             AND vocab_results.user_id = :user_id
-            AND vocab_results.status NOT IN ('skipped', 'cheated')       -- Neither counts as a review the user earned
+            AND vocab_results.status NOT IN ('skipped', 'peeked')       -- Neither counts as a review the user earned
             GROUP BY sessions.id, sessions.session_type, sessions.started_at
             UNION ALL (
                 SELECT sentence_results.session_id, sessions.started_at, sessions.session_type, COUNT(*)
@@ -48,7 +48,7 @@ def get_session_log_data(conn: Connection, user_id: int) -> list[dict]:
                 JOIN sessions ON sessions.id = sentence_results.session_id
                 WHERE sessions.user_id = :user_id
                 AND sentence_results.user_id = :user_id
-                AND sentence_results.status NOT IN ('skipped', 'cheated')       -- Neither counts as a review the user earned, matching the vocab branch above
+                AND sentence_results.status NOT IN ('skipped', 'peeked')       -- Neither counts as a review the user earned, matching the vocab branch above
                 GROUP BY sentence_results.session_id, sessions.session_type, sessions.started_at
             ))
         SELECT session_id, started_at, session_type, total_reviewed, ROW_NUMBER() OVER (ORDER BY started_at, session_id) AS session_number

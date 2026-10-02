@@ -7,11 +7,11 @@
 - fetchNextPage is only fired when the (total - current index) <= 3
 - fetchNextPage hits fetchSentencePairs, which hits POST /sentences
 - The known-word proportion is fixed at >= 80%. Since this is fixed, the sentences can be prefetched on mount (before the user starts the session) so the user (hopefully) doesn't have to wait.
-- handleKeyDown adds 'skipped' status if tab is pressed. Adds 'cheated' status if esc is pressed, and reveals the answer for as long it is held
+- handleKeyDown adds 'skipped' status if tab is pressed. Adds 'peeked' status if esc is pressed, and reveals the answer for as long it is held
 - answerRevealed is set false on keyup or on blur in case focus is lost mid session
 - Esc and tab both guard on e.repeat, so a held key counts once
 - The input autofocuses, and blur refocuses it so typing isn't lost mid-session
-- completedSentencesCount still increments on a cheated sentence, since it is progress towards the five rather than a score
+- completedSentencesCount still increments on a peeked sentence, since it is progress towards the five rather than a score
 
 ## Backend (POST /sentences)
 
@@ -30,9 +30,13 @@
 - lemma_count could be inflated since one surface word can be split into multiple lemmas (e.g 공부해 -> 공부 + 하다), and therefore a user who knows 공부 only gets half credit. TODO: verify the extract_lemmas output and test proportions are as expected.
 - The threshold is a floor with no upper bound, so fully known sentences with no new words stay eligible
 - If the generated sentences are not eligible, the get_eligible_sentences refetch will return a placeholder. How this is handled needs to be solved - [Design ideas](sentences.md#handling-ineligible-generated-sentences)
-- A cheated sentence excludes all of its words from total_reviewed, not just the word that blocked the user - [Design idea](sentences.md#hovering-over-an-individual-word-shows-the-translation-of-that-specific-word)
+- A peeked sentence excludes all of its words from total_reviewed, not just the word that blocked the user - [Design idea](sentences.md#hovering-over-an-individual-word-shows-the-translation-of-that-specific-word)
 
 ## Design ideas
+
+### Consider semantic priming - generated sentences should be evaluated for having their words connected
+
+For example, it's easier to remember "the doctor and nurse went to hospital" than "the artist and driver went to the supermarket". I should have a syste in place to filter out sentences which seems like a random jumble of words.
 
 ### The number of words due for review should be made clear, and made obvious that sentences is an efficient way to review them
 
@@ -40,11 +44,11 @@ This is particularly in consideration of [Log entry](log.md#2026-09-29---sentenc
 
 ### Hovering over an individual word shows the translation of that specific word
 
-Currently the cheat option has a wide impact radius - in that if a user is blocked by a single word and they cheat to resolve that word, the whole sentence gets 'cheated'. Instead it would be good to allow a user to see a specific word's translation. This could be done by returning each sentence as an array of work objects rather than a complete string, which each carring the displayed surface form, the lemma, and the lemmas translation. This can be resolved in one batched query, and since the frontend would render one element per word the hovering would be instant. A challenge is that the surface form has the partical etc, whereas the words database would just be the lemma - therefore, the tooltip can show for 공원에서, e.g 공원: Park. This also adds scope to add something additional for -에서 if I decide to implement this - but for now vocab lemma acts as a fair nudge.
+Currently the peek option has a wide impact radius - in that if a user is blocked by a single word and they peek to resolve that word, the whole sentence gets 'peeked'. Instead it would be good to allow a user to see a specific word's translation. This could be done by returning each sentence as an array of work objects rather than a complete string, which each carring the displayed surface form, the lemma, and the lemmas translation. This can be resolved in one batched query, and since the frontend would render one element per word the hovering would be instant. A challenge is that the surface form has the partical etc, whereas the words database would just be the lemma - therefore, the tooltip can show for 공원에서, e.g 공원: Park. This also adds scope to add something additional for -에서 if I decide to implement this - but for now vocab lemma acts as a fair nudge.
 
-### Guard against inflating total reviewed count from cheating sentences - for example, minimum individual words hovered over and attempt before cheating enables
+### Guard against inflating total reviewed count from peeking sentences - for example, minimum individual words hovered over and attempt before peeking enables
 
-I think it's very important that the 'total reviewed' count isn't super easy to increase. E.g, someone should not be able to cheat on a sentence immediately, type it, and have the total reviewed count increase by 10 words or something. They need to work for it, otherwise there is not pride in a high number. On top of individual word hovering, there could additionally be some sort of guard to prevent 'cheating' on the whole sentence too soon - hence encourages people to actually try, rather than to flick through them. For example, they need to have typed at least something AND have viewed a certain proportion of individual lemmas - only then they can ESC to see the answer, and in that case the whole sentences is 'cheated'. Would be reasonable therefore to discount all words as 'reviewed' (or something similar) to maintain 'total reviewed' integrity. If not 'cheated' on the whole sentence (ESC), on the specific words they hovered over could get a 'cheated' status. This would require a migration to save which words in a sentence have been cheated, such as another table where the grain is each sentence's word and the individual status.
+I think it's very important that the 'total reviewed' count isn't super easy to increase. E.g, someone should not be able to peek at a sentence immediately, type it, and have the total reviewed count increase by 10 words or something. They need to work for it, otherwise there is not pride in a high number. On top of individual word hovering, there could additionally be some sort of guard to prevent 'peeking' on the whole sentence too soon - hence encourages people to actually try, rather than to flick through them. For example, they need to have typed at least something AND have viewed a certain proportion of individual lemmas - only then they can ESC to see the answer, and in that case the whole sentences is 'peeked'. Would be reasonable therefore to discount all words as 'reviewed' (or something similar) to maintain 'total reviewed' integrity. If not 'peeked' on the whole sentence (ESC), on the specific words they hovered over could get a 'peeked' status. This would require a migration to save which words in a sentence have been peeked, such as another table where the grain is each sentence's word and the individual status.
 
 ### Word tagging for user-steered content
 

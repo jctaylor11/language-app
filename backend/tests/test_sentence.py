@@ -118,21 +118,21 @@ def test_get_session_summary_excludes_skipped(client, access_token, seed_session
     assert data["summary"]["total_reviewed"] == 2  # Would be 5 if the skipped sentence's words were counted
 
 
-def test_get_session_summary_excludes_cheated(client, access_token, seed_session, seed_words, conn):
+def test_get_session_summary_excludes_peeked(client, access_token, seed_session, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
-    # The words known word IDs don't match the actual words as the only thing that's relevant for this test is numbers. I just needed the number of valid seeded word IDs (and of different quantities to distinguish in assertions: in this case 2 correct, 3 for cheated)
+    # The words known word IDs don't match the actual words as the only thing that's relevant for this test is numbers. I just needed the number of valid seeded word IDs (and of different quantities to distinguish in assertions: in this case 2 correct, 3 for peeked)
     answered_sentence_id = seed_sentence(conn, "물을 마십니다.", 2, seed_words[:2])    # lemma count as literals as it doesn't need to be accurate for test - not what's tested. Could be anything - but written to match the number of word IDs inserts    
-    cheated_sentence_id = seed_sentence(conn, "집에 갑니다.", 3, seed_words[:3])
+    peeked_sentence_id = seed_sentence(conn, "집에 갑니다.", 3, seed_words[:3])
 
     client.post("/sentence-results", json={"sentence_id": answered_sentence_id, "session_id": seed_session, "status": "correct"})
-    client.post("/sentence-results", json={"sentence_id": cheated_sentence_id, "session_id": seed_session, "status": "cheated"})
+    client.post("/sentence-results", json={"sentence_id": peeked_sentence_id, "session_id": seed_session, "status": "peeked"})
 
     response = client.get(f"/sentence-sessions/{seed_session}/summary")
     data = response.json()
 
     assert response.status_code == 200
-    assert data["summary"]["total_reviewed"] == 2  # Would be 5 if the cheated sentence's words were counted
+    assert data["summary"]["total_reviewed"] == 2  # Would be 5 if the peeked sentence's words were counted
 
 
 def test_get_session_summary_counts_shared_word_once_per_sentence(client, access_token, seed_session, seed_words, conn):

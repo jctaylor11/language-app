@@ -12,7 +12,7 @@
 
 ## Backend
 
-For all endpoints, user_id is injected server side via decode_access_token and takes get_read_connection. Every count excludes 'skipped' and 'cheated', since progress metrics must be earned, as per [Principles](principles.md).
+For all endpoints, user_id is injected server side via decode_access_token and takes get_read_connection. Every count excludes 'skipped' and 'peeked', since progress metrics must be earned, as per [Principles](principles.md).
 
 ### GET /dashboard/hero-metrics
 

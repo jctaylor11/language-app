@@ -27,7 +27,7 @@ function SentenceStart({ onStart }: { onStart: () => void }) {
       <p className="mb-2">
         Min 80% known words, prioritising those due for review
       </p>
-      <p className="text-gray-500 pl-4">ESC to cheat</p>
+      <p className="text-gray-500 pl-4">ESC to peek</p>
       <p className="text-gray-500 pl-4">TAB to skip</p>
 
       {/* Intentionally leaving 'session' in to signal how the app functions in terms of session - this is the root of the data, the session log, etc */}
@@ -143,7 +143,7 @@ export default function SentenceSession() {
   const [completedSentencesCount, setCompletedSentencesCount] = useState(0);
   const [answerRevealed, setAnswerRevealed] = useState(false);
 
-  const cheated = useRef<boolean>(false);
+  const peeked = useRef<boolean>(false);
   const inputElementRef = useRef<HTMLInputElement>(null);
   const queuedSentenceIdsRef = useRef<number[]>([]); // queryFn needs the latest sentencePairs, but referencing it directly creates a TS type cycle (its type depends on this hook's own return)
 
@@ -194,11 +194,11 @@ export default function SentenceSession() {
     const session_id = session;
 
     let status: string;
-    // Skipping takes priority over cheating, as it's a conscious decision they don't want to do that sentence
+    // Skipping takes priority over peeking, as it's a conscious decision they don't want to do that sentence
     if (skipped) {
       status = "skipped";
-    } else if (cheated.current) {
-      status = "cheated";
+    } else if (peeked.current) {
+      status = "peeked";
     } else {
       status = "correct";
     }
@@ -217,7 +217,7 @@ export default function SentenceSession() {
 
     setInputText("");
     setAnswerRevealed(false);
-    cheated.current = false;
+    peeked.current = false;
     setSentencePairIndex(nextIndex);
 
     if (sentencePairs.length - nextIndex <= 3) {
@@ -262,7 +262,7 @@ export default function SentenceSession() {
       if (e.repeat) return; // Only the first press down is relevant
 
       setAnswerRevealed(true);
-      cheated.current = true; // Only in keydown, not key up - otherwise holding the keydown while typing correct answer will result in a false positive on the next sentence
+      peeked.current = true; // Only in keydown, not key up - otherwise holding the keydown while typing correct answer will result in a false positive on the next sentence
     }
 
     if (key === "Tab") {

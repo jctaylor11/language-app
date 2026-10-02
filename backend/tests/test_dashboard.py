@@ -51,33 +51,33 @@ def test_get_dashboard_hero_metrics_for_empty_user(client, access_token):
     assert metrics["words_reviewed"] == 0
 
 
-def test_get_dashboard_hero_metrics_excludes_skipped_and_cheated_words(client, access_token, seed_user, seed_session, seed_words, conn):
+def test_get_dashboard_hero_metrics_excludes_skipped_and_peeked_words(client, access_token, seed_user, seed_session, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
     conn.execute(text("""
         INSERT INTO vocab_results (user_id, session_id, word_id, response_time_ms, answered_at, status, session_position)
-        VALUES (:user_id, :session_id, :cheated_word_id, 1500, '2026-08-30T10:00:00', 'cheated', 1),
+        VALUES (:user_id, :session_id, :peeked_word_id, 1500, '2026-08-30T10:00:00', 'peeked', 1),
                (:user_id, :session_id, :skipped_word_id, 400, '2026-08-30T10:00:03', 'skipped', 2),
                (:user_id, :session_id, :correct_word_id, 900, '2026-08-30T10:00:05', 'correct_first_try', 3),
                (:user_id, :session_id, :skipped_then_corrected_word_id, 300, '2026-08-30T10:00:08', 'skipped', 4),
                (:user_id, :session_id, :skipped_then_corrected_word_id, 1100, '2026-08-30T10:00:12', 'corrected', 5)
-    """), {"user_id": seed_user, "session_id": seed_session, "cheated_word_id": seed_words[0], "skipped_word_id": seed_words[1], "correct_word_id": seed_words[2], "skipped_then_corrected_word_id": seed_words[3]})
+    """), {"user_id": seed_user, "session_id": seed_session, "peeked_word_id": seed_words[0], "skipped_word_id": seed_words[1], "correct_word_id": seed_words[2], "skipped_then_corrected_word_id": seed_words[3]})
 
     response = client.get(f"/dashboard/hero-metrics")
     assert response.status_code == 200
     data = response.json()
     metrics = data["metrics"]
 
-    assert metrics["total_words"] == 2     # Would be 4 if only-skipped or only-cheated words counted, or would be 1 if words that were first skipped stopped being counted if later earned
-    assert metrics["words_reviewed"] == 2  # Would be 5 if the cheated and skipped results counted, only the correct and corrected ones are earned
+    assert metrics["total_words"] == 2     # Would be 4 if only-skipped or only-peeked words counted, or would be 1 if words that were first skipped stopped being counted if later earned
+    assert metrics["words_reviewed"] == 2  # Would be 5 if the peeked and skipped results counted, only the correct and corrected ones are earned
 
 
-def test_get_dashboard_hero_metrics_excludes_skipped_and_cheated_sentences(client, access_token, seed_user, seed_session, seed_words, conn):
+def test_get_dashboard_hero_metrics_excludes_skipped_and_peeked_sentences(client, access_token, seed_user, seed_session, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
     answered_sentence_id = seed_sentence(conn, "물을 마십니다.", 2, seed_words[:2])
     skipped_sentence_id = seed_sentence(conn, "집에 갑니다.", 3, seed_words[2:5])
-    cheated_sentence_id = seed_sentence(conn, "오늘 밥을 먹습니다.", 3, seed_words[3:6])
+    peeked_sentence_id = seed_sentence(conn, "오늘 밥을 먹습니다.", 3, seed_words[3:6])
 
     conn.execute(text("""
         INSERT INTO sentence_results (user_id, session_id, sentence_id, status)
@@ -85,7 +85,7 @@ def test_get_dashboard_hero_metrics_excludes_skipped_and_cheated_sentences(clien
     """), [
         {"user_id": seed_user, "session_id": seed_session, "sentence_id": answered_sentence_id, "status": "correct"},
         {"user_id": seed_user, "session_id": seed_session, "sentence_id": skipped_sentence_id, "status": "skipped"},
-        {"user_id": seed_user, "session_id": seed_session, "sentence_id": cheated_sentence_id, "status": "cheated"},
+        {"user_id": seed_user, "session_id": seed_session, "sentence_id": peeked_sentence_id, "status": "peeked"},
     ])
 
     response = client.get(f"/dashboard/hero-metrics")
@@ -93,10 +93,10 @@ def test_get_dashboard_hero_metrics_excludes_skipped_and_cheated_sentences(clien
     data = response.json()
     metrics = data["metrics"]
 
-    assert metrics["words_reviewed"] == 2  # Would be 8 if the skipped and cheated sentences' words counted
+    assert metrics["words_reviewed"] == 2  # Would be 8 if the skipped and peeked sentences' words counted
 
 
-def test_get_dashboard_words_times_reviewed_excludes_skipped_and_cheated(client, access_token, seed_user, seed_session, seed_words, conn):
+def test_get_dashboard_words_times_reviewed_excludes_skipped_and_peeked(client, access_token, seed_user, seed_session, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
     reviewed_word_id = seed_words[0]   # Same word three times, so the count isolates the status filter rather than the word
@@ -104,7 +104,7 @@ def test_get_dashboard_words_times_reviewed_excludes_skipped_and_cheated(client,
         INSERT INTO vocab_results (user_id, session_id, word_id, response_time_ms, answered_at, status, session_position)
         VALUES (:user_id, :session_id, :word_id, 900, '2026-08-30T10:00:00', 'correct_first_try', 1),
                (:user_id, :session_id, :word_id, 400, '2026-08-30T10:00:03', 'skipped', 2),
-               (:user_id, :session_id, :word_id, 1500, '2026-08-30T10:00:06', 'cheated', 3)
+               (:user_id, :session_id, :word_id, 1500, '2026-08-30T10:00:06', 'peeked', 3)
     """), {"user_id": seed_user, "session_id": seed_session, "word_id": reviewed_word_id})
 
     response = client.get(f"/dashboard/words")
@@ -112,8 +112,8 @@ def test_get_dashboard_words_times_reviewed_excludes_skipped_and_cheated(client,
     data = response.json()
     word = next(word for word in data["words"] if word["id"] == reviewed_word_id)
 
-    assert word["times_reviewed"] == 1  # Would be 3 if the skipped and cheated results counted as reviews
-    assert word["accuracy"] == 1 / 3    # Denominator intentionally stays every result, so skipping and cheating count against accuracy rather than raising it
+    assert word["times_reviewed"] == 1  # Would be 3 if the skipped and peeked results counted as reviews
+    assert word["accuracy"] == 1 / 3    # Denominator intentionally stays every result, so skipping and peeking count against accuracy rather than raising it
 
 
 def test_get_word_chart_data(client, access_token, seed_introduced_words):

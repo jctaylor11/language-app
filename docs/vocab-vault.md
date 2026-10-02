@@ -13,10 +13,10 @@ user_id injected server side via decode_access_token and get_read_connection
 
 get_word_table_data returns one row per word in the user's vault
 
-- Shows the user's introduced_words - words with at least one earned vocab result, so words only ever skipped or cheated are excluded
-- times_reviewed excludes 'skipped' and 'cheated', a review must be earned as per principles
+- Shows the user's introduced_words - words with at least one earned vocab result, so words only ever skipped or peeked are excluded
+- times_reviewed excludes 'skipped' and 'peeked', a review must be earned as per principles
 - av_s_per_syllable divides average response_time_ms by the character length of the target, so words of different lengths are comparable
-- accuracy is 'correct_first_try' over **every** result, so skipping and cheating count against it rather than raising it
+- accuracy is 'correct_first_try' over **every** result, so skipping and peeking count against it rather than raising it
 
 ## Design Ideas
 

@@ -231,7 +231,7 @@ def test_get_session_summary_counts_previously_skipped_word_as_new(client, acces
     assert data["summary"]["new_words"] == 1  # A prior skip doesn't count as already known, so it's still new
     
 
-def test_get_session_summary_excludes_cheated_words(client, access_token, seed_session, seed_words):
+def test_get_session_summary_excludes_peeked_words(client, access_token, seed_session, seed_words):
     client.cookies.set("access_token", access_token)
 
     body = {
@@ -242,7 +242,7 @@ def test_get_session_summary_excludes_cheated_words(client, access_token, seed_s
                 "response_time_ms": 1200,
                 "answered_at": "2026-08-30T10:00:00",
                 "raw_keystrokes": None,
-                "status": "cheated",
+                "status": "peeked",
                 "session_position": 1
             },
             {
@@ -261,21 +261,21 @@ def test_get_session_summary_excludes_cheated_words(client, access_token, seed_s
     data = response.json()
 
     assert response.status_code == 200
-    assert data["summary"]["total_reviewed"] == 1  # Only the recalled word - a cheated word isn't a review the user earned
-    assert data["summary"]["new_words"] == 1  # Cheated word doesn't count as newly learned either
+    assert data["summary"]["total_reviewed"] == 1  # Only the recalled word - a peeked word isn't a review the user earned
+    assert data["summary"]["new_words"] == 1  # Peeked word doesn't count as newly learned either
 
 
-def test_get_session_summary_counts_previously_cheated_word_as_not_new(client, access_token, seed_user, seed_session, seed_words, conn):
+def test_get_session_summary_counts_previously_peeked_word_as_not_new(client, access_token, seed_user, seed_session, seed_words, conn):
     client.cookies.set("access_token", access_token)
 
     earlier_session_id = conn.execute(text(
         "INSERT INTO sessions (user_id, bound_type, bound_value, session_type) VALUES (:user_id, 'time', 120, 'vocab') RETURNING id"
     ), {"user_id": seed_user}).scalar()
 
-    # Word cheated in an earlier session - unlike a skip, seeing the answer counts as having been exposed to the word
+    # Word peeked in an earlier session - unlike a skip, seeing the answer counts as having been exposed to the word
     conn.execute(text("""
         INSERT INTO vocab_results (user_id, session_id, word_id, response_time_ms, answered_at, status, session_position)
-        VALUES (:user_id, :session_id, :word_id, 1500, '2020-01-01T00:00:00', 'cheated', 1)
+        VALUES (:user_id, :session_id, :word_id, 1500, '2020-01-01T00:00:00', 'peeked', 1)
     """), {"user_id": seed_user, "session_id": earlier_session_id, "word_id": seed_words[0]})
 
     body = {
@@ -298,4 +298,4 @@ def test_get_session_summary_counts_previously_cheated_word_as_not_new(client, a
 
     assert response.status_code == 200
     assert data["summary"]["total_reviewed"] == 1
-    assert data["summary"]["new_words"] == 0  # Already seen via the earlier cheat, so not new this time
+    assert data["summary"]["new_words"] == 0  # Already seen via the earlier peek, so not new this time

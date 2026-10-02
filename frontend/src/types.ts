@@ -15,7 +15,7 @@ export type SessionResponse = {
 export type VocabResultStatus =
   | "correct_first_try"
   | "corrected"
-  | "cheated"
+  | "peeked"
   | "skipped";
 
 export type WordResults = {
