@@ -1,8 +1,16 @@
+### 2026-10-05 - dashboard: only completed sessions are shown and contribute to metrics, but incomplete sessions still contribute to algorithm
+
+The session log currently lists every session with results, even if it was not complete. It was decided to only show sessions with a non-NULL completed_at, since starting and abandoning a session can make the page look messy. It also creates an incentive to see the full session through, rather than to leave it early. This also applies to metrics - where users should feel incentivised to completing a session, and if they can do e.g half a session and see their count go up, the session loses integrity and it only becomes a window of time in which to practice.
+
+However, their inputs are still valuable data - and therefore kept for the selection algorithm to use.
+
 ### 2026-10-02 - results: rename the 'cheated' status to 'peeked'
 
 Currently a user can see the answer by pressing ESC, and that result entry will be labelled as 'cheated'. However, I've realised this holds unnecessary bad connotation, where seeing the word is necessary for learning. It should therefore not be associated with cheating. It was therefore decided to rename the status to 'peeked' which is more descriptive of what is actually happening. The behaviour remains unchanged - only the semantics.
 
 Rejected alternatives: 'revealed' was rejected as it seems ambiguous compared with 'peeked'. Revealed could be like revealing something at the end, whereas 'peeked' is more clearly briefly checking something - which matches the actual beahviour of only seeing while ESC is held. Other alternatives like hinted or assisted seem ambiguous.
+
+Outcome: Implemented.
 
 ### 2026-09-29 - sentences: top priority is words that are due for review by selection algorithm
 

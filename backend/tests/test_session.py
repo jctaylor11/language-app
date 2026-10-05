@@ -76,7 +76,7 @@ def test_get_session_log_excludes_peeked_sentences_from_total_reviewed(client, a
     client.cookies.set("access_token", access_token)
 
     result = conn.execute(text(
-        "INSERT INTO sessions (user_id, bound_type, bound_value, session_type) VALUES (:user_id, 'count', 5, 'sentence') RETURNING id"
+        "INSERT INTO sessions (user_id, bound_type, bound_value, session_type, completed_at) VALUES (:user_id, 'count', 5, 'sentence', NOW()) RETURNING id"
     ), {"user_id": seed_user})
     sentence_session_id = result.scalar()
 
@@ -98,3 +98,27 @@ def test_get_session_log_excludes_peeked_sentences_from_total_reviewed(client, a
     assert response.status_code == 200
     session_row = next(row for row in data["session_log"] if row["session_id"] == sentence_session_id)
     assert session_row["total_reviewed"] == 2  # Would be 5 if the peeked sentence's words counted, matching how the vocab branch treats a peeked word
+
+
+def test_get_session_log_excludes_incomplete_sessions(client, access_token, seed_user, seed_session, seed_words, conn):
+    client.cookies.set("access_token", access_token)
+
+    result = conn.execute(text(
+        "INSERT INTO sessions (user_id, bound_type, bound_value, session_type, started_at) VALUES (:user_id, 'time', 120, 'vocab', '2026-08-29T10:00:00') RETURNING id"
+    ), {"user_id": seed_user})
+    abandoned_session_id = result.scalar()  # Started before seed_session, so it would take session_number 1 if it were counted
+
+    conn.execute(text("""
+        INSERT INTO vocab_results (user_id, session_id, word_id, response_time_ms, answered_at, status, session_position)
+        VALUES (:user_id, :abandoned_session_id, :abandoned_word_id, 900, '2026-08-29T10:00:05', 'correct_first_try', 1),
+               (:user_id, :completed_session_id, :completed_word_id, 900, '2026-08-30T10:00:05', 'correct_first_try', 1)
+    """), {"user_id": seed_user, "abandoned_session_id": abandoned_session_id, "completed_session_id": seed_session, "abandoned_word_id": seed_words[0], "completed_word_id": seed_words[1]})
+
+    response = client.get("/sessions/log")
+    data = response.json()
+
+    assert response.status_code == 200
+    session_ids = [row["session_id"] for row in data["session_log"]]
+    assert abandoned_session_id not in session_ids
+    session_row = next(row for row in data["session_log"] if row["session_id"] == seed_session)
+    assert session_row["session_number"] == 1  # Numbering only counts completed sessions

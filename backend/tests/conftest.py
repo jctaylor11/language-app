@@ -60,7 +60,7 @@ def access_token(seed_user) -> str:
 
 @pytest.fixture
 def seed_session(conn, seed_user):
-    result = conn.execute(text("INSERT INTO sessions (user_id, bound_type, bound_value, session_type) VALUES (:user_id, :bound_type, :bound_value, :session_type) RETURNING id"), {"user_id": seed_user, "bound_type": "time", "bound_value": 120, "session_type": "vocab"})
+    result = conn.execute(text("INSERT INTO sessions (user_id, bound_type, bound_value, session_type, completed_at) VALUES (:user_id, :bound_type, :bound_value, :session_type, NOW()) RETURNING id"), {"user_id": seed_user, "bound_type": "time", "bound_value": 120, "session_type": "vocab"})     # Completed, since abandoned sessions are excluded from the session log
     return result.scalar()
 
 

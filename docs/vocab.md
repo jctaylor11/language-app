@@ -33,7 +33,7 @@
 
 1. Result parameters from the user's input are built one dict per word result, with user_id from the token and session_id from the payload merged into each row, so the insert is a single executemany
 2. insert_vocab_results inserts batch of results into vocab_results. It is the raw data for everything derived later (e.g dashboard, confidence scoring)
-3. sessions.completed_at is re-stamped with NOW() on every flush, so it currently means 'last activity' gets updated until it is truly the last activity
+3. sessions.last_result_at is re-stamped with NOW() on every flush, so the final flush leaves it as the session's last activity
 4. Returns the number of results saved
 
 ### GET /vocab-sessions/{session_id}/summary
