@@ -5,7 +5,7 @@ from sqlalchemy import Connection
 from backend.auth.google import get_user_infos_from_google_token
 from backend.auth.users import get_or_create_user_id
 from backend.auth.access_token import create_access_token, decode_access_token
-from backend.auth.refresh_token import create_refresh_token, get_user_id_from_valid_refresh_token, delete_refresh_token
+from backend.auth.refresh_token import create_refresh_token, consume_refresh_token, delete_refresh_token
 from backend.schemas import GoogleToken
 from backend.db.connection import get_write_connection
 from backend.config import REFRESH_TOKEN_EXPIRES_DAYS
@@ -79,12 +79,11 @@ def auth_refresh(request: Request, response: Response, conn: Annotated[Connectio
     if refresh_token is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='No refresh token')
 
-    user_id = get_user_id_from_valid_refresh_token(conn, refresh_token)
+    user_id = consume_refresh_token(conn, refresh_token)   # Rotate token - single use so stolen token only gives a single access
 
     if user_id is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid or expired refresh token')
 
-    delete_refresh_token(conn, refresh_token)   # Rotate token - single use so stolen token only gives a single access
     set_auth_cookies(response, conn, user_id)
 
     return {"status": "ok"}

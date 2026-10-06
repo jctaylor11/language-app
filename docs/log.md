@@ -4,6 +4,10 @@ The session log currently lists every session with results, even if it was not c
 
 However, their inputs are still valuable data - and therefore kept for the selection algorithm to use.
 
+Amendment 2026-10-05: Only session log excludes incomplete sessions - it becomes a record of completed sessions. Later a toggle could be added to show abandoned sessions. But, the hero metrics and charts still show abandoned session counts, otherwise it starts to contradict principles: particularly immediate visible progress, and removing frictions. Knowing one needs to commit a full session timespan feels more like a friction.
+
+Outcome: Implemented.
+
 ### 2026-10-02 - results: rename the 'cheated' status to 'peeked'
 
 Currently a user can see the answer by pressing ESC, and that result entry will be labelled as 'cheated'. However, I've realised this holds unnecessary bad connotation, where seeing the word is necessary for learning. It should therefore not be associated with cheating. It was therefore decided to rename the status to 'peeked' which is more descriptive of what is actually happening. The behaviour remains unchanged - only the semantics.

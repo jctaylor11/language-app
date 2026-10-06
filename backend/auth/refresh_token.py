@@ -6,14 +6,15 @@ from sqlalchemy import text, Connection
 from backend.config import REFRESH_TOKEN_EXPIRES_DAYS
 
 
-def get_user_id_from_valid_refresh_token(conn: Connection, refresh_token: str) -> int | None:
+def consume_refresh_token(conn: Connection, refresh_token: str) -> int | None:
     hashed_refresh_token = hash_token(refresh_token)
 
-    # FOR UPDATE locks the row so a concurrent request with the same refresh token blocks here until this transaction is finished (instead of reading it as still valid)
+    # Checked and deleted in one statement so a concurrent request with the same token can't also read it as valid - the second finds no row
     result = conn.execute(text("""
-        SELECT user_id FROM refresh_tokens
+        DELETE FROM refresh_tokens
         WHERE refresh_token_hash = :refresh_token_hash
             AND refresh_token_expires_at > now()
+        RETURNING user_id
     """), {"refresh_token_hash": hashed_refresh_token})
 
     row = result.fetchone()
