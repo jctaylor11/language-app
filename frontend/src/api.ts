@@ -18,6 +18,28 @@ import type {
 
 const BASE_URL = "http://localhost:8000";
 
+let refreshInFlight: Promise<boolean> | null = null; // Shared so concurrent 401s wait on one refresh, since the refresh token is single-use
+
+async function requestTokenRefresh(): Promise<boolean> {
+  const refreshAuthUrl = `${BASE_URL}/auth/refresh`;
+  const refreshResponse = await fetch(refreshAuthUrl, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  return refreshResponse.status === 200;
+}
+
+function refreshAccessToken(): Promise<boolean> {
+  if (refreshInFlight === null) {
+    refreshInFlight = requestTokenRefresh().finally(() => {
+      refreshInFlight = null; // Cleared once settled so the next expiry triggers a fresh refresh
+    });
+  }
+
+  return refreshInFlight;
+}
+
 // Wrapper API to call endpoints with auth and retry with refresh token if 401 response
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
   let response = await fetch(url, { ...options, credentials: "include" });
@@ -26,14 +48,10 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
   if (response.status != 401) {
     return response;
   } else {
-    const refreshAuthUrl = `${BASE_URL}/auth/refresh`;
-    const refreshResponse = await fetch(refreshAuthUrl, {
-      method: "POST",
-      credentials: "include",
-    });
+    const refreshSucceeded = await refreshAccessToken();
 
     // Refresh token is invalid
-    if (refreshResponse.status != 200) {
+    if (refreshSucceeded === false) {
       throw new Error(
         "Refresh token is invalid or expired. Please log in again.",
       );
