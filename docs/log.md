@@ -1,3 +1,34 @@
+### 2026-10-08 - algorithm: words due for review are determined by modelling memory, estimating each word's recall probability, and seeing which fall below a threshold
+
+The ideal time to review something is just before you forget it. The algorithm will therefore select words due for review by first predicting the probability that a user will recall the word. This is based on Ebbinghaus research on forgetting curves, and the spaced-repetition work built on it.
+
+When the probability of recall falls below a certain threshold, it's due for review.
+
+It is the words that are due for review that the vocab session algorithm selects from according to its policy, and that sentence session algorithm selects from to fetch (or generate) sentences for efficient review in-context.
+
+Rather than reinventing the wheel, I will start with an established and open-source licensed spaced repetition algorithm and adapt it. FSRS fits the starting requirement since it seems well documented and open source licensing. This will form the starting point of my research, and the design question becomes how the algorithm can be adapted to fit my telemetry. This is to address Question 1 of the three core questions (below).
+
+Consequences: Sentence words results must also be considered alongside the vocab results, since words reviewed in sentences must also count as a review.
+
+Rejected alternatives: SM-2, since it is rigid - a fixed multiplier, with only per-card state without intelligently fitting the user's review history. It only gives a due date, rather than working with memory model and recall probability. Later SM algorithms are more advanced, but these are proprietary.
+
+### 2026-10-08 - business logic: core questions to focus on
+
+The primary goal of the selection algorithm is to choose the next best word for the user to review. This includes reviewing words they have seen before, and being introduced to a new word. The selection algorithm therefore has two layers:
+
+1. Of the words which have a non-skipped result, which is the most due for review?
+2. Of the words without a non-skipped result, which is most suitable to introduce?
+
+The sentences session will use the words most due for review, and the vocab session will have a policy to select between words due for review and words suitable to introduce.
+
+There are therefore three core questions:
+
+1. How do we calculate when a word is due for review?
+2. How do we determine which words are suitable to be introduced?
+3. How do we decide whether to show a review word or a new word in the vocab session?
+
+These core questions assume the user already has data - the edge case of a new user with no history starting will be handled separately as the cold-start problem to solve.
+
 ### 2026-10-05 - dashboard: only completed sessions are shown and contribute to metrics, but incomplete sessions still contribute to algorithm
 
 The session log currently lists every session with results, even if it was not complete. It was decided to only show sessions with a non-NULL completed_at, since starting and abandoning a session can make the page look messy. It also creates an incentive to see the full session through, rather than to leave it early. This also applies to metrics - where users should feel incentivised to completing a session, and if they can do e.g half a session and see their count go up, the session loses integrity and it only becomes a window of time in which to practice.
@@ -20,7 +51,7 @@ Outcome: Implemented.
 
 At a high level, the selection algorithm's primary goal should be to identify when a word is due for review - and it is these words that should be the top priority for sentence generations. This provides a lot of value by allowing users to quickly catch up with words they need to review by translating bespoke sentences.
 
-This arose as the forgetting curve describes how memory fades quickly unless reactivated at well-timed intervals ([The Decision Lab, 2025](references.md)). This reminds me of my experience on Anki, where I would accumulate a large number of words due for review and fall behind. It would become a massive chore for me to go through them all individually, and I’d lose motivation just churning through the words. This problem creates a great value proposition for the sentences feature - it allows for a high volume of reviews at once, and translating bespoke sentences is more engaging than churning through individual words. This provides the user with an efficient way to stay on schedule (or catch up) with the words the selection algorithm has flagged as being at a critical time for a review. This is a core USP, where the likes of Anki do not offer this.
+This arose as the forgetting curve describes how memory fades quickly unless reactivated at well-timed intervals ([Boros, 2025](references.md)). This reminds me of my experience on Anki, where I would accumulate a large number of words due for review and fall behind. It would become a massive chore for me to go through them all individually, and I’d lose motivation just churning through the words. This problem creates a great value proposition for the sentences feature - it allows for a high volume of reviews at once, and translating bespoke sentences is more engaging than churning through individual words. This provides the user with an efficient way to stay on schedule (or catch up) with the words the selection algorithm has flagged as being at a critical time for a review. This is a core USP, where the likes of Anki do not offer this.
 
 This gives rise to design decision - the number of words due for review should be made visible, and it should be made very evident that sentences is tackling this count of words due for review. The user should be made very aware this is the core purpose of the sentences feature. Not only is it efficient, the context also gives it meaning - making it more likely for recall.
 

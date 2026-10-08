@@ -26,6 +26,10 @@ Principles: The cross-cutting rules that every decision adheres to
 
 - A numbered list of important and timeless principles that future decisions should not conflict
 
+## Research (`research.md`)
+
+- Living document of formalised notes from my research into building out the selection algorithm.
+
 ## Workflow
 
 Rough notes made in Notion, distilled in the log, then implemented, then append outcome, finally update the reference to reflect the changes. Principles are added when a core consideration arises that seems important.
