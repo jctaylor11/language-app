@@ -9,6 +9,7 @@ import DashboardIndex from "./pages/dashboard/DashboardIndex";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from "./AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SentenceVault from "./pages/dashboard/SentenceVault";
@@ -42,6 +43,7 @@ export default function App() {
           </Routes>
         </AuthProvider>
       </GoogleOAuthProvider>
+      <Analytics />
     </BrowserRouter>
   );
 }
