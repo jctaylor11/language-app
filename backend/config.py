@@ -13,3 +13,6 @@ JOSE_SECRET_KEY = os.getenv('JOSE_SECRET_KEY')
 JOSE_ALGORITHM = os.getenv('JOSE_ALGORITHM')
 ACCESS_TOKEN_EXPIRES_MINUTES = os.getenv('ACCESS_TOKEN_EXPIRES_MINUTES')
 REFRESH_TOKEN_EXPIRES_DAYS = os.getenv('REFRESH_TOKEN_EXPIRES_DAYS')
+COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"  # Off by default since local dev and tests run over http
+
+FRONTEND_ORIGIN = os.environ['FRONTEND_ORIGIN']

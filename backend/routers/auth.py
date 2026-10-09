@@ -8,7 +8,7 @@ from backend.auth.access_token import create_access_token, decode_access_token
 from backend.auth.refresh_token import create_refresh_token, consume_refresh_token, delete_refresh_token
 from backend.schemas import GoogleToken
 from backend.db.connection import get_write_connection
-from backend.config import REFRESH_TOKEN_EXPIRES_DAYS
+from backend.config import REFRESH_TOKEN_EXPIRES_DAYS, COOKIE_SECURE
 
 router = APIRouter()
 
@@ -17,13 +17,14 @@ def set_auth_cookies(response: Response, conn: Connection, user_id: int) -> None
     jwt = create_access_token(user_id)
     refresh_token = create_refresh_token(conn, user_id)
 
-    response.set_cookie("access_token", jwt, httponly=True, samesite="lax")
+    response.set_cookie("access_token", jwt, httponly=True, samesite="lax", secure=COOKIE_SECURE)
     # path to auth/refresh to limit scope to only place that uses it. max_age makes it persist browser restarts
     response.set_cookie(
         "refresh_token",
         refresh_token,
         httponly=True,
         samesite="lax",
+        secure=COOKIE_SECURE,
         path="/auth/refresh",
         max_age=int(REFRESH_TOKEN_EXPIRES_DAYS) * 24 * 60 * 60,
     )
