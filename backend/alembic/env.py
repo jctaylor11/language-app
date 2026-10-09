@@ -13,9 +13,6 @@ from backend.config import DATABASE_URL, TEST_DATABASE_URL
 # access to the values within the .ini file in use.
 config = context.config
 
-# Override sqlalchemy url 
-config.set_main_option('sqlalchemy.url', DATABASE_URL)
-
 # Override sqlalchemy url — use -x db=test to target the test database
 x_args = context.get_x_argument(as_dictionary=True)
 if x_args.get("db") == "test":

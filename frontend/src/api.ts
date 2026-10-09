@@ -31,6 +31,7 @@ async function requestTokenRefresh(): Promise<boolean> {
 }
 
 function refreshAccessToken(): Promise<boolean> {
+  // If there is already a request in flight, the current promise will be returned - hence concurrent requests share the same request
   if (refreshInFlight === null) {
     refreshInFlight = requestTokenRefresh().finally(() => {
       refreshInFlight = null; // Cleared once settled so the next expiry triggers a fresh refresh

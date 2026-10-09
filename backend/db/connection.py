@@ -1,8 +1,8 @@
 from sqlalchemy import create_engine, Engine
 
-from backend.config import DATABASE_URL
+from backend.config import DATABASE_URL, SQL_ECHO
 
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL, echo=SQL_ECHO)
 
 
 def get_read_connection():
