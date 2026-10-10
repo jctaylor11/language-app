@@ -96,3 +96,7 @@ export type SessionLogEntry = {
   session_type: "vocab" | "sentence";
   total_reviewed: number;
 };
+
+export type AuthStatus = {
+  authenticated: boolean;
+};

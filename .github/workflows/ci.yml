@@ -22,7 +22,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:18
+        image: public.ecr.aws/docker/library/postgres:18 # Changed from postgres:18 to avoid docker hub rate limits, pulls from ecr mirror instead
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres

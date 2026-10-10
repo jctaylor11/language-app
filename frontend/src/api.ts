@@ -14,6 +14,7 @@ import type {
   SentenceResults,
   SentenceSessionSummary,
   SessionLogEntry,
+  AuthStatus,
 } from "./types";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -234,7 +235,14 @@ export async function checkAuth(): Promise<boolean> {
   const response = await fetchWithAuth(`${BASE_URL}/auth/me`, {
     method: "GET",
   });
-  return response.ok;
+
+  if (!response.ok) {
+    return false;
+  }
+
+  // Body checked rather than status alone, since a misrouted request (e.g a rewrite serving index.html) also returns 200
+  const authStatus: AuthStatus = await response.json();
+  return authStatus.authenticated === true;
 }
 
 export async function logoutUser(): Promise<void> {
