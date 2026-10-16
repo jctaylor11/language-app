@@ -1,3 +1,38 @@
+### 2026-10-16 - words database: words table should be normalised, the grain is simply a Korean word that a user would learn
+
+Previously the grain is one row per Korean word, each holding one meaning. This makes it difficult to add other accepted words (glosses) for each Korean word - but this is important for homographs and English variants of the same word. I am therefore normalising the words table. This is less obvious than it seems, where words you would expect, such as '안녕하세요' should not be included.
+
+The new words table grain will simply be the words in the target language (Korean to start) which are shown to the user as individual words for them to learn - in the form they will be shown (lemmas). One unique row per Korean spelling, with all meanings (including homographs) as glosses. Synonyms are counted as separated entries in the words database. Facts for each word (ie the deterministic metrics like frequency or NIKL's difficulty rating) will be a column in this table. To ensure determinism, if there are multiple values (e.g two frequencies in the case of homographs), the lowest value will be taken to bias towards easy words. The tradeoff is that more difficult meanings of words won't be specifically tagerted - for example, if an infrequent word comes up, the user can pass by giving only the easier word. This logic prioritises more beginner/intermediate learners, where this painpoint will only be accessed by more advanced learners.
+
+A new gloss table will hold all the translations - with a many-to-one relationship with the words. It will include an enum column that labels whether that gloss is the primary one, the diplayed one, or simply a tolerated one. For example, 보다' could have a primary gloss of 'to see', which will be the main one display, but will also accept 'to look' from the user (or simply just 'look' - but this will be done in code for as part of a normalise function). This makes it easy to add alternative spellings for each word. All the glosses will be sent to the frontend along with the traget, which will be folded into the function that checks for the correct input. The part of speech (POS) is deterministically index on Korean + English, rather than Korean alone, and is therefore a column on this gloss table.
+
+In summary, the decisions made here are:
+
+1. Normalise Korean words table to just the Korean words with their ID and facts
+2. Move the translations to a word_gloss table, which to many-to-one with words
+3. The facts for each word (ie settled metrics) go on the word table
+4. Part of speech (POS) goes as a column on word_gloss since POS is deterministic on Korean target + English meaning
+
+Rejected alternatives:
+One row per meaning was rejected as the lemmatiser can't tell meanings apart and the results then keyed to word_id cannot be split.
+A separate word_metrics table was considered by rejected, as it's still the same grain where the metrics are made to be deterministic on the word (assuming multiple values take the lowest (for frequency and NIKL difficulty atow)).
+
+### 2026-10-16 - words dataset: build dataset using LLMs with evaluator-optimiser workflow
+
+The NIKL words list is KOGL Type 1, but it only contains the Korean word, part of speech,frequency rank, and NIKL-assigned difficulty level. Since this data is freely available to use with attribution, I am using just this data to derive my own dataset. I need to decide:
+
+1. Shape: how to store the data and their form
+2. Scope: what type of words (part of speech)
+3. Translation source
+4. Homographs: how do I distinguish between them
+5. Validation
+
+### 2026-10-09 - sentences: peeking can be done per-word via hover, so only the blocking word is marked as peeked
+
+Currently there is only an option to peek the whole sentence - however this interferes with the spaced repetition algorithms that will be adapted. If it is only possible to peek the whole sentence, then all words in that sentence being reviewed will be marked as 'peeked'. Therefore, it's important that the user should be able to peek specific words - for example, in the case that only the odd word is unknown to them, rather than every word in the sentence. This provides more granular data for the selection algorithm.
+
+Consequences: A new table will be required, since the sentence_words table is only a junction table. A migration will therefore be required storing the status per word per sentence result.
+
 ### 2026-10-08 - algorithm: words due for review are determined by modelling memory, estimating each word's recall probability, and seeing which fall below a threshold
 
 The ideal time to review something is just before you forget it. The algorithm will therefore select words due for review by first predicting the probability that a user will recall the word. This is based on Ebbinghaus research on forgetting curves, and the spaced-repetition work built on it.
@@ -51,7 +86,7 @@ Outcome: Implemented.
 
 At a high level, the selection algorithm's primary goal should be to identify when a word is due for review - and it is these words that should be the top priority for sentence generations. This provides a lot of value by allowing users to quickly catch up with words they need to review by translating bespoke sentences.
 
-This arose as the forgetting curve describes how memory fades quickly unless reactivated at well-timed intervals ([Boros, 2025](references.md)). This reminds me of my experience on Anki, where I would accumulate a large number of words due for review and fall behind. It would become a massive chore for me to go through them all individually, and I’d lose motivation just churning through the words. This problem creates a great value proposition for the sentences feature - it allows for a high volume of reviews at once, and translating bespoke sentences is more engaging than churning through individual words. This provides the user with an efficient way to stay on schedule (or catch up) with the words the selection algorithm has flagged as being at a critical time for a review. This is a core USP, where the likes of Anki do not offer this.
+This arose as the forgetting curve describes how memory fades quickly unless reactivated at well-timed intervals ([Boros, 2025](references.md)). This reminds me of my experience on Anki, where I would accumulate a large number of words due for review and fall behind. It would become a massive chore for me to go through them all individually, and I’d lose motivation just churning through the words. This problem creates a great value propition for the sentences feature - it allows for a high volume of reviews at once, and translating bespoke sentences is more engaging than churning through individual words. This provides the user with an efficient way to stay on schedule (or catch up) with the words the selection algorithm has flagged as being at a critical time for a review. This is a core USP, where the likes of Anki do not offer this.
 
 This gives rise to design decision - the number of words due for review should be made visible, and it should be made very evident that sentences is tackling this count of words due for review. The user should be made very aware this is the core purpose of the sentences feature. Not only is it efficient, the context also gives it meaning - making it more likely for recall.
 
@@ -475,5 +510,11 @@ Outcome: Implemented.
 The cache search should not take a certain number of words. I should take as many words as are applicable and then use that to search the cache for any sentences. To start, I will take ALL the words in their user_words. Later, I can whittle it down weighted by whatever the algorithm I build considers are the best words to be reviewed by the user.
 
 However, I should still constrain the user words for the sentence generation path, since it is unnecessary to pass excessive words and costs credits for the API.
+
+Outcome: Implemented.
+
+### 2026-06-02 - sentences: vocab is stored in citation form
+
+Vocab must be stored in the words table in citation form - therefore it's lookup in the words database is deterministic, which is necessary to get the IDs for sentence words - as one can lemmatise the sentence words to find the exact matching value (the lemma) in the database, and hence retrieve the word's ID. Without lemmatisation, a sentence may have, for example "먹었어요" or "먹고", which wouldn't then link back to the lemma "먹다".
 
 Outcome: Implemented.

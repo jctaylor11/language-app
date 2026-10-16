@@ -22,11 +22,10 @@ function SentenceStart({ onStart }: { onStart: () => void }) {
     <div className="flex flex-col bg-[#dddddd] w-120 mx-auto px-15 py-5 text-[14px]">
       <h1 className="text-[28px] font-bold">Sentences</h1>
       <p className="mb-1">
-        Sentences will be selected based on the words that you already know.
+        Sentences will be constructed from your words that are most due for
+        review.
       </p>
-      <p className="mb-2">
-        Min 80% known words, prioritising those due for review
-      </p>
+      <p className="mb-2">Minimum 80% known words.</p>
       <p className="text-gray-500 pl-4">ESC to peek</p>
       <p className="text-gray-500 pl-4">TAB to skip</p>
 

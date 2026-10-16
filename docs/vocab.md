@@ -50,6 +50,10 @@
 
 ## Design ideas
 
+### Add a direction column to vocab_results
+
+This should be done before the selection algorithm is started, so it accommodates both the Korean -> English and the English -> Korean. By designing the algorithm with this in mind it makes it easier to the reverse option later. The data side of how this is considered should be
+
 ### Quitting a session early drops the data from that session
 
 Originally I've been thinking to make it save the data continuously - if they do 10 words in 20 seconds and quit before the 2 minute timer is over, it would still increase 'total reviewed' by 10. However, I realise this reduces the integrity of a session being 2 minutes, and changes it to a session being 'maximum 2 minutes'. This could result to a decrease in motivation also, where there is no drive to complete a session. The 'reward' for completing a session is having that data saved. Else, it becomes optional.
@@ -86,6 +90,11 @@ The peeked words should be included in the session overview as per [log decision
 Currently the timer is set by a variable passed in from the frontend.
 
 ## Open questions
+
+### Once Korean -> English and English -> Korean are implemented, how do the different directions combine? Are they considered together or separately?
+
+Ie, are both directions considered separately or together? If they are confidence of English -> Korean, then what is their confidence on that word overall? In Anki and FSRS, they are considered completely separately, with their own memory, state, and review times. But maybe this just complicates things have two dimensions to it, though combining them can also make things very complicated.
+Similarly - what's the single words 'confidence'? Are there two scores (one for each direction?) or are they combined. Perhaps it could be combined, and producing gives a higher weighting than recognising. Producing the word could imply recognition, but recognition does not imply production.
 
 ### Session known vs unknown option?
 
