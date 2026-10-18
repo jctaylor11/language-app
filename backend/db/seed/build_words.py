@@ -1,8 +1,8 @@
 import csv
 import re
 
-NIKL_ENTRIES_PATH = "backend/db/seed/nikl_entries.csv"
-WORDS_PATH = "backend/db/seed/words_new.csv"
+NIKL_ENTRIES_PATH = "backend/db/seed/data/nikl_entries.csv"
+WORDS_PATH = "backend/db/seed/data/words_new.csv"
 
 REJECTED_WORD_POS = ['의', '보', '고', '불']
 

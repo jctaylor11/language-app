@@ -3,7 +3,7 @@ from sqlalchemy import text
 
 from backend.db.connection import get_engine
 
-CSV_PATH = "backend/db/seed/words.csv"
+CSV_PATH = "backend/db/seed/data/words.csv"
 
 def seed_words(engine):
     with open(CSV_PATH, newline="", encoding="utf-8") as csv_file:

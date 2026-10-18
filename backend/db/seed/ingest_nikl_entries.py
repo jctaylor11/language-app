@@ -1,7 +1,7 @@
 import csv
 
-NIKL_LIST_PATH = "resources/nikl_list.txt"
-NIKL_ENTRIES_CSV_PATH = "backend/db/seed/nikl_entries.csv"
+NIKL_LIST_PATH = "backend/db/seed/data/raw/nikl_list.txt"
+NIKL_ENTRIES_CSV_PATH = "backend/db/seed/data/nikl_entries.csv"
 
 
 def ingest_nikl_entries() -> None:
