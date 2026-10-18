@@ -19,7 +19,3 @@ app.include_router(vocab.router)
 app.include_router(sentence.router)
 app.include_router(dashboard.router)
 app.include_router(auth.router)
-
-
-
-

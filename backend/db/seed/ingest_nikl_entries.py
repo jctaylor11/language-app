@@ -18,8 +18,8 @@ def ingest_nikl_entries() -> None:
             "level": nikl_row["등급"],
         })
 
-    with open(NIKL_ENTRIES_CSV_PATH, "w", newline="", encoding="utf-8") as nikl_entries_file:
-        writer = csv.DictWriter(nikl_entries_file, fieldnames=["freq_rank", "word", "pos", "explanation", "level"])
+    with open(NIKL_ENTRIES_CSV_PATH, "w", newline="", encoding="utf-8") as nikl_entries_csv:
+        writer = csv.DictWriter(nikl_entries_csv, fieldnames=["freq_rank", "word", "pos", "explanation", "level"])
         writer.writeheader()
         writer.writerows(nikl_entries)
 

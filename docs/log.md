@@ -1,3 +1,9 @@
+### 2026-10-17 - words database: word entries scope excludes certain POS types
+
+For the vocab list, the principle is that the user should be able to translate each word as a standalone word cleanly, and it must be valid output from the lemmatiser function using (Kiwipiepy library). If the lemmatiser does not return that word to the inputted surface form in a sentence, then it will not have an ID from the words database, and therefore the data will be inaccurate. I'm therefore removing: dependent nouns (의), auxillary verbs (보), proper nouns (고), and words with unclassified POS.
+
+Outcome: Implemented.
+
 ### 2026-10-16 - words database: words table should be normalised, the grain is simply a Korean word that a user would learn
 
 Previously the grain is one row per Korean word, each holding one meaning. This makes it difficult to add other accepted words (glosses) for each Korean word - but this is important for homographs and English variants of the same word. I am therefore normalising the words table. This is less obvious than it seems, where words you would expect, such as '안녕하세요' should not be included.
@@ -14,10 +20,10 @@ In summary, the decisions made here are:
 4. Part of speech (POS) goes as a column on word_gloss since POS is deterministic on Korean target + English meaning
 
 Rejected alternatives:
-One row per meaning was rejected as the lemmatiser can't tell meanings apart and the results then keyed to word_id cannot be split.
+One row per meaning was rejected as the lemmatiser can't tell meanings apart and the results then keyed to word_id cannot be sp
 A separate word_metrics table was considered by rejected, as it's still the same grain where the metrics are made to be deterministic on the word (assuming multiple values take the lowest (for frequency and NIKL difficulty atow)).
 
-### 2026-10-16 - words dataset: build dataset using LLMs with evaluator-optimiser workflow
+### 2026-10-16 - words dataset: decisions for words dataset
 
 The NIKL words list is KOGL Type 1, but it only contains the Korean word, part of speech,frequency rank, and NIKL-assigned difficulty level. Since this data is freely available to use with attribution, I am using just this data to derive my own dataset. I need to decide:
 
