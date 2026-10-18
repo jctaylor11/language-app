@@ -27,7 +27,7 @@
 
 ## Edge cases
 
-- lemma_count could be inflated since one surface word can be split into multiple lemmas (e.g 공부해 -> 공부 + 하다), and therefore a user who knows 공부 only gets half credit. TODO: verify the extract_lemmas output and test proportions are as expected.
+- lemma_count counts every lemma extract_lemmas returns, including ones with no words.target match. These have no sentence_words row, so they always count as unknown and can push a sentence below the threshold. Lemmatiser gaps make this more likely (e.g 대학생 -> 대학, since the -생 suffix is dropped). TODO: add extract_lemmas tests to verify the output is as expected.
 - The threshold is a floor with no upper bound, so fully known sentences with no new words stay eligible
 - If the generated sentences are not eligible, the get_eligible_sentences refetch will return a placeholder. How this is handled needs to be solved - [Design ideas](sentences.md#handling-ineligible-generated-sentences)
 - A peeked sentence excludes all of its words from total_reviewed, not just the word that blocked the user - [Design idea](sentences.md#hovering-over-an-individual-word-shows-the-translation-of-that-specific-word)

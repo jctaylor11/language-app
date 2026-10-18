@@ -5,8 +5,13 @@ kiwi = Kiwi()
 PREDICATE_TAGS = frozenset({"VV", "VA"})                # Stem + "다" gives the citation form for verb (VV) and adjective verb (VA)
 PREDICATE_SUFFIX_TAGS = frozenset({"XSV", "XSA"})       # Derivational suffixes that turn a preceding noun/root into a predicate
 COMPOUND_ROOT_TAGS = frozenset({"NNG", "NNP", "XR"})    # Roots that combine with a predicate suffix (e.g 공부 + 하 → 공부하다)
-NOUN_TAGS = frozenset({"NNG", "NNP", "NP"})             # Nouns emitted verbatim - their particles are separate tokens, so they fall away
-INVARIANT_TAGS = frozenset({"MAG", "MAJ", "MM"})        # Adverbs/modifier already in citation form since they dont conjugate
+NOUN_TAGS = frozenset({"NNG", "NNP", "NP", "NR"})       # Nouns and numerals emitted verbatim - their particles are separate tokens, so they fall away
+INVARIANT_TAGS = frozenset({"MAG", "MAJ", "MM", "IC"})  # Adverbs/modifier/interjections already in citation form since they dont conjugate
+
+
+def get_base_tag(tag: str) -> str:
+    base_tag = tag.split("-")[0]    # Kiwi marks irregular (-I) and regular (-R) conjugation on some tags, e.g 듣 in 들었어요 is VV-I
+    return base_tag
 
 
 def extract_lemmas(sentence: str) -> list[str]:
@@ -22,25 +27,26 @@ def extract_lemmas(sentence: str) -> list[str]:
     while i < len(tokens):
         token = tokens[i]
         next_token = tokens[i + 1] if i + 1 < len(tokens) else None
+        token_tag = get_base_tag(token.tag)
 
         # Noun/root + derivational suffix → predicate compound
         if (
-            token.tag in COMPOUND_ROOT_TAGS
+            token_tag in COMPOUND_ROOT_TAGS
             and next_token is not None
-            and next_token.tag in PREDICATE_SUFFIX_TAGS
+            and get_base_tag(next_token.tag) in PREDICATE_SUFFIX_TAGS
         ):
             citations.append(token.form + next_token.form + "다")
             i += 2
             continue
 
         # Standalone verb or adjective → stem + 다
-        if token.tag in PREDICATE_TAGS:
+        if token_tag in PREDICATE_TAGS:
             citations.append(token.form + "다")
             i += 1
             continue
 
-        # Plain noun, or uninflected adverb
-        if token.tag in NOUN_TAGS or token.tag in INVARIANT_TAGS:
+        # Plain noun, uninflected adverb, numeral, or interjection
+        if token_tag in NOUN_TAGS or token_tag in INVARIANT_TAGS:
             citations.append(token.form)
             i += 1
             continue
