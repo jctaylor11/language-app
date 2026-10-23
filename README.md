@@ -1,10 +1,8 @@
 # Language App
 
-Inspired by my own pain points in learning Korean vocabulary. This project will be a clean, data-driven vocabulary management app, focused on efficiency and personalisation. The goal is to make even a 2-minute session genuinely productive, rather than only feel productive.
+Inspired by my own pain points in learning Korean vocabulary. This project will be a clean, data-driven vocabulary management app, focused on efficiency and personalisation. It will suggest the next word for you to focus on, and generate sentences from words you know that are due for review. The goal is to make even a 2-minute session genuinely productive, rather than only feel productive.
 
-For users who want to skip the slow-paced gamification bloat from the likes of Duolingo, yet want more accessibility and personalisation than Anki.
-
-Designed to need no setup, to learn your level, and to build your language pack as you go.
+Designed for users who want to skip the slow-paced gamification bloat from the likes of Duolingo, yet want more accessibility and personalisation than Anki. It will need no setup, will learn your level, and will build your language pack as you go.
 
 ## Core Components
 

@@ -7,7 +7,7 @@ export default function RootLayout() {
 
   return (
     <div className="h-screen flex flex-col">
-      <nav className="flex justify-end p-5 gap-4 border-b border-gray-300 shrink-0">
+      <nav className="flex justify-end p-5 gap-4 border-b border-gray-300 shrink-0 text-sm text-[#5B636E] *:hover:text-black">
         {isAuthenticated === true ? (
           <>
             <Link to="/vocab">Vocab</Link>

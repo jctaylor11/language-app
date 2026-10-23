@@ -13,6 +13,8 @@ import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from "./AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SentenceVault from "./pages/dashboard/SentenceVault";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 export default function App() {
   return (
@@ -39,6 +41,8 @@ export default function App() {
               </Route>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
             </Route>
           </Routes>
         </AuthProvider>
