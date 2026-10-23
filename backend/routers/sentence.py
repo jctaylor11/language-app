@@ -15,7 +15,8 @@ router = APIRouter()
 
 NUM_WORDS_SAMPLED = 10
 NUM_SENTENCES_IN_BATCH = 3
-MIN_KNOWN_PERCENT = 80    # Comprehensible input: research puts the optimal known proportion at 80%, the remaining 20% inferred from context
+MIN_KNOWN_PERCENT = 60    # Should be 80, however temporarily lowered to 60 for development while logic is tightened
+GENERATION_KNOWN_PERCENT = 80    # Comprehensible input research puts the optimal known proportion at 80%, the remaining 20% inferred from context
 MIN_INTRODUCED_WORDS = NUM_WORDS_SAMPLED    # Fewer and the generation sample is short of what the prompt is built around
 
 
@@ -155,7 +156,7 @@ def get_sentence_batch(
     
     introduced_words_sample = sample_introduced_words_for_generation(read_conn, user_id, NUM_WORDS_SAMPLED)   # Introduced words needed to get sentences bespoke for the user
 
-    generated_sentences = generate_sentences(introduced_words_sample, NUM_SENTENCES_IN_BATCH, MIN_KNOWN_PERCENT)  # If no eligible sentences already exist in the sentences cache
+    generated_sentences = generate_sentences(introduced_words_sample, NUM_SENTENCES_IN_BATCH, GENERATION_KNOWN_PERCENT)  # If no eligible sentences already exist in the sentences cache
 
     generated_sentences = lemmatise_sentences(generated_sentences)  # Lemmatisation allows sentence words to be matched against the words table by standardised citation form. Needed for sentence_words inserts and lemma_count
 
