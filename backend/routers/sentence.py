@@ -16,6 +16,21 @@ router = APIRouter()
 NUM_WORDS_SAMPLED = 10
 NUM_SENTENCES_IN_BATCH = 3
 MIN_KNOWN_PERCENT = 80    # Comprehensible input: research puts the optimal known proportion at 80%, the remaining 20% inferred from context
+MIN_INTRODUCED_WORDS = NUM_WORDS_SAMPLED    # Fewer and the generation sample is short of what the prompt is built around
+
+
+def count_introduced_words(conn: Connection, user_id: int) -> int:
+    result = conn.execute(text("""
+        SELECT COUNT(*) AS introduced_words_count
+        FROM introduced_words       -- One row per word, and only counts words answered correctly, so peeked and skipped words don't unlock sentences
+        WHERE user_id = :user_id
+    """), {"user_id": user_id})
+
+    row = result.fetchone()
+
+    introduced_words_count = row.introduced_words_count
+
+    return introduced_words_count
 
 
 def sample_introduced_words_for_generation(conn: Connection, user_id: int, num_words_sampled: int) -> list[str]:
@@ -124,9 +139,14 @@ def get_sentence_batch(
 ):
     """Returns a batch of sentences for the user.
 
-    First serves sentences already in the cache that meet the minimum known-word proportion. If the cache holds fewer than a full batch, new sentences
+    Rejects users with too few introduced words to build sentences from, before any LLM call. Otherwise first serves sentences already in the cache that meet the minimum known-word proportion. If the cache holds fewer than a full batch, new sentences
     are generated via LLM API, lemmatised, and inserted into the sentences cache.
     """
+    introduced_words_count = count_introduced_words(read_conn, user_id)
+
+    if introduced_words_count < MIN_INTRODUCED_WORDS:      # Checked first rather than only before generation, so the user isn't served cached sentences then locked out mid-session
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Not enough introduced words to build sentences - do a vocab session first")
+
     eligible_sentences_in_cache = get_eligible_sentences(read_conn, user_id, payload.sentences_already_queued)  # Sentences already queued for the user are excluded from the eligible sentences returned, so that the user doesn't see duplicates in a single session
 
     if len(eligible_sentences_in_cache) >= NUM_SENTENCES_IN_BATCH:    # Sufficient sentences already fetched, can return them rather than generate any

@@ -116,25 +116,33 @@ export async function sendVocabResults(
   }
 }
 
+export class NotEnoughIntroducedWordsError extends Error {} // Its own type so the page can tell this 409 apart from other failures
+
 export async function fetchSentencePairs(
   sentencesAlreadyQueued: number[] = [],
 ): Promise<SentencePair[]> {
-  try {
-    const sentencesUrl = `${BASE_URL}/sentences`;
-    const response = await fetchWithAuth(sentencesUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sentences_already_queued: sentencesAlreadyQueued,
-      }),
-    });
-    const sentencesData = await response.json();
-    console.log("Fetched sentences:", sentencesData);
-    return sentencesData.sentences;
-  } catch (error) {
-    console.error("Failed to get sentences:", error);
-    return [];
+  const sentencesUrl = `${BASE_URL}/sentences`;
+  const response = await fetchWithAuth(sentencesUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sentences_already_queued: sentencesAlreadyQueued,
+    }),
+  });
+
+  if (response.status === 409) {
+    throw new NotEnoughIntroducedWordsError(
+      "Not enough introduced words to build sentences",
+    );
   }
+
+  if (!response.ok) {
+    throw new Error(`Failed to get sentences: ${response.status}`);
+  }
+
+  const sentencesData = await response.json();
+  console.log("Fetched sentences:", sentencesData);
+  return sentencesData.sentences;
 }
 
 export async function sendSentenceResult(

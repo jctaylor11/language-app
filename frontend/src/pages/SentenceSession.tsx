@@ -5,6 +5,7 @@ import {
   useMutation,
   useIsMutating,
 } from "@tanstack/react-query";
+import { Link } from "react-router";
 
 import {
   fetchSession,
@@ -12,12 +13,19 @@ import {
   sendSentenceResult,
   getSentencesSummary,
   completeSession,
+  NotEnoughIntroducedWordsError,
 } from "../api";
 import type { SentencePair, SentenceResults } from "../types";
 
 const SENTENCES_PER_SESSION = 5;
 
-function SentenceStart({ onStart }: { onStart: () => void }) {
+function SentenceStart({
+  onStart,
+  startBlocked,
+}: {
+  onStart: () => void;
+  startBlocked: boolean;
+}) {
   return (
     <div className="flex flex-col bg-[#dddddd] w-120 mx-auto px-15 py-5 text-[14px]">
       <h1 className="text-[28px] font-bold">Sentences</h1>
@@ -36,6 +44,21 @@ function SentenceStart({ onStart }: { onStart: () => void }) {
       >
         Start session
       </button>
+      {startBlocked && (
+        <div
+          role="alert" // Announced by screen readers when it appears, since it's only inserted on click
+          className="flex flex-col gap-1 mt-4 border border-red-400 bg-red-50 text-red-800 rounded px-3 py-2"
+        >
+          <p className="font-bold">Not enough words yet</p>
+          <p>
+            Sentences are built from words you've learnt, so start with a vocab
+            session (it's only set at 10 for dev)
+          </p>
+          <Link to="/vocab" className="underline">
+            Go to vocab →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
@@ -141,6 +164,7 @@ export default function SentenceSession() {
   const [sentencePairIndex, setSentencePairIndex] = useState(0);
   const [completedSentencesCount, setCompletedSentencesCount] = useState(0);
   const [answerRevealed, setAnswerRevealed] = useState(false);
+  const [startBlocked, setStartBlocked] = useState(false);
 
   const peeked = useRef<boolean>(false);
   const inputElementRef = useRef<HTMLInputElement>(null);
@@ -171,7 +195,11 @@ export default function SentenceSession() {
     mutationFn: completeSession,
   });
 
-  const { data: sentencePairsData, fetchNextPage } = useInfiniteQuery({
+  const {
+    data: sentencePairsData,
+    error: sentencePairsError,
+    fetchNextPage,
+  } = useInfiniteQuery({
     // useInfiniteQuery appends batches instead of replace on refetch
     queryKey: ["sentencePairs"],
     queryFn: () =>
@@ -179,6 +207,7 @@ export default function SentenceSession() {
     initialPageParam: 0,
     getNextPageParam: (_, __, lastPageParam) => lastPageParam + 1,
     staleTime: Infinity, // Prevent background refetching mid-session
+    retry: false, // A 409 won't change on retry, and retrying a failed generation re-spends LLM tokens
   }); // Fetches on mount rather than waiting on the session, so the first batch is ready by the time the user starts
 
   const sentencePairs = sentencePairsData?.pages.flat() ?? []; // Pages only needed so refetch doesn't replace data
@@ -292,13 +321,23 @@ export default function SentenceSession() {
     inputElementRef.current?.focus(); // Refocuses on inputbox since typing shouldn't be lost mid-session
   }
 
+  function handleStart() {
+    // Checked on click rather than on render, so the start screen doesn't change when the 409 lands. Also stops a session being created that can't be completed
+    if (sentencePairsError instanceof NotEnoughIntroducedWordsError) {
+      setStartBlocked(true);
+      return;
+    }
+
+    sessionMutate();
+  }
+
   // Intentionally above check for existence of sessionId, since session pending implies no session ID exists yet
   if (sessionPending) {
     return <div>Loading...</div>;
   }
 
   if (!sessionId) {
-    return <SentenceStart onStart={() => sessionMutate()} />;
+    return <SentenceStart onStart={handleStart} startBlocked={startBlocked} />;
   }
 
   if (completedSentencesCount >= SENTENCES_PER_SESSION) {

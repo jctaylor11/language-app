@@ -11,7 +11,7 @@ from backend.auth.access_token import create_access_token
 
 test_engine = create_engine(TEST_DATABASE_URL)
 
-TEST_INTRODUCED_WORDS_COUNT = 6
+TEST_INTRODUCED_WORDS_COUNT = 10     # At least MIN_INTRODUCED_WORDS so POST /sentences isn't rejected, and fewer than seed_words so some aren't introduced
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -109,7 +109,12 @@ def seed_words(conn):
             ('먹다', 'to eat', 'verb'),
             ('가다', 'to go', 'verb'),
             ('좋다', 'good', 'adjective'),
-            ('오늘', 'today', 'noun')
+            ('오늘', 'today', 'noun'),
+            ('학교', 'school', 'noun'),
+            ('내일', 'tomorrow', 'noun'),
+            ('크다', 'big', 'adjective'),
+            ('작다', 'small', 'adjective'),
+            ('보다', 'to see', 'verb')
         RETURNING id
     """))
 
