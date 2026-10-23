@@ -20,8 +20,8 @@ In summary, the decisions made here are:
 4. Part of speech (POS) goes as a column on word_gloss since POS is deterministic on Korean target + English meaning
 
 Rejected alternatives:
-One row per meaning was rejected as the lemmatiser can't tell meanings apart and the results then keyed to word_id cannot be sp
-A separate word_metrics table was considered by rejected, as it's still the same grain where the metrics are made to be deterministic on the word (assuming multiple values take the lowest (for frequency and NIKL difficulty atow)).
+One row per meaning was rejected as the lemmatiser can't tell meanings apart and the results then keyed to word_id cannot be split.
+A separate word_metrics table was considered but rejected, as it's still the same grain where the metrics are made to be deterministic on the word (assuming multiple values take the lowest (for frequency and NIKL difficulty atow)).
 
 ### 2026-10-16 - words dataset: decisions for words dataset
 
