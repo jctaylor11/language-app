@@ -6,6 +6,8 @@
 - staleTime: Infinity means no automatic refetch. After the initial render, the next page is only explicitly fetched with fetchNextPage
 - fetchNextPage is only fired when the (total - current index) <= 3
 - fetchNextPage hits fetchSentencePairs, which hits POST /sentences
+- If POST /sentences returns 409, fetchSentencePairs throws NotEnoughIntroducedWordsError. The start screen looks the same either way, and handleStart only shows an error alert (role="alert", with a link to the vocab session) when Start is clicked, instead of creating a session that has no sentences
+- retry: false, since a 409 won't change on retry and retrying a failed generation re-spends LLM tokens
 - The known-word proportion is fixed at >= 80%. Since this is fixed, the sentences can be prefetched on mount (before the user starts the session) so the user (hopefully) doesn't have to wait.
 - handleKeyDown adds 'skipped' status if tab is pressed. Adds 'peeked' status if esc is pressed, and reveals the answer for as long it is held
 - answerRevealed is set false on keyup or on blur in case focus is lost mid session
@@ -15,18 +17,20 @@
 
 ## Backend (POST /sentences)
 
-1. sample_introduced_words_for_generation - random 10 from introduced_words (TODO: make it constraint aware [Design idea](sentences.md#constraint-aware-eligibility-query))
-2. get_eligible_sentences - check cache for sentences that meet requirements
-3. if >= 3 eligible sentences, return them with id (early exit, no LLM generation)
-4. else generate_sentences (LLM)
-5. lemmatise_sentences - allows the words to be standardised and matched to the words in words table
-6. insert_sentences - inserts sentence and gets IDs back
-7. insert_sentences_words - inserts the words for said sentences
-8. Sentence evaluation through get_eligible_sentences refetch - the updated cache should now contain eligible sentences from the generation, and therefore serves as an evaluation of the generated sentences
-9. returns the sentences with their newly assigned id
+1. count_introduced_words - if fewer than MIN_INTRODUCED_WORDS (10, matching NUM_WORDS_SAMPLED), return 409 before anything else, so no LLM call is made
+2. sample_introduced_words_for_generation - random 10 from introduced_words (TODO: make it constraint aware [Design idea](sentences.md#constraint-aware-eligibility-query))
+3. get_eligible_sentences - check cache for sentences that meet requirements
+4. if >= 3 eligible sentences, return them with id (early exit, no LLM generation)
+5. else generate_sentences (LLM)
+6. lemmatise_sentences - allows the words to be standardised and matched to the words in words table
+7. insert_sentences - inserts sentence and gets IDs back
+8. insert_sentences_words - inserts the words for said sentences
+9. Sentence evaluation through get_eligible_sentences refetch - the updated cache should now contain eligible sentences from the generation, and therefore serves as an evaluation of the generated sentences
+10. returns the sentences with their newly assigned id
 
 ## Edge cases
 
+- Below MIN_INTRODUCED_WORDS, if Start is clicked before the 409 from the prefetch arrives, a session is created and stays on loading. Accepted since the 409 only waits on a single count query
 - lemma_count counts every lemma extract_lemmas returns, including ones with no words.target match. These have no sentence_words row, so they always count as unknown and can push a sentence below the threshold. Lemmatiser gaps make this more likely (e.g 대학생 -> 대학, since the -생 suffix is dropped).
 - The threshold is a floor with no upper bound, so fully known sentences with no new words stay eligible
 - If the generated sentences are not eligible, the get_eligible_sentences refetch will return a placeholder. How this is handled needs to be solved - [Design ideas](sentences.md#handling-ineligible-generated-sentences)

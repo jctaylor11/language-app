@@ -2,6 +2,7 @@ from unittest.mock import patch
 from sqlalchemy import text, insert
 
 from backend.db.models import Sentence
+from backend.routers.sentence import MIN_INTRODUCED_WORDS
 from backend.schemas import SentencePair
 from backend.tests.conftest import seed_sentence
 
@@ -27,6 +28,23 @@ def test_get_sentence_batch(client, access_token, seed_introduced_words):
     expected_pairs = {(mock_sentence.target, mock_sentence.source) for mock_sentence in mock_sentences}
     assert returned_pairs == expected_pairs  # Order isn't guaranteed since the eligibility query has no ORDER BY
     assert all(isinstance(sentence["id"], int) for sentence in data["sentences"])
+
+
+def test_get_sentence_batch_rejects_user_below_min_introduced_words(client, access_token, seed_user, seed_session, seed_words, conn):
+    word_ids = seed_words[:MIN_INTRODUCED_WORDS - 1]   # One short of the threshold - the other side of the boundary is test_get_sentence_batch
+
+    conn.execute(text("""
+        INSERT INTO vocab_results (user_id, session_id, word_id, response_time_ms, answered_at, status, session_position)
+        VALUES (:user_id, :session_id, :word_id, 1000, NOW(), 'correct_first_try', :session_position)
+    """), [{"user_id": seed_user, "session_id": seed_session, "word_id": word_id, "session_position": position} for position, word_id in enumerate(word_ids, start=1)])
+
+    client.cookies.set("access_token", access_token)
+
+    with patch("backend.routers.sentence.generate_sentences") as mock_generate:
+        response = client.post("/sentences", json={})
+
+    assert response.status_code == 409
+    mock_generate.assert_not_called()      # The point of the guard is that no LLM tokens are spent
 
 
 def test_create_sentence_result(client, access_token, seed_session, conn):
