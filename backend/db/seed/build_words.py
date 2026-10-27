@@ -6,10 +6,7 @@ WORDS_PATH = "backend/db/seed/data/words_new.csv"
 
 REJECTED_WORD_POS = ['의', '보', '고', '불']
 
-def build_words():
-    with open(NIKL_ENTRIES_PATH, 'r', newline="", encoding="utf-8") as nikl_entries:
-        nikl_rows = list(csv.DictReader(nikl_entries))
-
+def group_and_filter_words_list(nikl_rows):
     entries_by_word = {}
     rejections = []
 
@@ -22,20 +19,26 @@ def build_words():
             if word not in entries_by_word:
                 entries_by_word[word] = [] 
 
-            entries_by_word[word].append({              # Appending each row to a list keyed on the word groups the homographs, so they can be collapsed into one entry
-                "nikl_freq_rank": row["freq_rank"],
-                "nikl_difficulty": row["level"]
-            })
+            entries_by_word[word].append(row)             # To group homographs keyed by the word - Appends the whole row so it can be used by the script to build word glosses dataset too
+
+    return entries_by_word, rejections
+
+
+def build_words():
+    with open(NIKL_ENTRIES_PATH, 'r', newline="", encoding="utf-8") as nikl_entries:
+        nikl_rows = list(csv.DictReader(nikl_entries))
+
+    entries_by_word, rejections = group_and_filter_words_list(nikl_rows)
 
     words = []
     for word, entries in entries_by_word.items():
         # Decision to condense ranks of homographs into the minimum value, as per 2026-10-16 log entry
         ranks = []
         for entry in entries: 
-            if entry["nikl_freq_rank"] == "":
+            if entry["freq_rank"] == "":
                 continue
             
-            ranks.append(int(entry["nikl_freq_rank"]))     
+            ranks.append(int(entry["freq_rank"]))     
 
         if ranks: 
             nikl_freq_rank = min(ranks)
@@ -43,7 +46,7 @@ def build_words():
             nikl_freq_rank = ""
 
         # Decision to condense homographs difficulties into their minimum value
-        difficulties = [entry["nikl_difficulty"] for entry in entries]
+        difficulties = [entry["level"] for entry in entries]
         nikl_difficulty = min(difficulties)    
 
         words.append({
