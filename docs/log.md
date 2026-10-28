@@ -1,6 +1,10 @@
+### 2026-10-28 - words database: batch ID is just the hex of the Korean word
+
+The Korean word itself cannot be used, since it only allows ASCII characters. By making it the hex, it also removes the need to save a lookup dictionary assigning each word to a custom ID, such as word-1. It makes the flow so much simpler, rather than more complex function signatures, with tuples to include the lookup variable in the return, etc.
+
 ### 2026-10-27 - words database: seed_words and word_glosses are linked by target word using a dict containing ID after the words table is seeded
 
-The CSVs never touch the IDs which are assigned by database. The Korean word uses the same ID for all homographs, and it has a one-to-many relationship with the glosses - which hold information on the homographs. To connect the two CSVs, the words table will be seeded first since word_glosses depends on it for its foreign key. I can then SELECT id, target for all entries in one query, and build a {target: id} dict. This ID will be looked up in the dict for each gloss as I build the word_glosses list of dicts from using the word_glosses csv with the foreign key, to insert in one execute.
+The CSVs never touch the IDs which are assigned by database. The Korean word uses the same ID for all homographs, and it has a one-to-many relationship with the glosses - which hold information on the homographs. To connect the two CSVs, the words table will be seeded first since word_glosses depends on it for its foreign key. I can then SELECT id, target for all entries in one query, and build a {target: id} dict. This ID will be looked up in the dict for each gloss as I build the word_glosses list of dicts using the word_glosses csv with the foreign key, to insert in one execute.
 
 ### 2026-10-27 - words database: word gloss table built from NIKL entries directly, using the same extracted exclusion logic as in build_words
 
