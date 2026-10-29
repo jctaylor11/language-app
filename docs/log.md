@@ -1,3 +1,15 @@
+### 2026-10-29 - words database: not worrying about American/British spellings, and primary is only American
+
+I can use breame to convert american spellings, but I can't use a package to convert full-on american words. E.g car vs automobile. The primary gloss is the answer displayed to the learner, so it should use one English consistently, rather than e.g "elevator" for one word and "flat" for another. American English is used because most Korean loanwords were borrowed from it (아파트 is "apartment", 엘리베이터 is "elevator"), so the primary gloss matches the loanword, and most people who learned English as a second language were taught American English.
+
+Rejected alternatives: British English primary glosses. "Flat" for 아파트 would look like bad.
+
+### 2026-10-29 - words database: each homograph entry for a word is given an entry ID
+
+I need a way to keep track of which entries coming out of the model were from which entries going in, where an entry is a homograph. I am therefore deriving the entry ID based on its position in the list of grouped NIKL words - which is determistic. The model will return this as a field with the homograph's glosses. When I want to connect the homographs glosses output from the model, I can connect the entry ID with the original input by rederiving the entry ID based on the position in the list. It's important that I keep this connection to the original input so that I can see the original POS and explanation that accompanied that word.
+
+Rejected alternatives: Return the POS as part of the response, however POS doesn't uniquely identify the entry.
+
 ### 2026-10-28 - words database: batch ID is just the hex of the Korean word
 
 The Korean word itself cannot be used, since it only allows ASCII characters. By making it the hex, it also removes the need to save a lookup dictionary assigning each word to a custom ID, such as word-1. It makes the flow so much simpler, rather than more complex function signatures, with tuples to include the lookup variable in the return, etc.
