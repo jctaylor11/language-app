@@ -3,8 +3,10 @@ import json
 import time
 import anthropic
 from anthropic import transform_schema
+from anthropic.types import Message
 from anthropic.types.messages.batch_create_params import Request
 from anthropic.types.message_create_params import MessageCreateParamsNonStreaming
+from anthropic.types.messages import MessageBatchIndividualResponse
 from dotenv import load_dotenv
 from pydantic import BaseModel, ValidationError
 
@@ -16,7 +18,9 @@ GENERATION_MODEL = "claude-haiku-5-5"
 WORDS_FILE_PATH = "backend/db/seed/data/pilot_words.txt"      # None generates every word, otherwise a file with one word per line (pilot, or resending failures)
 
 RAW_GLOSSES_PATH = f"backend/db/seed/data/word_glosses_raw_{GENERATION_MODEL}.jsonl"
-FAILURES_PATH = "backend/db/seed/data/word_gloss_failures.txt"
+RAW_FAILURES_PATH = f"backend/db/seed/data/word_gloss_failures_{GENERATION_MODEL}.txt"
+RAW_ERRORS_PATH = f"backend/db/seed/data/word_gloss_errors_{GENERATION_MODEL}.jsonl"
+
 WORD_GLOSSES_PATH = "backend/db/seed/data/word_glosses.csv"
 
 EFFORT = "medium"
@@ -156,25 +160,129 @@ def build_batch_requests(nikl_entries_by_word: dict[str, list[dict[str, str]]]) 
 
 
 def submit_gloss_batch(batch_requests: list[Request]) -> str:
-    # Batch API call, print its id 
-    ...
+    message_batch = client.messages.batches.create(requests=batch_requests)
+
+    print("message batch details:")
+    print(message_batch)
+    print()
+
+    batch_id = message_batch.id
+    print(f"Message batch ID: {batch_id}")
+
+    return batch_id
 
 
 def poll_for_batch(batch_id: str) -> None:
-    # Until processing_status is "ended": print progress, sleep POLL_INTERVAL_SECONDS
-    ...
+    print(f"Polling for batch {batch_id}", end="")
+    while True:
+        message_batch = client.messages.batches.retrieve(batch_id)
+        if message_batch.processing_status == "ended":
+            break
+
+        time.sleep(POLL_INTERVAL_SECONDS)
+        print(".", end="", flush=True)
+
+    print()     # Ends the line of dots
 
 
 def collect_gloss_batch(batch_id: str) -> None:
-    # Save raw jsonl
-    # Write failed words to FAILURES_PATH, print counts and token totals 
-    ...
+    succeed_records = []
+    errored_entries = []    # The request itself needs attention
+    failed_entries = []     # Should be resendable
+
+    # Stream results file in memory-efficient chunks, processing one at a time
+    for result in client.messages.batches.results(batch_id):
+        word = bytes.fromhex(result.custom_id).decode()
+        outcome = result.result
+        match outcome.type:
+            case "succeeded":
+                succeed_records.append(result.model_dump_json() + "\n")
+            case "errored":
+                if outcome.error.error.type == "invalid_request_error":
+                    # Something wrong with the actual request body
+                    errored_entries.append(result.model_dump_json() + "\n")
+                else:
+                    # Due to temporary problem on server side - can be resent. Therefore saved to another file
+                    failed_entries.append(word)
+            case "expired" | "canceled":
+                failed_entries.append(word)
+
+    with open(RAW_GLOSSES_PATH, "a", encoding="utf-8") as raw_glosses_file: 
+        for record in succeed_records:
+            raw_glosses_file.write(record)
+
+    with open(RAW_FAILURES_PATH, "w", encoding="utf-8") as failures_file:      # Overwritten so it only holds this run's failures, ready to set as WORDS_FILE_PATH
+        for word in failed_entries:
+            failures_file.write(word + "\n")
+
+    with open(RAW_ERRORS_PATH, "a", encoding="utf-8") as errors_file:
+        for record in errored_entries:
+            errors_file.write(record)
 
 
-def build_word_glosses_csv(word_groups: dict[str, list[dict[str, str]]]) -> None:
-    # Read RAW_GLOSSES_PATH, last line per word wins (resends replace earlier results)
-    # Write WORD_GLOSSES_PATH, print rows written and the missing count
-    ...
+def parse_word_glosses(message: Message, entries: list[dict[str, str]]) -> WordGlosses | None:
+    response_text = ""
+    for block in message.content:
+        if block.type == "text":
+            response_text = block.text
+
+    # Ensures the model adhered to the JSON shape asserted in WordGlosses
+    try:
+        word_glosses = WordGlosses.model_validate_json(response_text)
+    except ValidationError:     # e.g. JSON cut off by max_tokens
+        return None
+
+    # Check all numbers for entry_number are included. It works as the entry numbers were created determinstically
+    entry_numbers = [gloss_entry.entry_number for gloss_entry in word_glosses.entries]
+    if sorted(entry_numbers) != list(range(1, len(entries) + 1)):     # The schema can't know how many entries were sent
+        return None
+
+    return word_glosses
+
+
+def build_word_glosses_csv(nikl_entries_by_word: dict[str, list[dict[str, str]]]) -> None:
+    batch_results_by_word = {}
+    with open(RAW_GLOSSES_PATH, "r", encoding="utf-8") as raw_glosses_file:
+        for line in raw_glosses_file:
+            batch_result = MessageBatchIndividualResponse.model_validate_json(line)
+            word_custom_id = batch_result.custom_id
+            word = bytes.fromhex(word_custom_id).decode()       # The word's hex was used as its custom ID
+            batch_results_by_word[word] = batch_result      # Last line per word wins, so resent words replace earlier results
+
+    word_glosses_rows = []
+    invalid_words = []
+    missing_count = 0
+    for word, entries in nikl_entries_by_word.items():
+        if word not in batch_results_by_word:
+            missing_count += 1
+            continue
+
+        outcome = batch_results_by_word[word].result
+        if outcome.type != "succeeded":
+            missing_count += 1
+            continue
+
+        word_glosses = parse_word_glosses(outcome.message, entries)
+        if word_glosses is None:
+            invalid_words.append(word)
+            continue
+
+        for gloss_entry in word_glosses.entries:
+            nikl_entry = entries[gloss_entry.entry_number - 1]      # When built for input, entry number was indexed from 1 but python indexes from 0
+            pos = NIKL_POS_LABELS[nikl_entry["pos"]]        # POS always comes from NIKL - more reliable than the model
+
+            word_glosses_rows.append({"word": word, "gloss": gloss_entry.primary_gloss, "pos": pos, "gloss_type": "primary"})
+            for tolerated_gloss in gloss_entry.tolerated_glosses:
+                word_glosses_rows.append({"word": word, "gloss": tolerated_gloss, "pos": pos, "gloss_type": "tolerated"})
+
+    with open(WORD_GLOSSES_PATH, "w", newline="", encoding="utf-8") as word_glosses_file:
+        writer = csv.DictWriter(word_glosses_file, fieldnames=["word", "gloss", "pos", "gloss_type"])
+        writer.writeheader()
+        writer.writerows(word_glosses_rows)
+
+    print(f"Wrote {len(word_glosses_rows)} glosses to {WORD_GLOSSES_PATH}")
+    print(f"Words with missing glosses: {missing_count}")
+    print(f"Words with invalid model output: {invalid_words}")
 
 
 def build_word_glosses() -> None:
