@@ -1,8 +1,25 @@
+### 2026-11-13 - words database: gloss prompt is optimised using evals in rounds against a fixed answer key with a deterministic score
+
+The gloss prompt will generate glosses for over 5,000 words. I therefore need a way to evaluate the output and optimise the prompt for this generation. I will do this by running rounds of evals on a sample of eval words against an answer key. A round generates glosses for the eval words, scores them against the key, diagnoses the failures, and revises the prompt for the next round. I am using a sample of 50 words, which are chosen to be challenging.
+
+I am designing the eval system, but using Fable to build it based off my spec. I am not hand building it since it's tooling around the product, rather than the product itself. The system will involve a skill which instructs the agent how to run one loop of the evaluation. It must use a deterministic script to score the generated glosses relative to an answer key. The answer key is thoroughly checked and run through models from different providers to improve reliability of this source of truth. A subagent will be used to analyse the failures, diagnose the failures, and make specific recommended prompt revisions based on these diagnoses. The skill will default to one iteration per run, but the number of desired iterations can be specified. For each round, it saves a snapshot of the prompt (before changes are applied), and adds a row to a rounds.md file to keep a record of each round's prompt and its impact as it won't be committed between rounds. It's permissioned to ensure there are no changes to the key during iterations, and that the changes to the prompt generalise.
+
+The answer key has one row per entry to accommodate for homographs, and has columns for acceptable_primaries (any of these is a correct primary), must_tolerate (glosses that a learner would type and must be accepted), and must_not_include (words that must not be accepted since they're a broader/only related word). Another homograph's meaning is not put in must_not_include as the app accepts any glosses for a given word (rather than testing homographs).
+
+Scoring is deterministic to remove any judgement, and is a weighted average for each entry, with the final score being the mean and multiplied by 100.
+
+Rejected alternatives:
+
+- Scoring with an LLM judge. It would handle glosses the key didn't anticipate, but it's not deterministic and therefore not trustworthy.
+- A key with one row per word. It can't say which entry a gloss belongs to, so it can't check that each homograph got its own meaning.
+
 ### 2026-10-29 - words database: not worrying about American/British spellings, and primary is only American
 
 I can use breame to convert american spellings, but I can't use a package to convert full-on american words. E.g car vs automobile. The primary gloss is the answer displayed to the learner, so it should use one English consistently, rather than e.g "elevator" for one word and "flat" for another. American English is used because most Korean loanwords were borrowed from it (아파트 is "apartment", 엘리베이터 is "elevator"), so the primary gloss matches the loanword, and most people who learned English as a second language were taught American English.
 
 Rejected alternatives: British English primary glosses. "Flat" for 아파트 would look like bad.
+
+Amendment 2026-11-13: Tolerated glosses should include the common British or international equivalents of the primary when they mean exactly the same thing. The primary stays American English. A non-US learner would otherwise be marked wrong for a correct translation. So "flat" for 아파트, "football" for 축구 and "metro" for 지하철 are all required tolerated glosses. The system prompt asks for these variants, and the answer key requires them in must_tolerate.
 
 ### 2026-10-29 - words database: each homograph entry for a word is given an entry ID
 
