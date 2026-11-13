@@ -1,0 +1,124 @@
+word,entry_number,pos,explanation,acceptable_primaries,must_tolerate,must_not_include
+학교,1,noun,學校,school,,college|university|academy|class|classroom
+가다,1,verb,,to go,,to come|to walk|to move|to arrive
+빨리,1,adverb,,quickly|fast,quickly|fast,early|soon|hurry|immediately|already
+하다,1,verb,,to do,,to make|to have|to be|to say|to work
+예쁘다,1,adjective,,pretty,,cute|handsome|nice|kind|good
+시원하다,1,adjective,,cool|refreshing,cool|refreshing,cold|chilly|fresh|freezing|warm
+걸다,1,verb,옷을 ~,to hang,,to wear|to put on|to take off|to walk|to fold
+밥,1,noun,~을 먹다,rice|cooked rice|meal,rice|meal,food|bread|dinner|lunch|breakfast|dish
+먹다,1,verb,귀를 ~,to go deaf|to become deaf|to lose one's hearing,,to hear|to listen|to drink
+먹다,2,verb,밥을 ~,to eat,,to feed|to swallow|to chew|to taste|to cook
+타다,1,verb,장작이 ~,to burn,,to light|to ignite|to heat|to bake
+타다,2,verb,버스에 ~,to ride|to take|to get on|to board,to ride|to get on,to drive|to get off|to travel|to go
+타다,3,verb,물에 ~,to mix|to dissolve|to mix in|to stir in,,to pour|to drink|to boil|to melt
+타다,4,verb,월급을 ~,to receive|to collect|to draw,,to earn|to pay|to give|to spend
+달다,1,verb,단추를 ~,to attach|to sew on|to fasten|to affix,to attach,to button|to sew|to wear|to tie
+달다,2,verb,무게를 ~,to weigh,,to measure|to lift|to be heavy
+달다,3,verb,돈을 다오,to ask for|to request|to demand,,to give|to hand over|to pay|to receive|to lend|to borrow
+달다,4,adjective,맛,sweet,,tasty|delicious|bitter|salty|sour
+크다,1,adjective,,big|large,big|large,huge|great|wide|long|high|loud
+크다,2,verb,,to grow|to grow up,to grow,to raise|to increase|to enlarge|to expand
+네,1,determiner,,four,,your|fourth|three
+네,2,interjection,,yes,,no|your
+남,1,noun,,others|other people|another person|someone else,others|other people,person|people|friend
+남,2,noun,男,man|male,man|male,boy|husband|son|gentleman
+남,3,noun,南,south,,north|east|west
+늦다,1,verb,,to be late|to run late,,to be slow|to delay|to wait|to miss|to postpone|to be early
+늦다,2,adjective,,late,,slow|early|last|long
+배,1,noun,신체의 일부,stomach|belly|abdomen,stomach|belly,body|chest|waist
+배,2,noun,~를 띄우다,boat|ship,boat|ship,sail|ferry|yacht|canoe
+배,3,noun,열매,pear,,fruit|apple|peach
+배,4,noun,倍,times|double|multiple|fold,times,half|multiply|increase|number
+아이,1,noun,,child|kid,child|kid,baby|boy|girl|son|daughter|infant
+아이,2,interjection,,oh|ah|oh my|aw|ugh|oh dear|geez|gosh|come on|oh no|oh come on,,baby|yes|no|hello|ouch
+집,1,noun,,house|home,house|home,building|apartment|room|hometown|place
+김치,1,noun,,kimchi,,cabbage|pickle|pickles|side dish|food|vegetable
+정,1,noun,情,affection|attachment|fondness|bond|emotional attachment|emotional bond,affection,love|emotion|sympathy|passion|friendship|kindness|pity
+오빠,1,noun,,older brother|elder brother|big brother,older brother|big brother,brother|boyfriend|younger brother|older sister|sibling|man
+축구,1,noun,蹴球,soccer,football,ball|sport|sports|american football|kick|game|futsal|rugby
+지하철,1,noun,地下鐵,subway,metro|underground,train|station|railway|railroad|subway station|bus|tunnel
+아파트,1,noun,apartment,apartment,flat,house|building|room|home|villa|studio|dormitory
+이,1,noun,신체,tooth,,mouth|louse|lice|gum|tongue|bone
+이,2,pronoun,,this|this one,this,that|here|he|she|they
+이,3,determiner,,this,,that|the|those|here
+이,4,numeral,二,two,,second|twice|double|one|three|pair
+상,1,noun,上,top|upper part|upper|high|high grade|top grade|first volume|above|superior|best,,reward|desk
+상,2,noun,床,table|dining table|meal table|low table|small table,table,desk|bed|floor|chair|meal|furniture
+상,3,noun,像,statue|image|figure|likeness,,elephant|photo|photograph
+상,4,noun,賞,prize|award,prize|award,trophy|medal|gift|bonus|praise
+쓰다,1,verb,글씨를 ~,to write,,to draw|to read|to type|to spell
+쓰다,2,verb,모자를 ~,to wear|to put on,to wear|to put on,to take off|to dress|to get dressed
+쓰다,3,verb,약을 ~,to use,,to take|to need|to buy|to waste
+쓰다,4,adjective,나물이 ~,bitter,,sour|salty|spicy|sweet|tart|unpleasant
+치다,1,verb,폭풍우가 ~,to strike|to rage|to hit|to blow|to storm|to lash,,to rain|to play|to pour|to fall|to shout
+치다,2,verb,얼굴을 ~,to hit|to strike,to hit|to strike,to kick|to touch|to push|to throw
+치다,3,verb,그물을 ~,to cast|to set up|to put up|to pitch|to spread|to hang|to set|to draw|to stretch|to lay,,to catch|to fish|to play|to weave|to pull
+치다,4,verb,셈을 맞추다,to count|to calculate|to reckon|to regard as|to consider|to count as|to suppose|to assume|to value|to estimate,,to play|to pay|to match|to fit|to guess
+차다,1,verb,가득 ~,to be full|to fill|to fill up|to be filled|to become full,,to overflow|to be satisfied|to pour
+차다,2,verb,공을 ~,to kick,,to hit|to throw|to play|to shoot|to step on|to stomp
+차다,3,verb,시계를 ~,to wear|to put on|to strap on,to wear,to take off|to watch|to check
+차다,4,adjective,날씨가 ~,cold,,cool|chilly|freezing|icy|frozen|frigid|hot
+이르다,1,verb,도착하다,to reach|to arrive|to arrive at|to get to,to reach|to arrive,to come|to go|to leave|to approach
+이르다,2,verb,말하다,to tell|to say|to inform,to tell,to ask|to listen|to answer|to shout
+이르다,3,adjective,빠르다,early,,fast|quick|rapid|speedy|swift|soon|late
+정말,1,adverb,正-,really|truly,really|truly,very|actually|so|true|certainly|definitely|quite|totally
+정말,2,interjection,正-,really|really?|really!|oh really|for real|seriously|indeed,,very|true|wow|oh my|yes|what|no way|actually
+정말,3,noun,正-,truth|true statement|true words|true word|true story|fact,truth,very|lie|reality|honesty|sincerity
+저,1,pronoun,일인칭 대명사,I|me,I|me,you|we|us|my|mine|he|she
+저,2,determiner,멀리 있는 대상,that|that over there,that,this|the|it|there|over there|far
+저,3,pronoun,멀리 있는 대상,that|that one|that over there|that thing,that,this|this one|it|there|over there|he|she|they
+저,4,interjection,,um|uh|well|er|erm|umm|uhm|hmm|excuse me,,oh|hey|wow|yes|no|ah|hello|ouch
+묻다,1,verb,옷에 흙이 ~,to be stained|to get stained|to stick|to stick to|to be smeared|to get smeared|to get on|to be stained with|to be smudged|to cling,,to wash|to wipe|to be dirty|to get dirty|to soak|to dye
+묻다,2,verb,시체를 ~,to bury,,to dig|to hide|to cover|to plant|to cremate|to conceal
+묻다,3,verb,길을 ~,to ask,,to answer|to request|to ask for|to beg|to tell|to find|to wonder|to search
+연기,1,noun,延期,postponement|deferral|deferment|delay,postponement,cancellation|extension|to postpone|suspension|lateness|pause
+연기,2,noun,煙氣,smoke,,fire|steam|fog|smog|vapor|gas|smoking|mist|haze
+연기,3,noun,演技,acting|performance,acting,actor|play|drama|show|theater|movie|role|stage
+맞다,1,verb,답이 ~,to be correct|to be right,to be correct|to be right,to meet|to answer|to guess
+맞다,2,verb,손님을 ~,to welcome|to greet|to receive,to welcome,to invite|to visit|to serve|to wait|to treat
+맞다,3,verb,매를 ~,to be hit|to get hit|to be beaten|to get beaten|to be struck,to be hit,to hit|to beat|to strike|to fight|to punish|to be punished|to be scolded|to be hurt
+뜨다,1,verb,솟아오르다,to rise|to float|to come up|to float up|to rise up,,to fly|to jump|to sink|to climb|to stand up|to get up|to wake up|to swim|to increase
+뜨다,2,verb,떠나다,to leave|to depart|to go away,to leave,to go|to move|to escape|to arrive|to travel|to abandon|to run away|to disappear
+뜨다,3,verb,눈을 ~,to open|to open one's eyes|to open eyes,to open,to close|to wake|to wake up|to see|to look|to blink|to watch|to stare|to awaken
+걷다,1,verb,느릿느릿 ~,to walk,,to run|to go|to stroll|to walk slowly|to plod|to step|to hike|to wander|to take a walk|to march|to move
+걷다,2,verb,소매를 ~,to roll up|to tuck up|to pull up,,to fold|to roll|to take off|to wear|to pull|to cut|to push
+걷다,3,verb,빨래를 ~,to take in|to bring in|to take down|to gather|to collect|to gather up|to gather in,,to wash|to hang|to hang up|to hang out|to dry|to fold|to do laundry|to clean|to iron
+짜다,1,verb,관을 ~,to make|to build|to assemble|to construct|to put together|to weave|to knit|to form|to plan|to frame|to organize|to craft|to fashion,,to bury|to carve|to cut|to break|to buy
+짜다,2,verb,빨래를 ~,to wring|to wring out|to squeeze|to squeeze out,to wring,to wash|to dry|to twist|to press|to hang|to rinse|to do laundry|to drain|to fold
+짜다,3,adjective,음식이 ~,salty,,spicy|sweet|sour|bitter|savory|tasty|bland|strong
+판,1,noun,~이 벌어지다,scene|situation|occasion|round|game|spot|place|setting|affair|event|match|bout|stage,,sale|judgment|market
+판,2,noun,板,board|plank|plate|panel|slab,board,wood|table|tray|desk|blackboard|wall|floor|shelf
+판,3,noun,版,edition|printing|version|print|printing plate|printing block|impression,,book|publication|copy|page|publishing|volume|sale|judgment
+철,1,noun,계절,season,,steel|metal|weather|climate|year|month|spring
+철,2,noun,~이 들다,sense|good sense|discretion|maturity|judgment|prudence|discernment|sensibleness|sensibility,,steel|metal|age|adult|to grow up|mature|growth|intelligence|knowledge|experience|feeling
+철,3,noun,鐵,iron,,metal|railway|railroad|rail|copper|gold|silver|magnet|wire
+이상,1,noun,以上,or more|more than|above|over|or above|and above|and over|at least|not less than|and up|or over|upward|upwards,,strange|abnormal|weird|below|less than|or less|under|maximum|most|high|extra|many
+이상,2,noun,理想,ideal|ideals,,abnormal|strange|dream|goal|idea|ideology|perfect|perfection|reason|theory|idealism|utopia|hope|ideal type
+이상,3,noun,異常,abnormality|anomaly|irregularity|strangeness|oddity|something wrong|abnormal condition,abnormality,strange|weird|odd|disease|illness|error|accident|difference|change|mistake|danger|symptom|different
+인사,1,noun,人士,figure|personage|person|public figure|notable|dignitary|prominent figure|prominent person|personality|notable person|important person,,bow|celebrity|people|human|hello|staff|employee|scholar|official|soldier|leader|expert|gentleman
+인사,2,noun,人事,greeting|greetings|salutation,greeting,hello|hi|introduction|farewell|thanks|manners|courtesy|welcome|to greet|goodbye|respect|handshake
+인사,3,noun,人事,personnel|personnel affairs|human resources|personnel management|personnel matters|staffing|personnel administration,personnel|human resources,people|staff|employee|employees|hiring|recruitment|management|work|job|human|bow|hello|worker|workers|promotion|business
+양,1,noun,羊,sheep,,lamb|goat|ram|ewe|wool|animal|mutton|volume|ocean|yang
+양,2,determiner,兩,both|two,both,pair|double|couple|each|all|twin|second|several|half|ocean|yang
+양,3,noun,量,amount|quantity,amount|quantity,lamb|number|size|weight|mass|capacity|price|degree|count|total|sum|many|much|quality|length
+올,1,noun,올해,this year,,year|next year|last year|new year|annual|all|coming|come|now|today|current|this|early|strand|thread
+올,2,determiner,올해,this year's|this year|of this year,this year,year|next year|last year|new year|annual|all|coming|come|now|today|current|this|early|strand|thread
+새,1,noun,사이,gap|space|interval|space between|in-between|meantime|while|opening|span|interim|between,,fresh|friend|side|center|inside|hole|window|bridge|dawn|six|leak
+새,2,noun,날짐승,bird,,animal|chicken|wing|feather|sparrow|pigeon|beast|poultry|bat|insect|eagle|duck|nest|fly
+새,3,determiner,,new,,fresh|young|recent|another|next|newly|modern|latest|clean|different|news
+안,1,noun,집 ~,inside|interior,inside,house|home|room|center|middle|outside|bottom|front|back|wife|under|eye|lining|among|between
+안,2,adverb,아니,not,,no|nope|never|none|neither|without|nothing|cannot|can't|won't
+안,3,noun,案,proposal|plan|draft|suggestion|draft proposal|motion,proposal,opinion|law|agenda|case|project|policy|desk|table|thought|document|schedule|matter|issue|guide|comfort|safety|eye
+한,1,determiner,,one,,Korean|Korea|han|first|great|big|only|once|many|two|alone|whole|some
+한,2,noun,恨,resentment|grudge|regret|sorrow|bitterness|deep sorrow|deep resentment|rancor|grief|lingering resentment|deep regret|lamentation,,Korean|Korea|anger|hate|hatred|pain|revenge|envy|jealousy|wish|curse|tears|rage|fury|emotion|feeling|despair|depression
+한,3,noun,限,limit|limitation|bound|bounds|end,limit,Korean|Korea|deadline|border|maximum|edge|line|rule|time|period|condition|term|degree|limited|control
+절,1,noun,사찰,temple|Buddhist temple,temple,church|shrine|cathedral|mosque|chapel|monk|Buddhism|Buddha|pagoda|inspection|religion|festival|season|half
+절,2,noun,~을 하다,bow|deep bow|formal bow|traditional bow|ceremonial bow|prostration,bow,greeting|kneel|kneeling|respect|curtsy|nod|salute|prayer|worship|ceremony|manners|hello|apology|ritual|festival
+절,3,noun,節,clause|verse|section|passage|stanza|paragraph,,festival|season|holiday|joint|knot|node|sentence|chapter|phrase|word|part|song|article|rhythm|moderation|half|page|integrity|fidelity
+약,1,noun,~이 오르다,irritation|annoyance|anger|vexation|exasperation|pique|temper|aggravation|pungency|indignation|ire|frustration,,promise|appointment|weak|weakness|price|fever|temperature|effect|poison|rise|increase|high|to get angry|angry|annoyed|irritated|upset|strength|power|energy|dose
+약,2,determiner,約,about|approximately|around|roughly,about|approximately,promise|appointment|contract|weak|almost|nearly|exactly|some|few|several|over|more than|less than|just|only|maybe|probably|estimate|brief
+약,3,noun,藥,medicine|medication|drug,medicine,weak|promise|pill|pills|tablet|pharmacy|drugstore|cure|treatment|herb|vitamin|ointment|prescription|injection|doctor|hospital|potion|antidote|dose|supplement|painkiller
+전,1,determiner,全. ~ 국민,all|whole|entire,all|whole|entire,front|each|everyone|nation|national|people|citizen|pancake|war|battle|electricity|money|field|most|many|completely|totally|entirely|general|public
+전,2,determiner,前,former|previous|ex-|ex|prior|preceding,former|previous,front|old|next|after|later|early|first|late|recent|original|ancient|pancake|war|above|behind|latter|current
+전,3,noun,前,before|ago|earlier|past|previous time|time before|earlier time|former time|prior,before,after|later|behind|next|back|early|first|yesterday|old|ancient|history|pancake|war|battle|electricity|money|field|until|since|already|then|once|above|forward

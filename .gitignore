@@ -209,6 +209,9 @@ __marimo__/
 # Rough script for testing
 scratch.py
 
+# Timestamped word gloss CSVs
+backend/db/seed/data/word_glosses_claude-*.csv
+
 ## From React with Vite initialisation
 # Logs
 logs
@@ -234,7 +237,6 @@ dist-ssr
 *.sw?
 
 # Claude
-.claude
 CLAUDE.md
 CONTEXT.md
 

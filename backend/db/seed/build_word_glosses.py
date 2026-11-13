@@ -1,6 +1,7 @@
 import csv
 import json
 import time
+from datetime import datetime
 import anthropic
 from anthropic import transform_schema
 from anthropic.types import Message
@@ -15,13 +16,13 @@ from backend.db.seed.build_words import NIKL_ENTRIES_PATH, group_and_filter_word
 load_dotenv()
 
 GENERATION_MODEL = "claude-haiku-5-5"
-WORDS_FILE_PATH = "backend/db/seed/data/pilot_words.txt"      # None generates every word, otherwise a file with one word per line (pilot, or resending failures)
+WORDS_FILE_PATH = "backend/evals/word_glosses/eval_words.txt"      # None generates every word, otherwise a file with one word per line (eval words, or resending failures)
 
 RAW_GLOSSES_PATH = f"backend/db/seed/data/word_glosses_raw_{GENERATION_MODEL}.jsonl"
 RAW_FAILURES_PATH = f"backend/db/seed/data/word_gloss_failures_{GENERATION_MODEL}.txt"
 RAW_ERRORS_PATH = f"backend/db/seed/data/word_gloss_errors_{GENERATION_MODEL}.jsonl"
 
-WORD_GLOSSES_PATH = "backend/db/seed/data/word_glosses.csv"
+WORD_GLOSSES_PATH = f"backend/db/seed/data/word_glosses_{GENERATION_MODEL}_{datetime.now().strftime('%Y-%m-%d_%H%M')}.csv"     # Timestamped so each eval run keeps its own CSV
 
 EFFORT = "medium"
 MAX_TOKENS = 16000           # Thinking counts towards this, and only generated tokens are billed
@@ -180,7 +181,7 @@ def poll_for_batch(batch_id: str) -> None:
             break
 
         time.sleep(POLL_INTERVAL_SECONDS)
-        print(".", end="", flush=True)
+        print(".", end="", flush=True)      # Signals it's still working after each poll
 
     print()     # Ends the line of dots
 
@@ -271,12 +272,14 @@ def build_word_glosses_csv(nikl_entries_by_word: dict[str, list[dict[str, str]]]
             nikl_entry = entries[gloss_entry.entry_number - 1]      # When built for input, entry number was indexed from 1 but python indexes from 0
             pos = NIKL_POS_LABELS[nikl_entry["pos"]]        # POS always comes from NIKL - more reliable than the model
 
-            word_glosses_rows.append({"word": word, "gloss": gloss_entry.primary_gloss, "pos": pos, "gloss_type": "primary"})
+            entry_number = gloss_entry.entry_number      # Kept in the CSV so the eval can tell same-POS homographs apart
+
+            word_glosses_rows.append({"word": word, "entry_number": entry_number, "gloss": gloss_entry.primary_gloss, "pos": pos, "gloss_type": "primary"})
             for tolerated_gloss in gloss_entry.tolerated_glosses:
-                word_glosses_rows.append({"word": word, "gloss": tolerated_gloss, "pos": pos, "gloss_type": "tolerated"})
+                word_glosses_rows.append({"word": word, "entry_number": entry_number, "gloss": tolerated_gloss, "pos": pos, "gloss_type": "tolerated"})
 
     with open(WORD_GLOSSES_PATH, "w", newline="", encoding="utf-8") as word_glosses_file:
-        writer = csv.DictWriter(word_glosses_file, fieldnames=["word", "gloss", "pos", "gloss_type"])
+        writer = csv.DictWriter(word_glosses_file, fieldnames=["word", "entry_number", "gloss", "pos", "gloss_type"])
         writer.writeheader()
         writer.writerows(word_glosses_rows)
 
