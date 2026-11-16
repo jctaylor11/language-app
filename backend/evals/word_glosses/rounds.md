@@ -8,3 +8,4 @@ One row per round of the `eval-word-glosses` skill. Each round's prompt is saved
 
 | Round | Date | Model | Score | Primary | Recall | Must-not | Unjudged | Fixed | Regressed | Change |
 |---|---|---|---|---|---|---|---|---|---|---|
+| 1 | 2026-11-14 | claude-haiku-5-5 | 91.2 | 95.1% | 84.4% | 7 | 6 | - | - | Collocation explanations only identify the sense: gloss the word itself, not the phrase or a verb that fits only its noun (idioms excepted) |

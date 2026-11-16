@@ -1,3 +1,7 @@
+### 2026-11-16 - words database: unjudged extras are reviewed by hand, and used to make and changes to the answer key (and earlier rounds rescored against new key for consistency)
+
+Unjudged glosses are invisible to the score, so after round 1 I reviewed them by hand and added the clear ones to the key. Editing the key makes old scores incomparable with new ones, so I re-scored round 1 against the new key and carried on rather than resetting. Key edits happen only between runs (never mid-run), and every earlier round will need to be re-scored afterwards so the rounds share one same key as the source of truth.
+
 ### 2026-11-13 - words database: gloss prompt is optimised using evals in rounds against a fixed answer key with a deterministic score
 
 The gloss prompt will generate glosses for over 5,000 words. I therefore need a way to evaluate the output and optimise the prompt for this generation. I will do this by running rounds of evals on a sample of eval words against an answer key. A round generates glosses for the eval words, scores them against the key, diagnoses the failures, and revises the prompt for the next round. I am using a sample of 50 words, which are chosen to be challenging.

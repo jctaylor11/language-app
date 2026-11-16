@@ -1,9 +1,9 @@
 word,entry_number,pos,explanation,acceptable_primaries,must_tolerate,must_not_include
 학교,1,noun,學校,school,,college|university|academy|class|classroom
-가다,1,verb,,to go,,to come|to walk|to move|to arrive
-빨리,1,adverb,,quickly|fast,quickly|fast,early|soon|hurry|immediately|already
+가다,1,verb,,to go,,to come|to walk|to move|to arrive|to travel
+빨리,1,adverb,,quickly|fast,quickly|fast|rapidly|swiftly,early|soon|hurry|immediately|already
 하다,1,verb,,to do,,to make|to have|to be|to say|to work
-예쁘다,1,adjective,,pretty,,cute|handsome|nice|kind|good
+예쁘다,1,adjective,,pretty,,cute|handsome|nice|kind|good|beautiful
 시원하다,1,adjective,,cool|refreshing,cool|refreshing,cold|chilly|fresh|freezing|warm
 걸다,1,verb,옷을 ~,to hang,,to wear|to put on|to take off|to walk|to fold
 밥,1,noun,~을 먹다,rice|cooked rice|meal,rice|meal,food|bread|dinner|lunch|breakfast|dish
@@ -20,14 +20,14 @@ word,entry_number,pos,explanation,acceptable_primaries,must_tolerate,must_not_in
 크다,1,adjective,,big|large,big|large,huge|great|wide|long|high|loud
 크다,2,verb,,to grow|to grow up,to grow,to raise|to increase|to enlarge|to expand
 네,1,determiner,,four,,your|fourth|three
-네,2,interjection,,yes,,no|your
+네,2,interjection,,yes,yeah|yep,no|your
 남,1,noun,,others|other people|another person|someone else,others|other people,person|people|friend
 남,2,noun,男,man|male,man|male,boy|husband|son|gentleman
 남,3,noun,南,south,,north|east|west
 늦다,1,verb,,to be late|to run late,,to be slow|to delay|to wait|to miss|to postpone|to be early
 늦다,2,adjective,,late,,slow|early|last|long
-배,1,noun,신체의 일부,stomach|belly|abdomen,stomach|belly,body|chest|waist
-배,2,noun,~를 띄우다,boat|ship,boat|ship,sail|ferry|yacht|canoe
+배,1,noun,신체의 일부,stomach|belly|abdomen,stomach|belly|tummy,body|chest|waist
+배,2,noun,~를 띄우다,boat|ship,boat|ship|vessel,sail|ferry|yacht|canoe
 배,3,noun,열매,pear,,fruit|apple|peach
 배,4,noun,倍,times|double|multiple|fold,times,half|multiply|increase|number
 아이,1,noun,,child|kid,child|kid,baby|boy|girl|son|daughter|infant
@@ -42,7 +42,7 @@ word,entry_number,pos,explanation,acceptable_primaries,must_tolerate,must_not_in
 이,1,noun,신체,tooth,,mouth|louse|lice|gum|tongue|bone
 이,2,pronoun,,this|this one,this,that|here|he|she|they
 이,3,determiner,,this,,that|the|those|here
-이,4,numeral,二,two,,second|twice|double|one|three|pair
+이,4,numeral,二,two,2,second|twice|double|one|three|pair
 상,1,noun,上,top|upper part|upper|high|high grade|top grade|first volume|above|superior|best,,reward|desk
 상,2,noun,床,table|dining table|meal table|low table|small table,table,desk|bed|floor|chair|meal|furniture
 상,3,noun,像,statue|image|figure|likeness,,elephant|photo|photograph
