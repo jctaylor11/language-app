@@ -16,7 +16,7 @@ from backend.db.seed.build_words import NIKL_ENTRIES_PATH, group_and_filter_word
 load_dotenv()
 
 GENERATION_MODEL = "claude-haiku-5-5"
-WORDS_FILE_PATH = "backend/evals/word_glosses/eval_words.txt"      # None generates every word, otherwise a file with one word per line (eval words, or resending failures)
+WORDS_FILE_PATH = None      # None generates every word, otherwise a file with one word per line (eval words, or resending failures) - e.g "backend/evals/word_glosses/eval_words.txt"
 
 RAW_GLOSSES_PATH = f"backend/db/seed/data/word_glosses_raw_{GENERATION_MODEL}.jsonl"
 RAW_FAILURES_PATH = f"backend/db/seed/data/word_gloss_failures_{GENERATION_MODEL}.txt"

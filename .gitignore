@@ -211,6 +211,7 @@ scratch.py
 
 # Timestamped word gloss CSVs
 backend/db/seed/data/word_glosses_claude-*.csv
+backend/db/seed/data/word_glosses_raw_*.jsonl
 
 ## From React with Vite initialisation
 # Logs

@@ -2,14 +2,14 @@
   "round": 1,
   "generated_csv": "backend/db/seed/data/word_glosses_claude-haiku-5-5_2026-11-14_0304.csv",
   "metrics": {
-    "score": 91.2,
+    "score": 92.5,
     "primary_accuracy": 95.1,
-    "tolerate_recall": 84.4,
+    "tolerate_recall": 92.0,
     "must_not_hits": 7,
     "unjudged": 6,
-    "perfect_entries": 104,
+    "perfect_entries": 111,
     "entries": 123,
-    "perfect_words": 33,
+    "perfect_words": 39,
     "words": 50,
     "missing_entries": 0
   },
@@ -66,7 +66,9 @@
       "primary_correct": true,
       "missing_tolerated": [],
       "must_not_hits": [],
-      "unjudged": [],
+      "unjudged": [
+        "swiftly"
+      ],
       "score": 1.0
     },
     {
@@ -148,12 +150,10 @@
         "cooked rice"
       ],
       "primary_correct": true,
-      "missing_tolerated": [
-        "meal"
-      ],
+      "missing_tolerated": [],
       "must_not_hits": [],
       "unjudged": [],
-      "score": 0.8
+      "score": 1.0
     },
     {
       "word": "먹다",
@@ -210,12 +210,10 @@
         "to take"
       ],
       "primary_correct": true,
-      "missing_tolerated": [
-        "to get on"
-      ],
+      "missing_tolerated": [],
       "must_not_hits": [],
       "unjudged": [],
-      "score": 0.8
+      "score": 1.0
     },
     {
       "word": "타다",
@@ -449,9 +447,7 @@
       "primary_correct": true,
       "missing_tolerated": [],
       "must_not_hits": [],
-      "unjudged": [
-        "tardy"
-      ],
+      "unjudged": [],
       "score": 1.0
     },
     {
@@ -470,8 +466,10 @@
         "stomach"
       ],
       "must_not_hits": [],
-      "unjudged": [],
-      "score": 0.8667
+      "unjudged": [
+        "tummy"
+      ],
+      "score": 0.8
     },
     {
       "word": "배",
@@ -487,7 +485,9 @@
       "primary_correct": true,
       "missing_tolerated": [],
       "must_not_hits": [],
-      "unjudged": [],
+      "unjudged": [
+        "vessel"
+      ],
       "score": 1.0
     },
     {
@@ -670,9 +670,7 @@
       "primary_correct": true,
       "missing_tolerated": [],
       "must_not_hits": [],
-      "unjudged": [
-        "teeth"
-      ],
+      "unjudged": [],
       "score": 1.0
     },
     {
@@ -1053,12 +1051,10 @@
       "primary": "I",
       "tolerated": [],
       "primary_correct": true,
-      "missing_tolerated": [
-        "me"
-      ],
+      "missing_tolerated": [],
       "must_not_hits": [],
       "unjudged": [],
-      "score": 0.8
+      "score": 1.0
     },
     {
       "word": "저",
@@ -1083,12 +1079,10 @@
       "primary": "that one",
       "tolerated": [],
       "primary_correct": true,
-      "missing_tolerated": [
-        "that"
-      ],
+      "missing_tolerated": [],
       "must_not_hits": [],
       "unjudged": [],
-      "score": 0.6
+      "score": 1.0
     },
     {
       "word": "저",
@@ -1547,12 +1541,10 @@
         "personnel affairs"
       ],
       "primary_correct": true,
-      "missing_tolerated": [
-        "human resources"
-      ],
+      "missing_tolerated": [],
       "must_not_hits": [],
       "unjudged": [],
-      "score": 0.8
+      "score": 1.0
     },
     {
       "word": "양",
@@ -1621,9 +1613,7 @@
       "primary": "this",
       "tolerated": [],
       "primary_correct": false,
-      "missing_tolerated": [
-        "this year"
-      ],
+      "missing_tolerated": [],
       "must_not_hits": [
         "this"
       ],
@@ -1709,12 +1699,10 @@
       "primary": "plan",
       "tolerated": [],
       "primary_correct": true,
-      "missing_tolerated": [
-        "proposal"
-      ],
+      "missing_tolerated": [],
       "must_not_hits": [],
       "unjudged": [],
-      "score": 0.6
+      "score": 1.0
     },
     {
       "word": "한",
@@ -1787,9 +1775,7 @@
       "primary_correct": true,
       "missing_tolerated": [],
       "must_not_hits": [],
-      "unjudged": [
-        "bowing"
-      ],
+      "unjudged": [],
       "score": 1.0
     },
     {
@@ -1863,12 +1849,10 @@
         "whole"
       ],
       "primary_correct": true,
-      "missing_tolerated": [
-        "all"
-      ],
+      "missing_tolerated": [],
       "must_not_hits": [],
       "unjudged": [],
-      "score": 0.8667
+      "score": 1.0
     },
     {
       "word": "전",
