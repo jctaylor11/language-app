@@ -2,7 +2,7 @@ import csv
 import re
 
 NIKL_ENTRIES_PATH = "backend/db/seed/data/nikl_entries.csv"
-WORDS_PATH = "backend/db/seed/data/words_new.csv"
+WORDS_PATH = "backend/db/seed/data/words.csv"
 
 REJECTED_WORD_POS = ['의', '보', '고', '불']
 
@@ -50,13 +50,13 @@ def build_words():
         nikl_difficulty = min(difficulties)    
 
         words.append({
-            "word": word,
+            "target": word,
             "nikl_freq_rank": nikl_freq_rank,
             "nikl_difficulty": nikl_difficulty
         })
 
     with open(WORDS_PATH, 'w', newline="", encoding="utf-8") as words_csv:
-        writer = csv.DictWriter(words_csv, fieldnames=['word', 'nikl_freq_rank', 'nikl_difficulty'])
+        writer = csv.DictWriter(words_csv, fieldnames=['target', 'nikl_freq_rank', 'nikl_difficulty'])
         writer.writeheader()
         writer.writerows(words)
 

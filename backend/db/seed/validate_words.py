@@ -2,7 +2,7 @@ import csv
 
 from backend.lemmatiser import extract_lemmas
 
-WORDS_PATH = "backend/db/seed/data/words_new.csv"
+WORDS_PATH = "backend/db/seed/data/words.csv"
 LEMMA_FAILURES_PATH = "backend/db/seed/data/lemma_failures.csv"
 
 
@@ -15,7 +15,7 @@ def validate_words():
 
     failures = []
     for row in word_rows:
-        word = row["word"]
+        word = row["target"]
         lemmas = extract_lemmas(word)
 
         # A word is valid if the lemmatiser returns it unchanged, so sentence lemmas can match it, as per 2026-10-17 log entry
