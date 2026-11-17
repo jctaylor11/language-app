@@ -4,7 +4,7 @@ import itertools
 import json
 import os
 
-from backend.db.seed.build_words import NIKL_ENTRIES_PATH, group_and_filter_words_list
+from backend.db.seed.build_csv.build_words import NIKL_ENTRIES_PATH, group_and_filter_words_list
 
 EVAL_WORDS_PATH = "backend/evals/word_glosses/eval_words.txt"
 ANSWER_KEY_PATH = "backend/evals/word_glosses/answer_key.csv"

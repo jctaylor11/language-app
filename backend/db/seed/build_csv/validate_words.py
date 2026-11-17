@@ -3,7 +3,7 @@ import csv
 from backend.lemmatiser import extract_lemmas
 
 WORDS_PATH = "backend/db/seed/data/words.csv"
-LEMMA_FAILURES_PATH = "backend/db/seed/data/lemma_failures.csv"
+LEMMA_FAILURES_PATH = "backend/db/seed/data/runs/lemma_failures.csv"
 
 
 def validate_words():

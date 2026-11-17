@@ -8,7 +8,7 @@ You analyse one round of an eval for a prompt that generates English glosses for
 
 ## Background
 
-The app shows a learner a Korean word and they type its meaning in English. `backend/db/seed/build_word_glosses.py` sends each word to a model with `SYSTEM_PROMPT`, along with the word's dictionary entries (one per homograph, each with a part of speech and a short explanation). The model returns one primary gloss and a list of tolerated glosses per entry. The full run covers about 5,400 words, and the eval measures the prompt on 50 of them chosen to be hard.
+The app shows a learner a Korean word and they type its meaning in English. `backend/db/seed/build_csv/build_word_glosses.py` sends each word to a model with `SYSTEM_PROMPT`, along with the word's dictionary entries (one per homograph, each with a part of speech and a short explanation). The model returns one primary gloss and a list of tolerated glosses per entry. The full run covers about 5,400 words, and the eval measures the prompt on 50 of them chosen to be hard.
 
 `backend/evals/word_glosses/score_word_glosses.py` scores the output against `answer_key.csv`. Per entry:
 

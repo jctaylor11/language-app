@@ -209,9 +209,8 @@ __marimo__/
 # Rough script for testing
 scratch.py
 
-# Timestamped word gloss CSVs
-backend/db/seed/data/word_glosses_claude-*.csv
-backend/db/seed/data/word_glosses_raw_*.jsonl
+# Word gloss generation run output (timestamped CSVs, raw batch results, failures, lemma report)
+backend/db/seed/data/runs/
 
 ## From React with Vite initialisation
 # Logs

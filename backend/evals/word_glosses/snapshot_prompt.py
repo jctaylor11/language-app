@@ -2,7 +2,7 @@ import argparse
 import ast
 import os
 
-GENERATOR_PATH = "backend/db/seed/build_word_glosses.py"
+GENERATOR_PATH = "backend/db/seed/build_csv/build_word_glosses.py"
 ROUNDS_DIRECTORY = "backend/evals/word_glosses/rounds"
 
 

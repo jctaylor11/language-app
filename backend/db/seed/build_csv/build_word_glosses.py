@@ -11,18 +11,18 @@ from anthropic.types.messages import MessageBatchIndividualResponse
 from dotenv import load_dotenv
 from pydantic import BaseModel, ValidationError
 
-from backend.db.seed.build_words import NIKL_ENTRIES_PATH, group_and_filter_words_list
+from backend.db.seed.build_csv.build_words import NIKL_ENTRIES_PATH, group_and_filter_words_list
 
 load_dotenv()
 
 GENERATION_MODEL = "claude-haiku-5-5"
 WORDS_FILE_PATH = None      # None generates every word, otherwise a file with one word per line (eval words, or resending failures) - e.g "backend/evals/word_glosses/eval_words.txt"
 
-RAW_GLOSSES_PATH = f"backend/db/seed/data/word_glosses_raw_{GENERATION_MODEL}.jsonl"
-RAW_FAILURES_PATH = f"backend/db/seed/data/word_gloss_failures_{GENERATION_MODEL}.txt"
-RAW_ERRORS_PATH = f"backend/db/seed/data/word_gloss_errors_{GENERATION_MODEL}.jsonl"
+RAW_GLOSSES_PATH = f"backend/db/seed/data/runs/word_glosses_raw_{GENERATION_MODEL}.jsonl"
+RAW_FAILURES_PATH = f"backend/db/seed/data/runs/word_gloss_failures_{GENERATION_MODEL}.txt"
+RAW_ERRORS_PATH = f"backend/db/seed/data/runs/word_gloss_errors_{GENERATION_MODEL}.jsonl"
 
-WORD_GLOSSES_PATH = f"backend/db/seed/data/word_glosses_{GENERATION_MODEL}_{datetime.now().strftime('%Y-%m-%d_%H%M')}.csv"     # Timestamped so each eval run keeps its own CSV
+WORD_GLOSSES_PATH = f"backend/db/seed/data/runs/word_glosses_{GENERATION_MODEL}_{datetime.now().strftime('%Y-%m-%d_%H%M')}.csv"     # Timestamped so each eval run keeps its own CSV
 
 EFFORT = "medium"
 MAX_TOKENS = 16000           # Thinking counts towards this, and only generated tokens are billed

@@ -6,7 +6,7 @@ argument-hint: "[number of rounds]"
 
 # Eval word glosses
 
-Runs rounds of the eval that optimises `SYSTEM_PROMPT` in `backend/db/seed/build_word_glosses.py`. The argument is the number of rounds. With no argument, run one.
+Runs rounds of the eval that optimises `SYSTEM_PROMPT` in `backend/db/seed/build_csv/build_word_glosses.py`. The argument is the number of rounds. With no argument, run one.
 
 Everything lives in `backend/evals/word_glosses/`:
 
@@ -32,10 +32,10 @@ Everything lives in `backend/evals/word_glosses/`:
 
 Run from the project root, in the `language-app` conda env.
 
-1. **Generate.** Count the lines in `backend/db/seed/data/word_gloss_errors_{model}.jsonl` first (zero if it doesn't exist). Then run the generator in the background and wait for it to finish rather than polling:
+1. **Generate.** Count the lines in `backend/db/seed/data/runs/word_gloss_errors_{model}.jsonl` first (zero if it doesn't exist). Then run the generator in the background and wait for it to finish rather than polling:
 
    ```
-   conda run -n language-app python -m backend.db.seed.build_word_glosses
+   conda run -n language-app python -m backend.db.seed.build_csv.build_word_glosses
    ```
 
    Its last lines give the path of the CSV it wrote and the words with invalid model output.
@@ -73,7 +73,7 @@ Run from the project root, in the `language-app` conda env.
 
    Fixed and regressed are the entry labels from the scorer (`word#entry_number`), or `-` when there are none or no previous round. Change is the analyst's one-line summary, or `No change` with the reason.
 
-8. **Apply the change** to `SYSTEM_PROMPT` in `backend/db/seed/build_word_glosses.py` with a single edit. Do this after every round, including the last, so the working prompt is always the latest and the next run of this skill tests it.
+8. **Apply the change** to `SYSTEM_PROMPT` in `backend/db/seed/build_csv/build_word_glosses.py` with a single edit. Do this after every round, including the last, so the working prompt is always the latest and the next run of this skill tests it.
 
 Then start the next round if any remain.
 
