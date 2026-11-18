@@ -1,0 +1,36 @@
+
+ <instructions>
+You will receive one Korean word and its entries, each with an entry number, part of speech, and any explanation. For every entry, give one primary gloss and any tolerated glosses, returned under the same entry number.
+Use each entry's part of speech and explanation to identify which meaning it refers to. If an entry covers several related senses, gloss the one a learner is most likely to be taught.
+An explanation may be hanja, a short Korean description, a collocation where ~ stands for the word, or empty. A collocation is there only to show which sense is meant: the learner sees the word alone, so gloss what the word itself contributes, not the whole phrase (잡다 with 손을 ~ → "to hold", not "to hold hands"), and prefer the gloss that stays right for the other things that sense is used with over an English verb that fits only the collocation's own noun. The exception is an idiom, where the word has that meaning only inside the phrase, so the phrase's meaning is the gloss. When it's empty, use the part of speech and the most common meaning.
+For the primary gloss, choose the most common, natural English word or short phrase for that meaning. Match its form to the part of speech: verbs as "to" plus the verb (마시다 → "to drink"), adjectives as the bare adjective (작다 → "small"), and nouns without an article (책 → "book"). Write primary glosses in American English, since most Korean loanwords come from it (엘리베이터 → "elevator").
+When a word has more than one entry, give each entry a primary gloss that distinguishes its meaning from the others. The exception is entries with the same meaning in different parts of speech, such as a pronoun and a determiner that both mean "this": these can share a primary gloss.
+For tolerated glosses, include only other words a learner might type that mean exactly the same as the primary gloss, in that sense and part of speech. Leave out broader, narrower or merely related words, and don't repeat the primary gloss. Do include the common British or international word for the primary gloss when it means exactly the same thing (엘리베이터 → primary "elevator", tolerated "lift"), since a learner who doesn't use American English would otherwise be marked wrong for a correct answer.
+</instructions>
+
+ <context>
+The learner is an English speaker learning Korean. The app shows the learner a Korean word, and the learner types its meaning in English.
+A Korean word has one or more entries: separate dictionary entries for the same spelling, each distinguished by its part of speech and, where present, an explanation. Each entry gets one primary gloss and zero or more tolerated glosses.
+The primary gloss is the answer displayed as that entry's meaning. Tolerated glosses have exactly the same meaning as the primary gloss, and are also accepted as correct answers.
+The app shows only the spelling, not which entry is meant, so the learner's answer is correct if it matches any of the word's glosses. A loose tolerated gloss on one entry therefore lets a wrong answer pass for the whole word, so tolerated glosses must be true equivalents. An empty list is better than a near miss.
+Each entry's glosses are stored against its part of speech and reviewed entry by entry, so they must be accurate for that entry specifically.
+</context>
+
+<example>
+<input>
+{"word": "차", "entries": [
+  {"entry_number": 1, "part_of_speech": "noun", "explanation": "車"},
+  {"entry_number": 2, "part_of_speech": "noun", "explanation": "差"},
+  {"entry_number": 3, "part_of_speech": "noun", "explanation": "茶"}
+]}
+</input>
+<output>
+{"entries": [
+  {"entry_number": 1, "primary_gloss": "car", "tolerated_glosses": ["automobile"]},
+  {"entry_number": 2, "primary_gloss": "difference", "tolerated_glosses": []},
+  {"entry_number": 3, "primary_gloss": "tea", "tolerated_glosses": []}
+]}
+</output>
+"vehicle" is not tolerated for entry 1 because it is broader than "car".
+</example>
+ 

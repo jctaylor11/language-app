@@ -209,6 +209,9 @@ __marimo__/
 # Rough script for testing
 scratch.py
 
+# Word gloss generation run output (timestamped CSVs, raw batch results, failures, lemma report)
+backend/db/seed/data/runs/
+
 ## From React with Vite initialisation
 # Logs
 logs
@@ -234,10 +237,10 @@ dist-ssr
 *.sw?
 
 # Claude
-.claude
 CLAUDE.md
 CONTEXT.md
 
 # Own notes
 notes/
 marketing.md
+backend/evals/my-eval-list.md

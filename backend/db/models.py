@@ -1,9 +1,9 @@
 from datetime import datetime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import TIMESTAMP
-from sqlalchemy import Enum, ForeignKey, func
+from sqlalchemy import Enum, ForeignKey, UniqueConstraint, func
 
-from backend.enums import SessionBoundType, VocabResultStatus, SentenceResultStatus, SessionType
+from backend.enums import GlossType, SessionBoundType, VocabResultStatus, SentenceResultStatus, SessionType
 
 
 class Base(DeclarativeBase):
@@ -15,8 +15,19 @@ class Word(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     target: Mapped[str] = mapped_column(unique=True)
-    source: Mapped[str]
-    part_of_speech: Mapped[str]
+    nikl_freq_rank: Mapped[int | None]
+    nikl_difficulty: Mapped[str]
+
+
+class WordGloss(Base):
+    __tablename__ = "word_glosses"
+    __table_args__ = (UniqueConstraint("word_id", "gloss"),)    # For ON CONFLICT DO NOTHING to work when ingesting to postgres
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    word_id: Mapped[int] = mapped_column(ForeignKey("words.id", ondelete="CASCADE"))
+    gloss: Mapped[str]
+    pos: Mapped[str]
+    gloss_type: Mapped[GlossType] = mapped_column(Enum(GlossType, name="gloss_type"))
 
 
 class User(Base):

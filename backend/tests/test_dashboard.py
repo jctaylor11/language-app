@@ -2,8 +2,8 @@ from sqlalchemy import text
 
 from backend.tests.conftest import TEST_INTRODUCED_WORDS_COUNT, seed_sentence
 
-def test_get_dashboard_words(client, access_token, seed_introduced_words):
-    expected_keys = ["id", "target", "source", "times_reviewed", "av_s_per_syllable", "accuracy"]
+def test_get_dashboard_words(client, access_token, seed_introduced_words, seed_word_glosses):
+    expected_keys = ["id", "target", "primary_glosses", "times_reviewed", "av_s_per_syllable", "accuracy"]
 
     client.cookies.set("access_token", access_token)
     response = client.get(f"/dashboard/words")
@@ -17,6 +17,16 @@ def test_get_dashboard_words(client, access_token, seed_introduced_words):
     assert len(words) == TEST_INTRODUCED_WORDS_COUNT
     assert word["times_reviewed"] == 1     # Each introduced word has the one earned result that put it in the view
     assert word["accuracy"] == 1
+
+
+def test_get_dashboard_words_returns_primary_glosses_without_repeating_reviews(client, access_token, seed_introduced_words, seed_word_glosses):
+    client.cookies.set("access_token", access_token)
+    response = client.get(f"/dashboard/words")
+    data = response.json()
+
+    for word in data["words"]:
+        assert word["primary_glosses"] == seed_word_glosses[word["id"]]["primary_glosses"]
+        assert word["times_reviewed"] == 1     # A word with several glosses must still count its one review once
 
 
 def test_get_dashboard_words_for_empty_user(client, access_token):

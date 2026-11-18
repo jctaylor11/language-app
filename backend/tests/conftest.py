@@ -102,25 +102,59 @@ def concurrent_refresh_token():
 @pytest.fixture
 def seed_words(conn):
     result = conn.execute(text("""
-        INSERT INTO words (target, source, part_of_speech) VALUES
-            ('물', 'water', 'noun'),
-            ('사람', 'person', 'noun'),
-            ('집', 'house', 'noun'),
-            ('먹다', 'to eat', 'verb'),
-            ('가다', 'to go', 'verb'),
-            ('좋다', 'good', 'adjective'),
-            ('오늘', 'today', 'noun'),
-            ('학교', 'school', 'noun'),
-            ('내일', 'tomorrow', 'noun'),
-            ('크다', 'big', 'adjective'),
-            ('작다', 'small', 'adjective'),
-            ('보다', 'to see', 'verb')
+        INSERT INTO words (target, nikl_difficulty) VALUES
+            ('물', 'A'),
+            ('사람', 'A'),
+            ('집', 'A'),
+            ('먹다', 'A'),
+            ('가다', 'A'),
+            ('좋다', 'A'),
+            ('오늘', 'A'),
+            ('학교', 'A'),
+            ('내일', 'A'),
+            ('크다', 'A'),
+            ('작다', 'A'),
+            ('보다', 'A')
         RETURNING id
     """))
 
     word_ids = [row.id for row in result.fetchall()]
 
     return word_ids
+
+
+@pytest.fixture
+def seed_word_glosses(conn, seed_words) -> dict[int, dict[str, list[str]]]:
+    # Same order as seed_words. Based on the generated glosses, with homographs (several primaries) and words with no tolerated glosses
+    glosses_by_word = [
+        [("water", "noun", "primary")],                                                                                         # 물
+        [("person", "noun", "primary"), ("human", "noun", "tolerated"), ("human being", "noun", "tolerated")],                  # 사람
+        [("house", "noun", "primary"), ("home", "noun", "tolerated")],                                                          # 집
+        [("to eat", "verb", "primary"), ("to have a meal", "verb", "tolerated")],                                               # 먹다
+        [("to go", "verb", "primary"), ("to move", "verb", "tolerated"), ("to travel", "verb", "tolerated")],                   # 가다
+        [("good", "adjective", "primary")],                                                                                     # 좋다
+        [("today", "adverb", "primary")],                                                                                       # 오늘
+        [("school", "noun", "primary")],                                                                                        # 학교
+        [("tomorrow", "adverb", "primary"), ("future", "noun", "primary")],                                                     # 내일
+        [("big", "adjective", "primary"), ("large", "adjective", "tolerated"), ("to grow", "verb", "primary"), ("to grow up", "verb", "tolerated")],   # 크다
+        [("small", "adjective", "primary"), ("little", "adjective", "tolerated")],                                              # 작다
+        [("to see", "verb", "primary"), ("to look", "verb", "tolerated"), ("to watch", "verb", "tolerated"), ("more", "adverb", "primary")],          # 보다
+    ]
+
+    rows = []
+    expected_glosses = {}
+    for word_id, word_glosses in zip(seed_words, glosses_by_word):
+        expected_glosses[word_id] = {"primary_glosses": [], "tolerated_glosses": []}
+        for gloss, pos, gloss_type in word_glosses:
+            rows.append({"word_id": word_id, "gloss": gloss, "pos": pos, "gloss_type": gloss_type})
+            expected_glosses[word_id][f"{gloss_type}_glosses"].append(gloss)
+
+    conn.execute(text("""
+        INSERT INTO word_glosses (word_id, gloss, pos, gloss_type)
+        VALUES (:word_id, :gloss, :pos, :gloss_type)
+    """), rows)
+
+    return expected_glosses
 
 
 @pytest.fixture

@@ -1,6 +1,68 @@
+### 2026-11-17 - vocab: primary glosses are ordered by their entry's frequency rank, stored on word_glosses
+
+Primary glosses currently come out in NIKL dictionary order, so a rare meaning can show before the common one. E.g, 먹다 shows "to go deaf" before "to eat". They should instead be ordered by most frequent gloss.
+
+The implications are that the rank should be added as a column for each gloss. A freq_rank column will therefore be added to word_glosses, for the endpoint to order by. This will be in addition to the freq_rank column, as that gives different infrormation - it's for the word rather than the gloss (the lower across homographs), and is depended on by the selection algorithm. Whereas, the word_glosses freq_rank will be a separate per-meaning fact only use for display order.
+
+Additionally, to add to evals, the glosses prompt should also judge whether a meaning is too obscure to be a primary gloss (e.g. 먹다 as "to go deaf"). This could be run as a verification eval after the batch is produced. as another batch model.
+
+Rejected alternatives:
+
+- Keeping NIKL order. It is the order that causes the problem.
+- Dropping words.nikl_freq_rank and deriving it as the lowest rank across a word's glosses. Rejected as the selection algorithm reads the words table directly, and would add complication to have to join and process.
+
+### 2026-11-17 - vocab: all primary glosses are shown on 'peek', and any tolerated are accepted
+
+The batch translation of each word in the NIKL list has provided the primary gloss for each homograph, and all glosses that should be tolerated if the user types. The words endpoint should collect all primary glosses, and all tolerated glosses, for each target word. These will be sent to the frontend, and when a user looks at the translation it will show all primary glosses for each homograph of that word. It will also accept any primary and all tolerated words for each homograph.
+
+The tradeoff is that a user will never be specifically tested on a more challenging homograph for a certain word - they could just type the easier translation and it will be accepted. It will be done this way since there is no way to give the context to indicate which homograph is being tested.
+
+Rejected alternatives: Making the words shown to the user specific homographs, however this makes it very challenging to disambiguate to the user which is being tested. For example, the user would need to be given context to know which homograph's gloss is the answer.
+
+Outcome: Implemented.
+
+### 2026-11-16 - words database: unjudged extras are reviewed by hand, and used to make and changes to the answer key (and earlier rounds rescored against new key for consistency)
+
+Unjudged glosses are invisible to the score, so after round 1 I reviewed them by hand and added the clear ones to the key. Editing the key makes old scores incomparable with new ones, so I re-scored round 1 against the new key and carried on rather than resetting. Key edits happen only between runs (never mid-run), and every earlier round will need to be re-scored afterwards so the rounds share one same key as the source of truth.
+
+### 2026-11-13 - words database: gloss prompt is optimised using evals in rounds against a fixed answer key with a deterministic score
+
+The gloss prompt will generate glosses for over 5,000 words. I therefore need a way to evaluate the output and optimise the prompt for this generation. I will do this by running rounds of evals on a sample of eval words against an answer key. A round generates glosses for the eval words, scores them against the key, diagnoses the failures, and revises the prompt for the next round. I am using a sample of 50 words, which are chosen to be challenging.
+
+I am designing the eval system, but using Fable to build it based off my spec. I am not hand building it since it's tooling around the product, rather than the product itself. The system will involve a skill which instructs the agent how to run one loop of the evaluation. It must use a deterministic script to score the generated glosses relative to an answer key. The answer key is thoroughly checked and run through models from different providers to improve reliability of this source of truth. A subagent will be used to analyse the failures, diagnose the failures, and make specific recommended prompt revisions based on these diagnoses. The skill will default to one iteration per run, but the number of desired iterations can be specified. For each round, it saves a snapshot of the prompt (before changes are applied), and adds a row to a rounds.md file to keep a record of each round's prompt and its impact as it won't be committed between rounds. It's permissioned to ensure there are no changes to the key during iterations, and that the changes to the prompt generalise.
+
+The answer key has one row per entry to accommodate for homographs, and has columns for acceptable_primaries (any of these is a correct primary), must_tolerate (glosses that a learner would type and must be accepted), and must_not_include (words that must not be accepted since they're a broader/only related word). Another homograph's meaning is not put in must_not_include as the app accepts any glosses for a given word (rather than testing homographs).
+
+Scoring is deterministic to remove any judgement, and is a weighted average for each entry, with the final score being the mean and multiplied by 100.
+
+Rejected alternatives:
+
+- Scoring with an LLM judge. It would handle glosses the key didn't anticipate, but it's not deterministic and therefore not trustworthy.
+- A key with one row per word. It can't say which entry a gloss belongs to, so it can't check that each homograph got its own meaning.
+
+### 2026-10-29 - words database: not worrying about American/British spellings, and primary is only American
+
+I can use breame to convert american spellings, but I can't use a package to convert full-on american words. E.g car vs automobile. The primary gloss is the answer displayed to the learner, so it should use one English consistently, rather than e.g "elevator" for one word and "flat" for another. American English is used because most Korean loanwords were borrowed from it (아파트 is "apartment", 엘리베이터 is "elevator"), so the primary gloss matches the loanword, and most people who learned English as a second language were taught American English.
+
+Rejected alternatives: British English primary glosses. "Flat" for 아파트 would look like bad.
+
+Amendment 2026-11-13: Tolerated glosses should include the common British or international equivalents of the primary when they mean exactly the same thing. The primary stays American English. A non-US learner would otherwise be marked wrong for a correct translation. So "flat" for 아파트, "football" for 축구 and "metro" for 지하철 are all required tolerated glosses. The system prompt asks for these variants, and the answer key requires them in must_tolerate.
+
+### 2026-10-29 - words database: each homograph entry for a word is given an entry ID
+
+I need a way to keep track of which entries coming out of the model were from which entries going in, where an entry is a homograph. I am therefore deriving the entry ID based on its position in the list of grouped NIKL words - which is determistic. The model will return this as a field with the homograph's glosses. When I want to connect the homographs glosses output from the model, I can connect the entry ID with the original input by rederiving the entry ID based on the position in the list. It's important that I keep this connection to the original input so that I can see the original POS and explanation that accompanied that word.
+
+Rejected alternatives: Return the POS as part of the response, however POS doesn't uniquely identify the entry.
+
+### 2026-10-28 - words database: batch ID is just the hex of the Korean word
+
+The Korean word itself cannot be used, since it only allows ASCII characters. By making it the hex, it also removes the need to save a lookup dictionary assigning each word to a custom ID, such as word-1. It makes the flow so much simpler, rather than more complex function signatures, with tuples to include the lookup variable in the return, etc.
+
 ### 2026-10-27 - words database: seed_words and word_glosses are linked by target word using a dict containing ID after the words table is seeded
 
-The CSVs never touch the IDs which are assigned by database. The Korean word uses the same ID for all homographs, and it has a one-to-many relationship with the glosses - which hold information on the homographs. To connect the two CSVs, the words table will be seeded first since word_glosses depends on it for its foreign key. I can then SELECT id, target for all entries in one query, and build a {target: id} dict. This ID will be looked up in the dict for each gloss as I build the word_glosses list of dicts from using the word_glosses csv with the foreign key, to insert in one execute.
+The CSVs never touch the IDs which are assigned by database. The Korean word uses the same ID for all homographs, and it has a one-to-many relationship with the glosses - which hold information on the homographs. To connect the two CSVs, the words table will be seeded first since word_glosses depends on it for its foreign key. I can then SELECT id, target for all entries in one query, and build a {target: id} dict. This ID will be looked up in the dict for each gloss as I build the word_glosses list of dicts using the word_glosses csv with the foreign key, to insert in one execute.
+
+Outcome: Implemented.
 
 ### 2026-10-27 - words database: word gloss table built from NIKL entries directly, using the same extracted exclusion logic as in build_words
 
@@ -17,6 +79,8 @@ Rejected alternatives:
 - Wide format (one row per word, with gloss_1, pos_1, type_1...). Each gloss has its own POS and type, so the columns multiply, the number of glosses varies per word, and which column is primary becomes a hidden rule.
 - Adding the glosses to the words CSV. build_words regenerates that file, whereas the glosses are generated and then reviewed, so a rebuild would overwrite the reviewed glosses.
 - JSON for the reviewed file. Its nesting doesn't exist in the table, and the rest of the seed pipeline is CSV. CSV is also easier to sort and filter when reviewing flagged glosses.
+
+Outcome: Implemented.
 
 ### 2026-10-26 - words database: word glosses built using LLM, specifically Anthropic's Batch API
 
@@ -52,6 +116,8 @@ In summary, the decisions made here are:
 Rejected alternatives:
 One row per meaning was rejected as the lemmatiser can't tell meanings apart and the results then keyed to word_id cannot be split.
 A separate word_metrics table was considered but rejected, as it's still the same grain where the metrics are made to be deterministic on the word (assuming multiple values take the lowest (for frequency and NIKL difficulty atow)).
+
+Outcome: Implemented.
 
 ### 2026-10-16 - words dataset: decisions for words dataset
 

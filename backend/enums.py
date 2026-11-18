@@ -21,3 +21,8 @@ class SessionBoundType(enum.Enum):
 class SessionType(enum.Enum):
     vocab = "vocab"
     sentence = "sentence"
+
+
+class GlossType(enum.Enum):
+    primary = "primary"
+    tolerated = "tolerated"

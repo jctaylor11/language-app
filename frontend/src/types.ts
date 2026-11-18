@@ -1,7 +1,8 @@
 export type WordPair = {
   id: number;
   target: string;
-  source: string;
+  primary_glosses: string[];
+  tolerated_glosses: string[];
 };
 
 export type WordsResponse = {
@@ -47,7 +48,7 @@ export type SentenceResults = {
 export type WordEntry = {
   id: number;
   target: string;
-  source: string;
+  primary_glosses: string[];
   times_reviewed: number;
   av_s_per_syllable: number;
   accuracy: number;
