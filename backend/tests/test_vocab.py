@@ -1,16 +1,27 @@
 from sqlalchemy import text
 
 
-def test_get_word_batch(client, access_token, seed_words):
+def test_get_word_batch(client, access_token, seed_word_glosses):
     # No results seeded - a new user must still get words (cold start)
     client.cookies.set("access_token", access_token)  # access token is sent over httpOnly cookie
     response = client.get(f"/words")
     data = response.json()
     assert response.status_code == 200
     assert "word_batch" in data
-    assert all("id" in word and "target" in word and "source" in word for word in data["word_batch"])
+    assert all("id" in word and "target" in word and "primary_glosses" in word and "tolerated_glosses" in word for word in data["word_batch"])
     assert len(data["word_batch"]) == 5 # Limited to 5 by endpoint query's LIMIT
-    
+
+
+def test_get_word_batch_returns_all_glosses_of_each_word(client, access_token, seed_word_glosses):
+    client.cookies.set("access_token", access_token)
+    response = client.get(f"/words")
+    data = response.json()
+
+    for word in data["word_batch"]:
+        expected = seed_word_glosses[word["id"]]
+        assert word["primary_glosses"] == expected["primary_glosses"]
+        assert word["tolerated_glosses"] == expected["tolerated_glosses"]    # Empty list, not null, for words with none
+
 
 def test_create_vocab_results(client, access_token, seed_session, seed_words):
     client.cookies.set("access_token", access_token)

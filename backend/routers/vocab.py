@@ -13,15 +13,30 @@ router = APIRouter()
 def sample_word_batch(conn: Connection, user_id: int) -> list[dict]:
     # TODO: placeholder - replace with selection algorithm driven by the user's results
     result = conn.execute(text("""
-        SELECT id, target, source
-        FROM words
-        ORDER BY RANDOM()
-        LIMIT 5
+        WITH sampled_words AS (
+            SELECT id, target
+            FROM words
+            ORDER BY RANDOM()
+            LIMIT 5)
+        SELECT sw.id, sw.target, wg.gloss, wg.gloss_type
+        FROM sampled_words sw
+        JOIN word_glosses wg ON wg.word_id = sw.id
+        ORDER BY sw.id, wg.id       -- Keeps each word's glosses in the order of its entries
     """))
 
     rows = result.fetchall()
 
-    return [row._asdict() for row in rows]
+    words_by_id = {}
+    for row in rows:
+        if row.id not in words_by_id:
+            words_by_id[row.id] = {"id": row.id, "target": row.target, "primary_glosses": [], "tolerated_glosses": []}
+
+        if row.gloss_type == "primary":
+            words_by_id[row.id]["primary_glosses"].append(row.gloss)
+        else:
+            words_by_id[row.id]["tolerated_glosses"].append(row.gloss)
+
+    return list(words_by_id.values())
 
 
 def insert_vocab_results(conn: Connection, user_id: int, vocab_results: VocabResults) -> int:

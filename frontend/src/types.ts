@@ -1,7 +1,8 @@
 export type WordPair = {
   id: number;
   target: string;
-  source: string;
+  primary_glosses: string[];
+  tolerated_glosses: string[];
 };
 
 export type WordsResponse = {

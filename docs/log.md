@@ -1,3 +1,24 @@
+### 2026-11-17 - vocab: primary glosses are ordered by their entry's frequency rank, stored on word_glosses
+
+Primary glosses currently come out in NIKL dictionary order, so a rare meaning can show before the common one. E.g, 먹다 shows "to go deaf" before "to eat". They should instead be ordered by most frequent gloss.
+
+The implications are that the rank should be added as a column for each gloss. A freq_rank column will therefore be added to word_glosses, for the endpoint to order by. This will be in addition to the freq_rank column, as that gives different infrormation - it's for the word rather than the gloss (the lower across homographs), and is depended on by the selection algorithm. Whereas, the word_glosses freq_rank will be a separate per-meaning fact only use for display order.
+
+Additionally, to add to evals, the glosses prompt should also judge whether a meaning is too obscure to be a primary gloss (e.g. 먹다 as "to go deaf"). This could be run as a verification eval after the batch is produced. as another batch model.
+
+Rejected alternatives:
+
+- Keeping NIKL order. It is the order that causes the problem.
+- Dropping words.nikl_freq_rank and deriving it as the lowest rank across a word's glosses. Rejected as the selection algorithm reads the words table directly, and would add complication to have to join and process.
+
+### 2026-11-17 - vocab: all primary glosses are shown on 'peek', and any tolerated are accepted
+
+The batch translation of each word in the NIKL list has provided the primary gloss for each homograph, and all glosses that should be tolerated if the user types. The words endpoint should collect all primary glosses, and all tolerated glosses, for each target word. These will be sent to the frontend, and when a user looks at the translation it will show all primary glosses for each homograph of that word. It will also accept any primary and all tolerated words for each homograph.
+
+The tradeoff is that a user will never be specifically tested on a more challenging homograph for a certain word - they could just type the easier translation and it will be accepted. It will be done this way since there is no way to give the context to indicate which homograph is being tested.
+
+Rejected alternatives: Making the words shown to the user specific homographs, however this makes it very challenging to disambiguate to the user which is being tested. For example, the user would need to be given context to know which homograph's gloss is the answer.
+
 ### 2026-11-16 - words database: unjudged extras are reviewed by hand, and used to make and changes to the answer key (and earlier rounds rescored against new key for consistency)
 
 Unjudged glosses are invisible to the score, so after round 1 I reviewed them by hand and added the clear ones to the key. Editing the key makes old scores incomparable with new ones, so I re-scored round 1 against the new key and carried on rather than resetting. Key edits happen only between runs (never mid-run), and every earlier round will need to be re-scored afterwards so the rounds share one same key as the source of truth.

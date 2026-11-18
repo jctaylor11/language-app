@@ -10,9 +10,9 @@
 - fetchNextPage hits fetchWords, which hits GET /words - a random batch of 5, with no level or review awareness yet (TODO: [Design idea](vocab.md#add-vocab-control))
 - Word pages are flattened into one array and wordIndex is an index into it
 - inputText is state rather than a ref so the input stays controlled and each keypress re-renders the card
-- Each keypress runs handleInputChange, which compares the input against currentWord.source. If it matches, it builds the results, advances the word, then sends them over POST /vocab-results. Results are built before advanceWord since advanceWord resets the wordShownTime
+- Each keypress runs handleInputChange, which checks the input against every primary and tolerated gloss of currentWord with isAcceptedAnswer (both sides normalised, e.g. lowercased and without a leading "to"). If any matches, it builds the results, advances the word, then sends them over POST /vocab-results. Results are built before advanceWord since advanceWord resets the wordShownTime
 - handleKeyDown catches tab with preventDefault and advances word with 'skipped' status
-- handleKeyDown catches esc with preventDefault and reveals the source word for as long as it is held. answerRevealed is set false on keyup or on blur in case focus is lost mid session
+- handleKeyDown catches esc with preventDefault and reveals all the word's primary glosses, joined with " / ", for as long as it is held. answerRevealed is set false on keyup or on blur in case focus is lost mid session
 - Both guard on e.repeat for idempotency
 - keystrokes and wordShownTime are refs to avoid a re-render per keypress. wordShownTime starts at 0 so time spent on the VocabStart isn't counted into the first word
 - Timer derives timeRemaining from the sessionStartTime prop against Date.now() rather than decrementing a counter to avoid drift
@@ -27,7 +27,8 @@
 
 1. user_id is injected from decode_access_token
 2. sample_word_batch samples 5 words from all words (placeholder at random - selection algorithm to be added, which will choose whether to review or introduce a word)
-3. Rows are returned as word_batch with id, target and source. The id is used for sending the results back in payload
+3. Rows are returned as word_batch with id, target, primary_glosses and tolerated_glosses. The id is used for sending the results back in payload
+4. TODO: order each word's primary glosses by frequency rank ([Design idea](vocab.md#order-primary-glosses-by-their-entrys-frequency-rank))
 
 ### POST /vocab-results
 
@@ -47,8 +48,24 @@
 
 - The current word when the timer ends is dropped and skipped intentionally - 2 minute session time is protected, and having it as the first word for the next would systematically lower response time since the user has already seen it
 - Words can current repeat in the same session. This raises the consideration regarding 'words reviewed'. Currently, two of the same words coming in the same session count as two reviewed.
+- A clean answer stores raw_keystrokes as null, so which accepted gloss the user typed (primary or tolerated) isn't recorded. A matched_gloss column on vocab_results would be needed if that signal is wanted
 
 ## Design ideas
+
+### Rethink the glosses generation - instead, I should be using a deterministic method
+
+When I use the current state of the app, I do notice some lacking polish in the words. For example, '어떤' had 'some' as the primary, without even 'what' as a primary or tolerated gloss. This would be a major issue for a learner. They would get frustrated and lose trust. I could fix this with more evals, or I could find an alternative route. I've investigated other deterministic options, and [NIKL](https://krdict.korean.go.kr/eng/openApi/openApiRegister#) might again be a promising option for this. I will refine the words table later, when the app is more usable. This will be a point to refine and iterate on.
+
+### Order primary glosses by their entry's frequency rank
+
+Primary glosses currently show in NIKL dictionary order, so a rare meaning can come before the common one (먹다 peeks as "to go deaf / to eat"). The plan, per the [log decision](log.md#2026-11-17---vocab-primary-glosses-are-ordered-by-their-entrys-frequency-rank-stored-on-word_glosses):
+
+- Add the entry's frequency rank as a freq_rank column on word_glosses. It is written into the gloss CSV by the generator, then seeded, and the words endpoint orders by it
+- words.nikl_freq_rank and nikl_difficulty are unchanged. They are per-spelling facts for the selection algorithm, whereas the new column is per-meaning and only sets the display order
+
+### Glosses prompt should also judge whether a meaning is too obscure to be a primary gloss
+
+For example, 먹다 is 'to eat' but also 'to go deaf', and the latter is so obscure that it feels more like clutter than a good signal. This should be added to the evals, and the batch re-run more rigorously.
 
 ### Add a direction column to vocab_results
 

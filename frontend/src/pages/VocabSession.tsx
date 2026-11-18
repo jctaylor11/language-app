@@ -19,7 +19,11 @@ import {
   sendVocabResults,
   getVocabSummary,
 } from "../api";
-import { calcIncorrectInput } from "../utils";
+import {
+  calcIncorrectInput,
+  getAcceptedGlosses,
+  isAcceptedAnswer,
+} from "../utils";
 
 const SESSION_DURATION_S = 120;
 
@@ -97,7 +101,7 @@ function WordCard({
   onInputChange: (value: string) => void;
 }) {
   const targetWord = wordPair.target;
-  const sourceWord = wordPair.source;
+  const sourceWord = wordPair.primary_glosses.join(" / ");
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-8 pb-48">
@@ -267,8 +271,9 @@ export default function VocabSession() {
     const word_id = currentWord.id;
     const response_time_ms = Date.now() - wordShownTime.current;
     const answered_at = new Date().toISOString();
+    const acceptedGlosses = getAcceptedGlosses(currentWord);
     const raw_keystrokes = calcIncorrectInput(
-      currentWord.source,
+      acceptedGlosses,
       keystrokes.current,
     );
     const session_position = sessionPosition.current;
@@ -308,7 +313,7 @@ export default function VocabSession() {
     setInputText(input);
 
     // Check whether input matches the answer
-    if (input === currentWord.source) {
+    if (isAcceptedAnswer(input, currentWord)) {
       if (!peeked.current) {
         // A correct input only counts if it wasn't peeked
         setScore((prev) => prev + 1);
