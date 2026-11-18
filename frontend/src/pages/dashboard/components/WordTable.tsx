@@ -57,7 +57,7 @@ function WordTableUI({ wordEntries }: WordTableUIProps) {
                 {entry.target}
               </td>
               <td className="px-6 py-2 text-xs border-b border-neutral-200">
-                {entry.source}
+                {entry.primary_glosses.join(" / ")}
               </td>
               <td className="px-6 py-2 font-mono text-right text-xs border-b border-neutral-200">
                 {entry.times_reviewed}

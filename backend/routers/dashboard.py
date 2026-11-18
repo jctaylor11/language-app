@@ -13,7 +13,7 @@ def get_word_table_data(conn: Connection, user_id: int) -> list[dict]:
         SELECT
             w.id,
             w.target,
-            UPPER(LEFT(w.source, 1)) || LOWER(SUBSTRING(w.source FROM 2)) AS source,
+            ARRAY(SELECT wg.gloss FROM word_glosses wg WHERE wg.word_id = w.id AND wg.gloss_type = 'primary' ORDER BY wg.id) AS primary_glosses,     -- A subquery rather than a JOIN, which would repeat each word's rows per gloss and inflate the counts
             COUNT(*) FILTER (WHERE vr.status NOT IN ('skipped', 'peeked')) AS times_reviewed,     -- A skipped or peeked word isn't a review the user earned
             AVG(vr.response_time_ms) / 1000.0 / LENGTH(w.target) as av_s_per_syllable,
             COUNT(*) FILTER (WHERE vr.status = 'correct_first_try')::numeric / NULLIF(COUNT(vr.id), 0) AS accuracy      -- Denominator intentionally stays every result, so skipping and peeking count against accuracy rather than raising it
@@ -24,8 +24,7 @@ def get_word_table_data(conn: Connection, user_id: int) -> list[dict]:
         WHERE iw.user_id = :user_id
         GROUP BY
             w.id,
-            w.target,
-            w.source;
+            w.target;
         """), {"user_id": user_id})
 
     rows = query.fetchall()
@@ -33,7 +32,7 @@ def get_word_table_data(conn: Connection, user_id: int) -> list[dict]:
     return [{
         "id": row.id,
         "target": row.target,
-        "source": row.source,
+        "primary_glosses": row.primary_glosses,
         "times_reviewed": row.times_reviewed,
         "av_s_per_syllable": float(row.av_s_per_syllable) if row.av_s_per_syllable is not None else None,
         "accuracy": float(row.accuracy) if row.accuracy is not None else None,

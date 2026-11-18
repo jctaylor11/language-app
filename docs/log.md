@@ -19,6 +19,8 @@ The tradeoff is that a user will never be specifically tested on a more challeng
 
 Rejected alternatives: Making the words shown to the user specific homographs, however this makes it very challenging to disambiguate to the user which is being tested. For example, the user would need to be given context to know which homograph's gloss is the answer.
 
+Outcome: Implemented.
+
 ### 2026-11-16 - words database: unjudged extras are reviewed by hand, and used to make and changes to the answer key (and earlier rounds rescored against new key for consistency)
 
 Unjudged glosses are invisible to the score, so after round 1 I reviewed them by hand and added the clear ones to the key. Editing the key makes old scores incomparable with new ones, so I re-scored round 1 against the new key and carried on rather than resetting. Key edits happen only between runs (never mid-run), and every earlier round will need to be re-scored afterwards so the rounds share one same key as the source of truth.
@@ -60,6 +62,8 @@ The Korean word itself cannot be used, since it only allows ASCII characters. By
 
 The CSVs never touch the IDs which are assigned by database. The Korean word uses the same ID for all homographs, and it has a one-to-many relationship with the glosses - which hold information on the homographs. To connect the two CSVs, the words table will be seeded first since word_glosses depends on it for its foreign key. I can then SELECT id, target for all entries in one query, and build a {target: id} dict. This ID will be looked up in the dict for each gloss as I build the word_glosses list of dicts using the word_glosses csv with the foreign key, to insert in one execute.
 
+Outcome: Implemented.
+
 ### 2026-10-27 - words database: word gloss table built from NIKL entries directly, using the same extracted exclusion logic as in build_words
 
 By using the same extracted filter and grouping logic from build_words (group_and_filter_words_list), the gloss CSV contains exactly the same words as the words CSV. The words CSV can't be used directly, since POS and explanation are per homograph and are lost when condensed to one row per word for the word table grain. The explanation is valuable data for the LLM to know which meaning each homograph is, rather than guessing. The POS also comes from NIKL and it steers each gloss into the right form (e.g 보다 as an adverb is "more", not "to see"). This helps make it more reliable, and feasible to evaluate.
@@ -75,6 +79,8 @@ Rejected alternatives:
 - Wide format (one row per word, with gloss_1, pos_1, type_1...). Each gloss has its own POS and type, so the columns multiply, the number of glosses varies per word, and which column is primary becomes a hidden rule.
 - Adding the glosses to the words CSV. build_words regenerates that file, whereas the glosses are generated and then reviewed, so a rebuild would overwrite the reviewed glosses.
 - JSON for the reviewed file. Its nesting doesn't exist in the table, and the rest of the seed pipeline is CSV. CSV is also easier to sort and filter when reviewing flagged glosses.
+
+Outcome: Implemented.
 
 ### 2026-10-26 - words database: word glosses built using LLM, specifically Anthropic's Batch API
 
@@ -110,6 +116,8 @@ In summary, the decisions made here are:
 Rejected alternatives:
 One row per meaning was rejected as the lemmatiser can't tell meanings apart and the results then keyed to word_id cannot be split.
 A separate word_metrics table was considered but rejected, as it's still the same grain where the metrics are made to be deterministic on the word (assuming multiple values take the lowest (for frequency and NIKL difficulty atow)).
+
+Outcome: Implemented.
 
 ### 2026-10-16 - words dataset: decisions for words dataset
 
