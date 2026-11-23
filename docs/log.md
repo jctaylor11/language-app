@@ -1,3 +1,12 @@
+### 2026-11-23 - auth: login changed to a waitlist form until proper launch
+
+Currently logging in just takes the user to an incomplete app. The login page will therefore be updated to a waitlist page. This will also double as a gate for approved users (ie me), where the waitlist table will record whether the email is approved. If it is approved, login continues as normal. Otherwise, it simply adds the email to the waitlist table, which is what the frontend page will indicate. It's just approved users that pass through. By add it into the existing auth endpoint, it saves the complication of adding another server-side authorisation endpoint (or a weak client-side auth). Instead it's just editing the /auth-google endpoint. The homepage stays public and can be polished as the landing page.
+
+Rejected alternatives:
+
+- A password-gated page blocking the whole site, which would be a waste of an opportunity for a waitlist.
+- A waitlist front page with a separate login, which would be inefficient since it creates two access gates.
+
 ### 2026-11-17 - vocab: primary glosses are ordered by their entry's frequency rank, stored on word_glosses
 
 Primary glosses currently come out in NIKL dictionary order, so a rare meaning can show before the common one. E.g, 먹다 shows "to go deaf" before "to eat". They should instead be ordered by most frequent gloss.

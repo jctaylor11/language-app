@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import TIMESTAMP
-from sqlalchemy import Enum, ForeignKey, UniqueConstraint, func
+from sqlalchemy import Enum, ForeignKey, UniqueConstraint, func, false
 
 from backend.enums import GlossType, SessionBoundType, VocabResultStatus, SentenceResultStatus, SessionType
 
@@ -102,3 +102,12 @@ class RefreshToken(Base):
     refresh_token_hash: Mapped[str] = mapped_column(unique=True)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
     refresh_token_expires_at: Mapped[datetime]  = mapped_column(TIMESTAMP(timezone=True))
+
+
+class Waitlist(Base):
+    __tablename__ = "waitlist"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(unique=True)
+    approved: Mapped[bool] = mapped_column(server_default=false())
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
