@@ -1,4 +1,40 @@
 from concurrent.futures import ThreadPoolExecutor
+from unittest.mock import patch
+
+import pytest
+from sqlalchemy import text
+
+
+@pytest.fixture
+def mock_google():
+    google_result = {"status": True, "user_infos": {"google_sub": "waitlist-sub", "email": "waitlist@email.com"}}
+    with patch("backend.routers.auth.get_user_infos_from_google_token", return_value=google_result):
+        yield
+
+
+def test_unapproved_email_is_waitlisted_not_signed_in(client, conn, mock_google):
+    response = client.post("/auth-google", json={"credential": "fake-google-credential"})
+
+    users = conn.execute(text("SELECT COUNT(*) FROM users")).scalar()
+    waitlist = conn.execute(text("SELECT COUNT(*) FROM waitlist WHERE email = 'waitlist@email.com'")).scalar()
+
+    assert response.json()["status"] == "waitlisted"
+    assert "access_token" not in response.cookies
+    assert users == 0
+    assert waitlist == 1
+
+
+def test_waitlisted_email_signs_in_once_approved(client, conn, mock_google):
+    client.post("/auth-google", json={"credential": "fake-google-credential"})
+    client.post("/auth-google", json={"credential": "fake-google-credential"})   # Repeat attempt shouldn't duplicate the row
+    waitlist = conn.execute(text("SELECT COUNT(*) FROM waitlist")).scalar()
+
+    conn.execute(text("UPDATE waitlist SET approved = true"))
+    response = client.post("/auth-google", json={"credential": "fake-google-credential"})
+
+    assert waitlist == 1
+    assert response.json()["status"] == "ok"
+    assert "access_token" in response.cookies
 
 
 def test_refresh_rotates_token(client, refresh_token):

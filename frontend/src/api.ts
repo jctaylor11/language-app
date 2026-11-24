@@ -15,6 +15,7 @@ import type {
   SentenceSessionSummary,
   SessionLogEntry,
   AuthStatus,
+  GoogleAuthResponse,
 } from "./types";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -223,7 +224,7 @@ export async function getReviewChartData(): Promise<ReviewChartDataPoint[]> {
 
 export async function authenticateWithGoogleToken(
   credential: string,
-): Promise<void> {
+): Promise<GoogleAuthResponse["status"]> {
   const authGoogleUrl = `${BASE_URL}/auth-google`;
   const response = await fetch(authGoogleUrl, {
     method: "POST",
@@ -237,6 +238,11 @@ export async function authenticateWithGoogleToken(
       `Failed to authenticate with Google token: ${response.status}`,
     );
   }
+
+  const authResponse: GoogleAuthResponse = await response.json();
+  const authStatus = authResponse.status;
+
+  return authStatus;
 }
 
 export async function checkAuth(): Promise<boolean> {

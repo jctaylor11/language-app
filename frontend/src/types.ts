@@ -101,3 +101,7 @@ export type SessionLogEntry = {
 export type AuthStatus = {
   authenticated: boolean;
 };
+
+export type GoogleAuthResponse = {
+  status: "ok" | "waitlisted";
+};

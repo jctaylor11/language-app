@@ -3,7 +3,7 @@ from typing import Annotated
 from sqlalchemy import Connection
 
 from backend.auth.google import get_user_infos_from_google_token
-from backend.auth.users import get_or_create_user_id
+from backend.auth.users import authenticate_or_waitlist
 from backend.auth.access_token import create_access_token, decode_access_token
 from backend.auth.refresh_token import create_refresh_token, consume_refresh_token, delete_refresh_token
 from backend.schemas import GoogleToken
@@ -49,7 +49,10 @@ def auth_google(google_token: GoogleToken, response: Response, conn: Annotated[C
 
     user_infos = check['user_infos']
 
-    user_id = get_or_create_user_id(conn, user_infos)
+    user_id = authenticate_or_waitlist(conn, user_infos)
+
+    if user_id is None:
+        return {"status": "waitlisted"}
 
     set_auth_cookies(response, conn, user_id)
 
