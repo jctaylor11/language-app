@@ -1,1 +1,83 @@
 @import "tailwindcss";
+
+/* Design tokens from DESIGN.md: edit here and the whole UI follows. Spacing and control sizes use Tailwind's default 4px scale: design space-1..9 = p-1, 2, 3, 4, 6, 8, 12, 16, 24; control-md 36px = h-9, control-lg 44px = h-11, answer field 64px = h-16, sidebar 240px = w-60 */
+@theme {
+  --color-canvas: #ffffff; /* Page and card ground */
+  --color-surface-muted: #f7f7f5; /* Tiles, revealed-answer fill, expanded rows, row hover */
+  --color-surface-sunken: #efefec; /* Progress track, sidebar hover */
+  --color-line: #e7e7e3; /* 1px decorative dividers only */
+  --color-line-control: #8a8a84; /* 1px control edges, resting chart bars (3:1) */
+  --color-ink: #0f0f0e; /* Primary text, numbers, primary button fill */
+  --color-ink-muted: #55554f; /* Secondary text, table headers, inactive nav */
+  --color-ink-subtle: #6b6b65; /* Mono labels, chart ticks */
+  --color-accent: #1d4fe0; /* The one accent, a few elements per screen */
+  --color-accent-hover: #153ec0;
+  --color-on-accent: #ffffff;
+
+  --font-sans: "Geist", "Noto Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-ko: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; /* Use font-ko on all Korean text, with lang="ko" */
+
+  /* Text styles: size, line-height, weight, letter-spacing. Font family is separate (prompt-* use font-ko; eyebrow, data, timer use font-mono) */
+  --text-display: 56px;
+  --text-display--line-height: 60px;
+  --text-display--font-weight: 600;
+  --text-display--letter-spacing: -0.03em;
+  --text-title: 36px;
+  --text-title--line-height: 42px;
+  --text-title--font-weight: 600;
+  --text-title--letter-spacing: -0.025em;
+  --text-heading: 24px;
+  --text-heading--line-height: 32px;
+  --text-heading--font-weight: 600;
+  --text-heading--letter-spacing: -0.02em;
+  --text-subheading: 18px;
+  --text-subheading--line-height: 28px;
+  --text-subheading--font-weight: 500;
+  --text-subheading--letter-spacing: -0.01em;
+  --text-body: 15px;
+  --text-body--line-height: 24px;
+  --text-body--font-weight: 400;
+  --text-body-strong: 15px;
+  --text-body-strong--line-height: 24px;
+  --text-body-strong--font-weight: 500;
+  --text-small: 13px;
+  --text-small--line-height: 20px;
+  --text-small--font-weight: 400;
+  --text-eyebrow: 12px; /* font-mono, text-ink-subtle */
+  --text-eyebrow--line-height: 16px;
+  --text-eyebrow--font-weight: 500;
+  --text-eyebrow--letter-spacing: 0.02em;
+  --text-data: 13px; /* font-mono tabular-nums */
+  --text-data--line-height: 20px;
+  --text-data--font-weight: 400;
+  --text-prompt-word: 48px; /* font-ko */
+  --text-prompt-word--line-height: 60px;
+  --text-prompt-word--font-weight: 500;
+  --text-prompt-word--letter-spacing: -0.01em;
+  --text-prompt-sentence: 28px; /* font-ko */
+  --text-prompt-sentence--line-height: 42px;
+  --text-prompt-sentence--font-weight: 500;
+  --text-prompt-sentence--letter-spacing: -0.01em;
+  --text-answer: 24px;
+  --text-answer--line-height: 32px;
+  --text-answer--font-weight: 400;
+  --text-answer--letter-spacing: -0.01em;
+  --text-timer: 20px; /* font-mono tabular-nums */
+  --text-timer--line-height: 28px;
+  --text-timer--font-weight: 500;
+  --text-stat: 40px; /* tabular-nums */
+  --text-stat--line-height: 44px;
+  --text-stat--font-weight: 600;
+  --text-stat--letter-spacing: -0.03em;
+
+  --radius-sm: 3px; /* Chart bars */
+  --radius-md: 6px; /* Buttons, sidebar items */
+  --radius-lg: 10px; /* Metric tiles, answer field */
+
+  --container-session: 640px; /* max-w-session: typing session column */
+  --container-page: 1120px; /* max-w-page: dashboard pages */
+
+  --shadow-popover: 0 0 0 1px rgba(15, 15, 14, 0.06), 0 8px 24px -8px rgba(15, 15, 14, 0.12); /* Chart tooltips only */
+  --shadow-focus: 0 0 0 2px #ffffff, 0 0 0 4px #1d4fe0; /* Keyboard focus ring */
+}

@@ -27,26 +27,86 @@ import {
 
 const SESSION_DURATION_S = 120;
 
-function VocabStart({ onStart }: { onStart: () => void }) {
+function formatTime(totalSeconds: number): string {
+  const secondsLeft = Math.max(0, totalSeconds); // The timer can tick just past zero before the session finishes
+  const minutes = Math.floor(secondsLeft / 60);
+  const seconds = secondsLeft % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function SessionHeader({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col bg-[#dddddd] w-120 mx-auto px-15 py-5 text-[14px]">
-      <h1 className="text-[28px] font-bold">Vocabulary</h1>
-      <p className="mb-1">
-        The algorithm learns your level and matches you with your next best word
-        to review.
-      </p>
-      <p className="mb-2">
-        This may be a new word, or one you've already seen.
-      </p>
-      <p className="text-gray-500 pl-4">ESC to peek</p>
-      <p className="text-gray-500 pl-4">TAB to skip</p>
-      {/* Intentionally leaving 'session' in to signal how the app functions in terms of session - this is the root of the data, the session log, etc */}
-      <button
-        onClick={() => onStart()}
-        className="border px-6 py-1 mt-4 rounded cursor-pointer bg-gray-100 hover:bg-[#dddddd] active:bg-gray-200"
-      >
-        Start session
-      </button>
+    <header className="flex justify-end items-center gap-6 p-8 border-b-2 border-accent">
+      {children}
+    </header>
+  );
+}
+
+function TimerDisplay({ seconds }: { seconds: number }) {
+  return (
+    <div
+      role="timer"
+      aria-label="Time remaining"
+      className="font-mono text-timer tabular-nums text-ink"
+    >
+      {formatTime(seconds)}
+    </div>
+  );
+}
+
+function KeyHint() {
+  return (
+    <p className="flex gap-6 text-small text-ink-muted">
+      <span>
+        <span className="font-mono text-ink">Tab</span> to skip
+      </span>
+      <span>
+        Hold <span className="font-mono text-ink">Esc</span> to reveal the
+        answer
+      </span>
+    </p>
+  );
+}
+
+function VocabStart({ onStart }: { onStart: () => void }) {
+  const started = useRef(false);
+
+  function startSession() {
+    if (started.current) return; // A second key press before the session mutation is pending would create an orphan session
+    started.current = true;
+    onStart();
+  }
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.repeat) return; // A held key would otherwise count as another press
+      if (e.metaKey || e.ctrlKey || e.altKey || e.key === "Shift") return; // Shortcuts like Cmd+R shouldn't start a session
+      startSession();
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  return (
+    <div className="h-full flex flex-col">
+      <main className="flex-1 flex flex-col items-center justify-center px-8 pb-24">
+        <div className="w-full max-w-session flex flex-col items-center gap-12">
+          <div className="h-15 flex items-center justify-center">
+            <p className="text-heading text-ink text-center">
+              Type the English meaning of each Korean word.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={startSession}
+            className="w-full h-16 px-4 rounded-lg border-2 border-accent bg-canvas text-answer text-ink-muted text-center cursor-pointer"
+          >
+            Press any key to start
+          </button>
+          <KeyHint />
+        </div>
+      </main>
     </div>
   );
 }
@@ -78,7 +138,7 @@ function Timer({
     return () => clearInterval(timerInterval); // Would be called on unmount, but also when the sessionStartTime changes (e.g. if the user restarts the session) - so the old interval is cleared and a new one is created with the new start time
   }, [sessionStartTime]);
 
-  return <div>{timeRemaining}</div>;
+  return <TimerDisplay seconds={timeRemaining} />;
 }
 
 function WordCard({
@@ -102,31 +162,32 @@ function WordCard({
 }) {
   const targetWord = wordPair.target;
   const sourceWord = wordPair.primary_glosses.join(" / ");
+  const inputValue = answerRevealed ? sourceWord : inputText; // The answer replaces the typed text while Esc is held, which returns on release
+  const inputFill = answerRevealed ? "bg-surface-muted" : "bg-canvas";
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-8 pb-48">
-      <p
-        className={`text-center text-2xl font-medium tracking-wide first-letter:uppercase text-gray-500 ${answerRevealed ? "" : "invisible"}`}
-      >
-        {sourceWord}
-      </p>
-      <h1 className="text-center text-4xl font-medium tracking-wide">
-        {targetWord}
-      </h1>
-      {/* Full event object needed onKeyDown and onKeyUp to disable default Tab/Esc behaviour - e.g changing selection*/}
-      <input
-        type="text"
-        ref={inputElementRef}
-        autoFocus
-        value={inputText}
-        onChange={(e) => onInputChange(e.target.value)}
-        onKeyDown={onKeyDown} // For non-value keys (esc, tab) and keystroke history recording
-        onKeyUp={onKeyUp}
-        onBlur={onBlur}
-        className="bg-transparent border-t border-b text-center border-gray-500 outline-none w-64 text-xl"
-      />
+    <main className="flex-1 flex flex-col items-center justify-center px-8 pb-24">
+      <div className="w-full max-w-session flex flex-col items-center gap-12">
+        <h1 lang="ko" className="text-prompt-word font-ko text-ink text-center">
+          {targetWord}
+        </h1>
+        {/* Full event object needed onKeyDown and onKeyUp to disable default Tab/Esc behaviour - e.g changing selection*/}
+        <input
+          type="text"
+          ref={inputElementRef}
+          autoFocus
+          value={inputValue}
+          readOnly={answerRevealed} // Otherwise typing while revealed would append to the displayed answer
+          onChange={(e) => onInputChange(e.target.value)}
+          onKeyDown={onKeyDown} // For non-value keys (esc, tab) and keystroke history recording
+          onKeyUp={onKeyUp}
+          onBlur={onBlur}
+          className={`w-full h-16 px-4 rounded-lg border-2 border-accent text-center text-answer text-ink outline-none ${inputFill}`}
+        />
+        <KeyHint />
+      </div>
       <p className="absolute bottom-5 left-5 text-gray-500">{sourceWord}</p>
-    </div>
+    </main>
   );
 }
 
@@ -398,7 +459,7 @@ export default function VocabSession() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex justify-between">
+      <SessionHeader>
         <Timer
           timerDurationS={SESSION_DURATION_S}
           sessionStartTime={sessionStartTime}
@@ -408,8 +469,10 @@ export default function VocabSession() {
             setWordIndex((index) => index + 1); // Skips the last (not done) word seen as the timer expired
           }}
         />
-        <div>{score}</div>
-      </div>
+        <div className="font-mono text-timer tabular-nums text-ink-muted">
+          {score}
+        </div>
+      </SessionHeader>
       <WordCard
         wordPair={currentWord}
         inputText={inputText}

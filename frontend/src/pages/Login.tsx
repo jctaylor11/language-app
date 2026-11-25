@@ -30,7 +30,7 @@ export default function Login() {
   const buttonScale = 1.25; // Google caps its button at 40px tall, so scale it up to make it the obvious action
   const buttonWidth = Math.min(window.innerWidth - 48, 400) / buttonScale; // Google's button is a fixed-pixel iframe that CSS can't size, so match the column width before scaling. 48: wrapper px-6, 400: column max-w
 
-  let heading = "Continue with your Google account to get started.";
+  let heading = "Join the waitlist.";
   // gap-5 is a tighter gap than the outer column as the legal line is a footnote to the button
   let authSection = (
     <div className="w-full flex flex-col items-center gap-5">
