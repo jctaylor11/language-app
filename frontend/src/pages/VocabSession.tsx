@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useOutletContext } from "react-router";
 import {
   useQuery,
   useInfiniteQuery,
@@ -7,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 
 import type {
+  RootLayoutContext,
   WordPair,
   WordResults,
   VocabResults,
@@ -308,6 +310,14 @@ export default function VocabSession() {
   }, [words.length, wordIndex, fetchNextPage]);
 
   const currentWord: WordPair | undefined = words[wordIndex];
+
+  const { setFocusMode } = useOutletContext<RootLayoutContext>();
+  const sessionRunning = sessionId !== undefined && !sessionFinished;
+
+  useEffect(() => {
+    setFocusMode(sessionRunning);
+    return () => setFocusMode(false); // Otherwise navigating away mid-session would leave the nav hidden
+  }, [sessionRunning, setFocusMode]);
 
   function advanceWord() {
     setInputText("");

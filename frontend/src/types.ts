@@ -1,3 +1,7 @@
+export type RootLayoutContext = {
+  setFocusMode: (focusMode: boolean) => void;
+};
+
 export type WordPair = {
   id: number;
   target: string;

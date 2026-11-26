@@ -1,3 +1,11 @@
+### 2026-11-25 - vocab: mid-session hides the top nav bar, to enter a 'focused mode'
+
+During the session, there should not be any distractions on the screen - it should only be the vocab session component. Therefore, once the session starts the navbar disappear, and in its place is only the timer and score.
+
+This will be done by adding a focusMode state to the RootLayout, which passes its setter to pages through Outlet context. VocabSession sets it when the session exists and has not finish, and reset on unmount so that there's never an hidden navbar by accident. There's currently no way out of a session, so a control to exist will be added later.
+
+Outcome: Implemented.
+
 ### 2026-11-23 - auth: login changed to a waitlist form until proper launch
 
 Currently logging in just takes the user to an incomplete app. The login page will therefore be updated to a waitlist page. This will also double as a gate for approved users (ie me), where the waitlist table will record whether the email is approved. If it is approved, login continues as normal. Otherwise, it simply adds the email to the waitlist table, which is what the frontend page will indicate. It's just approved users that pass through. By add it into the existing auth endpoint, it saves the complication of adding another server-side authorisation endpoint (or a weak client-side auth). Instead it's just editing the /auth-google endpoint. The homepage stays public and can be polished as the landing page.
